@@ -314,6 +314,14 @@ ul{ margin:0; padding:0; list-style:none; }
 }
 .list-title{ font-size:19px; font-weight:800; letter-spacing:-.025em; margin:0; }
 .list-title small{ font-size:13px; font-weight:600; color:var(--muted); margin-left:9px; }
+.list-tools{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.sort-sel{
+  border:1px solid var(--line); border-radius:7px; padding:7px 11px;
+  background:#fff; font-size:13px; font-weight:600; color:var(--n-600);
+  transition:border-color .16s var(--ease), box-shadow .16s var(--ease);
+}
+.sort-sel:hover{ border-color:var(--n-300); }
+.sort-sel:focus{ outline:none; border-color:var(--indigo-500); box-shadow:0 0 0 3px rgba(99,102,241,.13); }
 
 .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(258px,1fr)); gap:20px; }
 

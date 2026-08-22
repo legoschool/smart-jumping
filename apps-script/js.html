@@ -16,8 +16,25 @@ function srv(fn) {
 var S = {
   user: null, categories: [], videos: [], cart: [],
   c1: null, c2: null, q: '', page: 1, pageSize: 24,
+  sort: 'default',
   classes: [], loaded: false
 };
+
+/** 라이브러리 정렬 방식 */
+var SORTS = [
+  { k: 'default', label: '기본순' },
+  { k: 'views',   label: '조회수 많은순' },
+  { k: 'short',   label: '재생시간 짧은순' },
+  { k: 'long',    label: '재생시간 긴순' },
+  { k: 'title',   label: '제목순' }
+];
+
+/** "mm:ss" / "h:mm:ss" → 초 */
+function durSec(d) {
+  var p = String(d || '').split(':').map(Number);
+  if (p.some(isNaN) || !p.length) return 0;
+  return p.reduce(function (a, n) { return a * 60 + n; }, 0);
+}
 
 var $ = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -300,7 +317,14 @@ function viewLibrary() {
     '<div class="chips">' + chips + '</div>' +
     '<div class="list-head">' +
       '<h2 class="list-title" id="listTitle"></h2>' +
-      '<button class="btn btn-ghost btn-sm" id="pickAll">이 페이지 전체담기</button>' +
+      '<div class="list-tools">' +
+        '<select id="sortSel" class="sort-sel" aria-label="정렬">' +
+          SORTS.map(function (s) {
+            return '<option value="' + s.k + '"' + (S.sort === s.k ? ' selected' : '') + '>' + s.label + '</option>';
+          }).join('') +
+        '</select>' +
+        '<button class="btn btn-ghost btn-sm" id="pickAll">이 페이지 전체담기</button>' +
+      '</div>' +
     '</div>' +
     '<div class="grid" id="grid"></div>' +
     '<div class="pager" id="pager"></div>';
@@ -311,6 +335,9 @@ function viewLibrary() {
   $('#qBtn').addEventListener('click', doSearch);
   $('#q').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
   $('#pickAll').addEventListener('click', pickPage);
+  $('#sortSel').addEventListener('change', function () {
+    S.sort = $('#sortSel').value; S.page = 1; renderGrid();
+  });
 
   renderGrid();
 }
@@ -319,12 +346,18 @@ function doSearch() { S.q = $('#q').value.trim(); S.page = 1; renderGrid(); }
 
 function filtered() {
   var q = S.q.toLowerCase();
-  return S.videos.filter(function (v) {
+  var list = S.videos.filter(function (v) {
     if (S.q) return v.title.toLowerCase().indexOf(q) >= 0;   // 검색은 전체 대상
     if (S.c1 && v.c1 !== S.c1) return false;
     if (S.c2 && v.c2 !== S.c2) return false;
     return true;
   });
+
+  if (S.sort === 'views')      list.sort(function (a, b) { return b.views - a.views; });
+  else if (S.sort === 'short') list.sort(function (a, b) { return durSec(a.dur) - durSec(b.dur); });
+  else if (S.sort === 'long')  list.sort(function (a, b) { return durSec(b.dur) - durSec(a.dur); });
+  else if (S.sort === 'title') list.sort(function (a, b) { return a.title.localeCompare(b.title, 'ko'); });
+  return list;
 }
 
 function subName(id) {
