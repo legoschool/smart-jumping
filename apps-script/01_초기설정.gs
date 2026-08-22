@@ -266,13 +266,14 @@ function seedClasses_() {
   const rows = [];
   // 마지막 값이 소유자 — 관리자(teacher)와 교사(test)에 나눠 담아
   // '관리자는 전체 조회, 교사는 내 것만' 이 눈에 보이게 한다
+  // [지역, 학교, 학년, 반, 정원, 소유자, 연결된 스케줄그룹]
   const spec = [
-    ['울산광역시 북구', '강동초등학교', 1, 3, 8, 'teacher'],
-    ['울산광역시 북구', '강동초등학교', 2, 1, 12, 'teacher'],
-    ['울산광역시 북구', '강동초등학교', 3, 2, 15, 'teacher'],
-    ['울산광역시 남구', '옥동초등학교', 4, 1, 20, 'test'],
-    ['부산광역시 해운대구', '해운대초등학교', 5, 4, 18, 'test'],
-    ['서울특별시 강남구', '대치초등학교', 6, 2, 22, 'test']
+    ['울산광역시 북구', '강동초등학교', 1, 3, 8, 'teacher', '1학기 기본과정'],
+    ['울산광역시 북구', '강동초등학교', 2, 1, 12, 'teacher', '1학기 기본과정'],
+    ['울산광역시 북구', '강동초등학교', 3, 2, 15, 'teacher', '리듬 점핑반'],
+    ['울산광역시 남구', '옥동초등학교', 4, 1, 20, 'test', '체력왕 도전'],
+    ['부산광역시 해운대구', '해운대초등학교', 5, 4, 18, 'test', '체력왕 도전'],
+    ['서울특별시 강남구', '대치초등학교', 6, 2, 22, 'test', '']
   ];
   spec.forEach(function (s, i) {
     rows.push({
@@ -280,17 +281,28 @@ function seedClasses_() {
       '소유자': s[5],
       '수업년월': '2026-0' + (7 + (i % 2)),
       '지역': s[0], '학교': s[1], '학년': s[2], '반': s[3], '정원': s[4],
-      '메모': ''
+      '메모': '', '스케줄그룹': s[6]
     });
   });
   replaceAll_(T.CLASSES, rows);
 }
 
+/** 출석은 날짜별로 쌓인다. 시드는 최근 3회차를 만들어 둔다. */
 function seedAttendance_() {
   const names = ['김민준', '이서연', '박지호', '최수아', '정예준', '강하윤', '조은우', '윤채원'];
   const rows = [];
-  names.forEach(function (nm, i) {
-    rows.push({ '수업ID': 'CL001', '학생명': nm, '날짜': today_(), '출결': i === 3 ? '결' : '출' });
+  const base = new Date();
+  // 7일 전 · 3일 전 · 오늘 (요일이 다른 3회차)
+  [7, 3, 0].forEach(function (ago, d) {
+    const dt = new Date(base.getTime() - ago * 86400000);
+    const ds = Utilities.formatDate(dt, 'Asia/Seoul', 'yyyy-MM-dd');
+    names.forEach(function (nm, i) {
+      // 회차마다 결석·지각이 조금씩 다르게
+      var st = '출';
+      if ((i + d) % 7 === 3) st = '결';
+      else if ((i + d) % 5 === 0 && d > 0) st = '지';
+      rows.push({ '수업ID': 'CL001', '학생명': nm, '날짜': ds, '출결': st });
+    });
   });
   replaceAll_(T.ATTENDANCE, rows);
 }

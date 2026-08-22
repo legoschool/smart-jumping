@@ -217,9 +217,45 @@ function api_classes(userId) {
       id: String(c['수업ID']), owner: String(c['소유자']),
       ym: String(c['수업년월']), region: String(c['지역']),
       school: String(c['학교']), grade: c['학년'], cls: c['반'],
-      cap: c['정원'], memo: String(c['메모'] || '')
+      cap: c['정원'], memo: String(c['메모'] || ''),
+      sched: String(c['스케줄그룹'] || '')
     };
   });
+}
+
+/**
+ * 학급에 연결된 커리큘럼(차시 목록)을 가져온다.
+ * 수업관리 → ▶수업 버튼에서 "3학년 2반 오늘 수업" 을 바로 여는 데 쓴다.
+ */
+function api_classCurriculum(classId, userId) {
+  const cls = readAll_(T.CLASSES).filter(function (c) {
+    return String(c['수업ID']) === String(classId);
+  })[0];
+  if (!cls) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+
+  const group = String(cls['스케줄그룹'] || '').trim();
+  if (!group) return { ok: true, group: '', items: [], className: classLabel_(cls) };
+
+  // 스케줄은 학급 소유자의 것을 따른다 (관리자가 남의 수업을 열어도 원 소유자 커리큘럼)
+  const owner = String(cls['소유자']);
+  const items = readAll_(T.SCHEDULES)
+    .filter(function (s) {
+      return String(s['소유자']) === owner && String(s['그룹명']) === group;
+    })
+    .map(function (s) {
+      return {
+        no: Number(s['차시']) || 0,
+        videoIds: String(s['영상ID목록'] || '').split(',')
+          .map(function (x) { return x.trim(); }).filter(Boolean)
+      };
+    })
+    .sort(function (a, b) { return a.no - b.no; });
+
+  return { ok: true, group: group, items: items, className: classLabel_(cls) };
+}
+
+function classLabel_(c) {
+  return String(c['학교']) + ' ' + c['학년'] + '-' + c['반'];
 }
 
 function api_saveClass(userId, obj) {
@@ -234,8 +270,13 @@ function api_saveClass(userId, obj) {
       if (String(rows[idx]['소유자']) !== String(userId) && roleOf_(userId) !== '관리자') {
         return { ok: false, msg: '수정 권한이 없습니다.' };
       }
-      sh.getRange(idx + 2, 3, 1, 7).setValues([[
-        obj.ym, obj.region, obj.school, obj.grade, obj.cls, obj.cap, obj.memo || ''
+      // 값을 주지 않은 필드는 기존 값을 유지한다.
+      // (예전에는 sched 를 빼고 부르면 커리큘럼 연결이 조용히 지워졌다)
+      const keepMemo = (obj.memo === undefined) ? String(rows[idx]['메모'] || '') : obj.memo;
+      const keepSched = (obj.sched === undefined) ? String(rows[idx]['스케줄그룹'] || '') : obj.sched;
+      sh.getRange(idx + 2, 3, 1, 8).setValues([[
+        obj.ym, obj.region, obj.school, obj.grade, obj.cls, obj.cap,
+        keepMemo, keepSched
       ]]);
       return { ok: true, id: obj.id };
     }
@@ -248,7 +289,8 @@ function api_saveClass(userId, obj) {
     const newId = 'CL' + ('00' + (max + 1)).slice(-3);
     appendRows_(T.CLASSES, [{
       '수업ID': newId, '소유자': userId, '수업년월': obj.ym, '지역': obj.region,
-      '학교': obj.school, '학년': obj.grade, '반': obj.cls, '정원': obj.cap, '메모': obj.memo || ''
+      '학교': obj.school, '학년': obj.grade, '반': obj.cls, '정원': obj.cap,
+      '메모': obj.memo || '', '스케줄그룹': obj.sched || ''
     }]);
     return { ok: true, id: newId };
   });
@@ -272,24 +314,88 @@ function api_deleteClass(classId, userId) {
    출석부
    ═══════════════════════════════════════════ */
 
-function api_attendance(classId) {
-  return readAll_(T.ATTENDANCE)
-    .filter(function (a) { return String(a['수업ID']) === String(classId); })
-    .map(function (a) {
-      return { classId: String(a['수업ID']), name: String(a['학생명']), date: String(a['날짜']), status: String(a['출결']) };
-    });
+/** 날짜 값을 'yyyy-MM-dd' 문자열로 통일 (시트가 Date 로 돌려줄 수 있다) */
+function dateStr_(v) {
+  if (v instanceof Date) return Utilities.formatDate(v, 'Asia/Seoul', 'yyyy-MM-dd');
+  return String(v || '').trim().slice(0, 10);
 }
 
-function api_saveAttendance(classId, list) {
+/**
+ * 출석부 조회.
+ * date 를 주면 그 날짜만, 없으면 가장 최근 날짜를 돌려준다.
+ * dates 에는 기록이 있는 모든 날짜가 최신순으로 담긴다.
+ */
+function api_attendance(classId, date) {
+  const rows = readAll_(T.ATTENDANCE)
+    .filter(function (a) { return String(a['수업ID']) === String(classId); })
+    .map(function (a) {
+      return {
+        classId: String(a['수업ID']), name: String(a['학생명']),
+        date: dateStr_(a['날짜']), status: String(a['출결'])
+      };
+    });
+
+  const dates = [];
+  rows.forEach(function (r) { if (r.date && dates.indexOf(r.date) < 0) dates.push(r.date); });
+  dates.sort().reverse();
+
+  const target = dateStr_(date) || dates[0] || today_();
+  const list = rows.filter(function (r) { return r.date === target; });
+
+  // 그 날짜에 기록이 없으면 가장 최근 회차의 학생 명단을 그대로 불러온다
+  var roster = list;
+  var isNew = false;
+  if (!list.length && dates.length) {
+    isNew = true;
+    roster = rows.filter(function (r) { return r.date === dates[0]; })
+                 .map(function (r) { return { classId: r.classId, name: r.name, date: target, status: '출' }; });
+  }
+
+  return { date: target, dates: dates, list: roster, isNew: isNew };
+}
+
+/** 그 학급의 출결 통계 (학생별 출/결/지/조 합계) */
+function api_attendanceSummary(classId) {
+  const rows = readAll_(T.ATTENDANCE)
+    .filter(function (a) { return String(a['수업ID']) === String(classId); });
+  const by = {};
+  rows.forEach(function (a) {
+    const nm = String(a['학생명']);
+    if (!by[nm]) by[nm] = { name: nm, 출: 0, 결: 0, 지: 0, 조: 0, total: 0 };
+    const st = String(a['출결']);
+    if (by[nm][st] !== undefined) by[nm][st]++;
+    by[nm].total++;
+  });
+  return Object.keys(by).map(function (k) { return by[k]; });
+}
+
+/**
+ * 출석 저장 — 해당 (수업, 날짜) 조합만 교체한다.
+ * 예전에는 그 반의 모든 날짜를 지우고 다시 써서 지난 기록이 사라졌다.
+ */
+function api_saveAttendance(classId, date, list) {
   return withLock_(function () {
-    const all = readAll_(T.ATTENDANCE).filter(function (a) {
-      return String(a['수업ID']) !== String(classId);
+    const d = dateStr_(date) || today_();
+    const keep = readAll_(T.ATTENDANCE).filter(function (a) {
+      return !(String(a['수업ID']) === String(classId) && dateStr_(a['날짜']) === d);
     });
     (list || []).forEach(function (r) {
-      all.push({ '수업ID': classId, '학생명': r.name, '날짜': r.date || today_(), '출결': r.status || '출' });
+      keep.push({ '수업ID': classId, '학생명': r.name, '날짜': d, '출결': r.status || '출' });
     });
-    replaceAll_(T.ATTENDANCE, all);
-    return { ok: true, count: (list || []).length };
+    replaceAll_(T.ATTENDANCE, keep);
+    return { ok: true, date: d, count: (list || []).length };
+  });
+}
+
+/** 특정 날짜 회차 통째로 삭제 */
+function api_deleteAttendanceDate(classId, date) {
+  return withLock_(function () {
+    const d = dateStr_(date);
+    const keep = readAll_(T.ATTENDANCE).filter(function (a) {
+      return !(String(a['수업ID']) === String(classId) && dateStr_(a['날짜']) === d);
+    });
+    replaceAll_(T.ATTENDANCE, keep);
+    return { ok: true };
   });
 }
 
@@ -388,6 +494,91 @@ function api_textbooks() {
       badge: String(b['뱃지'] || '')
     };
   }).sort(function (a, b) { return a.no - b.no; });
+}
+
+/* ═══════════════════════════════════════════
+   회원관리 (관리자 전용)
+   ═══════════════════════════════════════════ */
+
+const ROLES = ['관리자', '교사', '학생'];
+
+/** 회원 목록 + 각자의 수업·교구 보유 수 */
+function api_members(userId) {
+  if (roleOf_(userId) !== '관리자') return { ok: false, msg: '관리자만 볼 수 있습니다.' };
+
+  const classes = readAll_(T.CLASSES);
+  const equip = readAll_(T.EQUIPMENT);
+  const scheds = readAll_(T.SCHEDULES);
+
+  const list = readAll_(T.USERS).map(function (u) {
+    const id = String(u['아이디']);
+    return {
+      id: id, name: String(u['이름']), org: String(u['소속'] || ''),
+      region: String(u['지역'] || ''), role: String(u['권한']),
+      joined: dateStr_(u['가입일']), status: String(u['상태'] || '정상'),
+      classCount: classes.filter(function (c) { return String(c['소유자']) === id; }).length,
+      equipCount: equip.filter(function (e) { return String(e['소유자']) === id; }).length,
+      schedCount: (function () {
+        const g = {};
+        scheds.forEach(function (s) {
+          if (String(s['소유자']) === id) g[String(s['그룹명'])] = 1;
+        });
+        return Object.keys(g).length;
+      })()
+    };
+  });
+  return { ok: true, members: list, roles: ROLES };
+}
+
+/** 권한 변경 — 자기 자신은 바꿀 수 없다 (관리자가 스스로 잠기는 것 방지) */
+function api_setMemberRole(adminId, targetId, role) {
+  return withLock_(function () {
+    if (roleOf_(adminId) !== '관리자') return { ok: false, msg: '관리자만 변경할 수 있습니다.' };
+    if (String(adminId) === String(targetId)) return { ok: false, msg: '자기 자신의 권한은 바꿀 수 없습니다.' };
+    if (ROLES.indexOf(role) < 0) return { ok: false, msg: '알 수 없는 권한입니다.' };
+
+    const users = readAll_(T.USERS);
+    const idx = users.findIndex(function (u) { return String(u['아이디']) === String(targetId); });
+    if (idx < 0) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+
+    // 마지막 관리자를 강등하면 아무도 관리할 수 없게 된다
+    if (String(users[idx]['권한']) === '관리자' && role !== '관리자') {
+      const admins = users.filter(function (u) { return String(u['권한']) === '관리자'; }).length;
+      if (admins <= 1) return { ok: false, msg: '마지막 관리자는 권한을 낮출 수 없습니다.' };
+    }
+    sheet_(T.USERS).getRange(idx + 2, 6).setValue(role);
+    return { ok: true, role: role };
+  });
+}
+
+/** 계정 정지 / 복구 */
+function api_setMemberStatus(adminId, targetId, status) {
+  return withLock_(function () {
+    if (roleOf_(adminId) !== '관리자') return { ok: false, msg: '관리자만 변경할 수 있습니다.' };
+    if (String(adminId) === String(targetId)) return { ok: false, msg: '자기 자신은 정지할 수 없습니다.' };
+
+    const users = readAll_(T.USERS);
+    const idx = users.findIndex(function (u) { return String(u['아이디']) === String(targetId); });
+    if (idx < 0) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+
+    sheet_(T.USERS).getRange(idx + 2, 8).setValue(status === '정상' ? '정상' : '정지');
+    return { ok: true, status: status === '정상' ? '정상' : '정지' };
+  });
+}
+
+/** 관리자가 비밀번호를 초기화해 준다 */
+function api_resetMemberPw(adminId, targetId, newPw) {
+  return withLock_(function () {
+    if (roleOf_(adminId) !== '관리자') return { ok: false, msg: '관리자만 변경할 수 있습니다.' };
+    if (!newPw || String(newPw).length < 4) return { ok: false, msg: '비밀번호는 4자 이상이어야 합니다.' };
+
+    const users = readAll_(T.USERS);
+    const idx = users.findIndex(function (u) { return String(u['아이디']) === String(targetId); });
+    if (idx < 0) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+
+    sheet_(T.USERS).getRange(idx + 2, 2).setValue(sha256_(newPw));
+    return { ok: true };
+  });
 }
 
 /* ═══════════════════════════════════════════

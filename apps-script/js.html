@@ -235,6 +235,7 @@ function renderRoute() {
 
   if (key === 'library') return viewLibrary();
   if (key === 'classes') return viewClasses();
+  if (key === 'members') return viewMembers();
   if (key === 'textbook') return viewTextbook();
   if (key === 'mypage') {
     if (sub === 'equipment') return viewEquipment();
@@ -827,21 +828,25 @@ function renderClasses() {
         '<button class="btn btn-primary btn-sm" id="clsAdd">＋ 등록</button></div>' +
       '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
         '<th>번호</th><th>수업년월</th><th>지역</th><th>학교</th><th>학년</th><th>반</th><th>정원</th>' +
+        '<th>커리큘럼</th>' +
         (adminView ? '<th>담당</th>' : '') +
-        '<th>출석부</th><th>보기</th><th>수정</th><th>삭제</th>' +
+        '<th>수업</th><th>출석부</th><th>수정</th><th>삭제</th>' +
       '</tr></thead><tbody>' +
       (pageList.length ? pageList.map(function (c, i) {
         return '<tr>' +
           '<td>' + ((cpage - 1) * CPS + i + 1) + '</td><td>' + esc(c.ym) + '</td><td class="t-left">' + esc(c.region) + '</td>' +
           '<td class="t-left t-strong">' + esc(c.school) + '</td><td>' + esc(c.grade) + '</td>' +
           '<td>' + esc(c.cls) + '</td><td>' + esc(c.cap) + '</td>' +
+          '<td>' + (c.sched
+            ? '<span class="sched-tag">' + esc(c.sched) + '</span>'
+            : '<span class="sched-none">미연결</span>') + '</td>' +
           (adminView ? '<td><span class="owner-tag">' + esc(c.owner || '-') + '</span></td>' : '') +
+          '<td><button class="ico-btn ico-play" data-run="' + esc(c.id) + '" title="오늘 수업 열기">▶</button></td>' +
           '<td><button class="ico-btn ico-att" data-att="' + esc(c.id) + '" title="출석부">📋</button></td>' +
-          '<td><button class="ico-btn ico-view" data-view="' + esc(c.id) + '" title="보기">🔎</button></td>' +
           '<td><button class="ico-btn ico-edit" data-edit="' + esc(c.id) + '" title="수정">✏️</button></td>' +
           '<td><button class="ico-btn ico-del" data-del="' + esc(c.id) + '" title="삭제">🗑</button></td>' +
         '</tr>';
-      }).join('') : '<tr><td colspan="' + (adminView ? 12 : 11) + '" style="padding:56px;color:#94a3b8">' +
+      }).join('') : '<tr><td colspan="' + (adminView ? 13 : 12) + '" style="padding:56px;color:#94a3b8">' +
         (S.classes.length ? '검색 결과가 없습니다.' : '등록된 수업이 없습니다.') + '</td></tr>') +
       '</tbody></table></div>' +
       '<div class="pager" id="clsPager"></div>' +
@@ -901,15 +906,60 @@ function renderClasses() {
   $$('[data-att]').forEach(function (b) {
     b.addEventListener('click', function () { attendanceModal(b.dataset.att); });
   });
-  $$('[data-view]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var c = S.classes.filter(function (x) { return x.id === b.dataset.view; })[0];
-      modal('수업 정보',
-        '<dl class="deflist">' +
-          defRow('수업년월', esc(c.ym)) + defRow('지역', esc(c.region)) + defRow('학교', esc(c.school)) +
-          defRow('학년 / 반', esc(c.grade) + '학년 ' + esc(c.cls) + '반') + defRow('정원', esc(c.cap) + '명') +
-          defRow('메모', esc(c.memo) || '-') +
-        '</dl>', '');
+  $$('[data-run]').forEach(function (b) {
+    b.addEventListener('click', function () { curriculumModal(b.dataset.run); });
+  });
+}
+
+/* ── 학급 커리큘럼: 차시를 골라 바로 수업 시작 ── */
+
+function curriculumModal(classId) {
+  var c = S.classes.filter(function (x) { return x.id === classId; })[0];
+  var title = c.school + ' ' + c.grade + '-' + c.cls + ' 수업';
+  modal(title, '<div class="empty">불러오는 중...</div>', '');
+
+  srv('api_classCurriculum', classId, S.user.id).then(function (r) {
+    if (!r.ok) { modal(title, '<div class="empty"><b>' + esc(r.msg) + '</b></div>', ''); return; }
+
+    if (!r.group) {
+      modal(title,
+        '<div class="empty"><span class="ico">🗂</span><b>연결된 커리큘럼이 없습니다</b>' +
+        '수업 수정에서 프로그램 스케줄을 연결하면<br>여기서 차시를 바로 열 수 있습니다.</div>',
+        '<button class="btn btn-ghost" id="mCancel">닫기</button>' +
+        '<button class="btn btn-primary" id="curLink">수업 수정</button>');
+      $('#mCancel').addEventListener('click', closeModal);
+      $('#curLink').addEventListener('click', function () { closeModal(); classForm(c); });
+      return;
+    }
+
+    var body = '<div class="cur-head"><span class="sched-tag">' + esc(r.group) + '</span>' +
+               '<span class="cur-cnt">' + r.items.length + '차시</span></div>' +
+      (r.items.length ? r.items.map(function (it) {
+        var names = it.videoIds.map(function (id) {
+          var v = vById(id); return v ? v.title : id;
+        });
+        var secs = it.videoIds.reduce(function (a, id) {
+          var v = vById(id); return a + (v ? durSec(v.dur) : 0);
+        }, 0);
+        var mm = Math.round(secs / 60);
+        return '<div class="cur-item">' +
+          '<div class="cur-no">' + it.no + '차시</div>' +
+          '<div class="cur-body">' +
+            '<div class="cur-vids">' + esc(names.join(' · ')) + '</div>' +
+            '<div class="cur-meta">영상 ' + it.videoIds.length + '편 · 약 ' + mm + '분</div>' +
+          '</div>' +
+          '<button class="btn btn-primary btn-sm" data-curplay="' + esc(it.videoIds.join(',')) + '">▶ 시작</button>' +
+        '</div>';
+      }).join('')
+        : '<div class="empty"><b>차시가 비어 있습니다</b>프로그램 스케줄에서 차시를 추가해 주세요.</div>');
+
+    modal(title, body, '<button class="btn btn-ghost" id="mCancel">닫기</button>');
+    $('#mCancel').addEventListener('click', closeModal);
+    $$('[data-curplay]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        closeModal();
+        openPlayer(b.dataset.curplay.split(','));
+      });
     });
   });
 }
@@ -919,29 +969,49 @@ function fld(label, input) { return '<label class="fld"><span>' + label + '</spa
 
 function classForm(c) {
   var isNew = !c;
-  c = c || { ym: '', region: '', school: '', grade: 1, cls: 1, cap: 20, memo: '' };
-  var body =
-    '<div class="form-grid">' +
-      fld('수업년월', '<input type="month" id="cYm" value="' + esc(c.ym) + '">') +
-      fld('정원', '<input type="number" id="cCap" value="' + esc(c.cap) + '" min="1">') +
-      fld('지역', '<input type="text" id="cRegion" value="' + esc(c.region) + '" placeholder="울산광역시 북구">') +
-      fld('학교', '<input type="text" id="cSchool" value="' + esc(c.school) + '" placeholder="강동초등학교">') +
-      fld('학년', '<input type="number" id="cGrade" value="' + esc(c.grade) + '" min="1" max="6">') +
-      fld('반', '<input type="number" id="cCls" value="' + esc(c.cls) + '" min="1">') +
-      '<div class="full">' + fld('메모', '<input type="text" id="cMemo" value="' + esc(c.memo) + '">') + '</div>' +
-    '</div>';
+  c = c || { ym: '', region: '', school: '', grade: 1, cls: 1, cap: 20, memo: '', sched: '' };
 
-  modal(isNew ? '수업 등록' : '수업 수정', body,
-    '<button class="btn btn-ghost" id="mCancel">취소</button>' +
-    '<button class="btn btn-primary" id="mSave">저장</button>');
+  // 내 스케줄 그룹을 불러와 선택지로 준다
+  srv('api_schedules', S.user.id).then(function (groups) {
+    var opts = '<option value="">— 연결 안 함 —</option>' +
+      (groups || []).map(function (g) {
+        return '<option value="' + esc(g.name) + '"' + (g.name === c.sched ? ' selected' : '') + '>' +
+          esc(g.name) + ' (' + g.items.length + '차시)</option>';
+      }).join('');
+    // 남이 만든 그룹이 이미 연결돼 있으면 목록에 없더라도 유지
+    if (c.sched && !(groups || []).some(function (g) { return g.name === c.sched; })) {
+      opts += '<option value="' + esc(c.sched) + '" selected>' + esc(c.sched) + '</option>';
+    }
 
-  $('#mCancel').addEventListener('click', closeModal);
-  $('#mSave').addEventListener('click', function () {
+    var body =
+      '<div class="form-grid">' +
+        fld('수업년월', '<input type="month" id="cYm" value="' + esc(c.ym) + '">') +
+        fld('정원', '<input type="number" id="cCap" value="' + esc(c.cap) + '" min="1">') +
+        fld('지역', '<input type="text" id="cRegion" value="' + esc(c.region) + '" placeholder="울산광역시 북구">') +
+        fld('학교', '<input type="text" id="cSchool" value="' + esc(c.school) + '" placeholder="강동초등학교">') +
+        fld('학년', '<input type="number" id="cGrade" value="' + esc(c.grade) + '" min="1" max="6">') +
+        fld('반', '<input type="number" id="cCls" value="' + esc(c.cls) + '" min="1">') +
+        '<div class="full">' + fld('커리큘럼 (프로그램 스케줄)',
+          '<select id="cSched">' + opts + '</select>') + '</div>' +
+        '<div class="full">' + fld('메모', '<input type="text" id="cMemo" value="' + esc(c.memo) + '">') + '</div>' +
+      '</div>' +
+      '<p class="form-note">커리큘럼을 연결하면 수업관리 표의 <b>▶</b> 버튼으로 차시를 바로 열 수 있습니다.</p>';
+
+    modal(isNew ? '수업 등록' : '수업 수정', body,
+      '<button class="btn btn-ghost" id="mCancel">취소</button>' +
+      '<button class="btn btn-primary" id="mSave">저장</button>');
+
+    $('#mCancel').addEventListener('click', closeModal);
+    $('#mSave').addEventListener('click', doSave);
+  });
+
+  function doSave() {
     var obj = {
       id: isNew ? '' : c.id,
       ym: $('#cYm').value, region: $('#cRegion').value.trim(), school: $('#cSchool').value.trim(),
       grade: Number($('#cGrade').value), cls: Number($('#cCls').value),
-      cap: Number($('#cCap').value), memo: $('#cMemo').value.trim()
+      cap: Number($('#cCap').value), memo: $('#cMemo').value.trim(),
+      sched: $('#cSched').value
     };
     if (!obj.ym || !obj.school) { toast('수업년월과 학교는 필수입니다.'); return; }
     $('#mSave').disabled = true;
@@ -952,30 +1022,67 @@ function classForm(c) {
         S.classes = rows; renderClasses(); toast('저장했습니다.');
       });
     });
-  });
+  }
 }
 
-function attendanceModal(classId) {
+function todayStr() {
+  var d = new Date(), p = function (n) { return ('0' + n).slice(-2); };
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+/** 출석부 — 날짜별로 회차가 쌓인다 */
+function attendanceModal(classId, date) {
   var c = S.classes.filter(function (x) { return x.id === classId; })[0];
   var ttl = '출석부 · ' + c.school + ' ' + c.grade + '-' + c.cls;
   modal(ttl, '<div class="empty">불러오는 중...</div>', '');
 
-  srv('api_attendance', classId).then(function (rows) {
+  srv('api_attendance', classId, date || '').then(function (r) {
+    var rows = r.list || [], dates = r.dates || [];
+
     var body =
-      '<div style="margin-bottom:14px;display:flex;gap:8px">' +
+      '<div class="att-bar">' +
+        '<label class="att-date"><span>날짜</span>' +
+          '<input type="date" id="attDate" value="' + esc(r.date) + '"></label>' +
+        (dates.length
+          ? '<select id="attHist"><option value="">지난 회차 ' + dates.length + '건</option>' +
+              dates.map(function (d) {
+                return '<option value="' + esc(d) + '"' + (d === r.date ? ' selected' : '') + '>' + esc(d) + '</option>';
+              }).join('') + '</select>'
+          : '') +
+        '<button class="btn btn-ghost btn-sm" id="attStat">📊 누적</button>' +
+      '</div>' +
+      (r.isNew
+        ? '<p class="att-note">이 날짜는 아직 기록이 없습니다. 최근 회차(' + esc(dates[0] || '-') +
+          ') 명단을 불러왔고, 출결은 모두 <b>출</b>로 두었습니다.</p>'
+        : '') +
+      '<div style="margin-bottom:12px;display:flex;gap:8px">' +
         '<input type="text" id="newStu" placeholder="학생 이름" style="flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px">' +
         '<button class="btn btn-ghost btn-sm" id="addStu">＋ 추가</button>' +
+        '<button class="btn btn-ghost btn-sm" id="allPresent">모두 출석</button>' +
       '</div>' +
       '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>학생명</th><th>출결</th><th></th></tr></thead><tbody id="attBody">' +
-      (rows.length ? rows.map(function (r, i) { return attRow(r.name, r.status, i); }).join('')
-                   : '<tr><td colspan="3" style="padding:40px;color:#94a3b8">등록된 학생이 없습니다.</td></tr>') +
+      (rows.length ? rows.map(function (x, i) { return attRow(x.name, x.status, i); }).join('')
+                   : '<tr><td colspan="3" style="padding:40px;color:#64748b">등록된 학생이 없습니다.</td></tr>') +
       '</tbody></table></div>';
 
     modal(ttl, body,
+      (dates.indexOf(r.date) >= 0
+        ? '<button class="btn btn-ghost" id="attDel" style="margin-right:auto;color:#e11d48">이 회차 삭제</button>' : '') +
       '<button class="btn btn-ghost" id="mCancel">닫기</button>' +
       '<button class="btn btn-primary" id="attSave">저장</button>');
 
     $('#mCancel').addEventListener('click', closeModal);
+
+    // 날짜 이동
+    $('#attDate').addEventListener('change', function () {
+      attendanceModal(classId, $('#attDate').value);
+    });
+    if ($('#attHist')) {
+      $('#attHist').addEventListener('change', function () {
+        if ($('#attHist').value) attendanceModal(classId, $('#attHist').value);
+      });
+    }
+
     $('#addStu').addEventListener('click', function () {
       var nm = $('#newStu').value.trim(); if (!nm) return;
       var tb = $('#attBody');
@@ -984,17 +1091,59 @@ function attendanceModal(classId) {
       $('#newStu').value = ''; bindAttDel();
     });
     $('#newStu').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('#addStu').click(); });
+    $('#allPresent').addEventListener('click', function () {
+      $$('#attBody select').forEach(function (s) { s.value = '출'; });
+      toast('모두 출석으로 표시했습니다.');
+    });
     bindAttDel();
 
     $('#attSave').addEventListener('click', function () {
+      var d = $('#attDate').value || todayStr();
       var list = $$('#attBody tr[data-nm]').map(function (tr) {
         return { name: tr.dataset.nm, status: $('select', tr).value };
       });
       $('#attSave').disabled = true;
-      srv('api_saveAttendance', classId, list).then(function () {
-        closeModal(); toast('출석부를 저장했습니다.');
+      srv('api_saveAttendance', classId, d, list).then(function () {
+        closeModal(); toast(d + ' 출석부를 저장했습니다.');
       });
     });
+
+    if ($('#attDel')) {
+      $('#attDel').addEventListener('click', function () {
+        if (!confirm(r.date + ' 회차를 삭제할까요?')) return;
+        srv('api_deleteAttendanceDate', classId, r.date).then(function () {
+          closeModal(); toast('회차를 삭제했습니다.');
+        });
+      });
+    }
+
+    $('#attStat').addEventListener('click', function () { attendanceSummary(classId, ttl); });
+  });
+}
+
+/** 누적 출결 통계 */
+function attendanceSummary(classId, ttl) {
+  modal(ttl + ' · 누적', '<div class="empty">집계 중...</div>', '');
+  srv('api_attendanceSummary', classId).then(function (rows) {
+    rows.sort(function (a, b) { return b.결 - a.결 || a.name.localeCompare(b.name, 'ko'); });
+    var body = rows.length
+      ? '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
+        '<th>학생명</th><th>출</th><th>결</th><th>지</th><th>조</th><th>출석률</th>' +
+        '</tr></thead><tbody>' +
+        rows.map(function (r) {
+          var rate = r.total ? Math.round(r['출'] / r.total * 100) : 0;
+          return '<tr><td class="t-left t-strong">' + esc(r.name) + '</td>' +
+            '<td>' + r['출'] + '</td>' +
+            '<td' + (r['결'] ? ' style="color:#e11d48;font-weight:700"' : '') + '>' + r['결'] + '</td>' +
+            '<td>' + r['지'] + '</td><td>' + r['조'] + '</td>' +
+            '<td><b>' + rate + '%</b></td></tr>';
+        }).join('') + '</tbody></table></div>'
+      : '<div class="empty"><b>기록이 없습니다</b></div>';
+    modal(ttl + ' · 누적', body,
+      '<button class="btn btn-ghost" id="mBack">← 출석부</button>' +
+      '<button class="btn btn-primary" id="mCancel">닫기</button>');
+    $('#mCancel').addEventListener('click', closeModal);
+    $('#mBack').addEventListener('click', function () { attendanceModal(classId); });
   });
 }
 
@@ -1008,6 +1157,141 @@ function attRow(name, status, i) {
 }
 function bindAttDel() {
   $$('[data-attdel]').forEach(function (b) { b.onclick = function () { b.closest('tr').remove(); }; });
+}
+
+/* ═══════════ 회원관리 (관리자 전용) ═══════════ */
+
+function viewMembers() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">회원관리</h1>' +
+    '<p class="page-desc">가입한 회원의 권한을 바꾸고 계정을 정지하거나 비밀번호를 초기화합니다.</p></div>' +
+    '<div id="memWrap">' + skelPanel() + '</div>';
+
+  srv('api_members', S.user.id).then(function (r) {
+    if (!r.ok) { $('#memWrap').innerHTML = '<div class="empty"><b>' + esc(r.msg) + '</b></div>'; return; }
+    viewMembers._data = r;
+    renderMembers();
+  }).catch(function (e) { $('#memWrap').innerHTML = errBox(e); });
+}
+
+function renderMembers() {
+  var r = viewMembers._data;
+  var q = (renderMembers._q || '').toLowerCase();
+  var fr = renderMembers._role || '';
+
+  var list = r.members.filter(function (m) {
+    if (fr && m.role !== fr) return false;
+    if (q && (m.id + ' ' + m.name + ' ' + m.org).toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+
+  var counts = {};
+  r.roles.forEach(function (ro) {
+    counts[ro] = r.members.filter(function (m) { return m.role === ro; }).length;
+  });
+
+  $('#memWrap').innerHTML =
+    '<div class="panel">' +
+      '<div class="toolbar">' +
+        '<div class="toolbar-l">' +
+          r.roles.map(function (ro) {
+            return '<button class="chip' + (fr === ro ? ' on' : '') + '" data-role="' + esc(ro) + '">' +
+              esc(ro) + '<span class="chip-count">' + counts[ro] + '</span></button>';
+          }).join('') +
+          '<button class="chip' + (fr === '' ? ' on' : '') + '" data-role="">전체' +
+            '<span class="chip-count">' + r.members.length + '</span></button>' +
+        '</div>' +
+        '<div class="toolbar-r">' +
+          '<input type="text" id="memQ" placeholder="아이디 · 이름 · 소속" value="' + esc(renderMembers._q || '') + '" style="min-width:200px">' +
+          '<button class="btn btn-primary btn-sm" id="memSearch">🔍 검색</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="count-row"><span class="count-txt">전체 <b>' + r.members.length + '</b> / 검색 <b>' + list.length + '</b></span></div>' +
+      '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
+        '<th>아이디</th><th>이름</th><th>소속</th><th>가입일</th>' +
+        '<th>수업</th><th>교구</th><th>스케줄</th><th>권한</th><th>상태</th><th>비밀번호</th>' +
+      '</tr></thead><tbody>' +
+      (list.length ? list.map(function (m) {
+        var me = (m.id === S.user.id);
+        return '<tr' + (me ? ' class="me-row"' : '') + '>' +
+          '<td class="t-left t-strong">' + esc(m.id) + (me ? '<span class="me-tag">나</span>' : '') + '</td>' +
+          '<td>' + esc(m.name) + '</td>' +
+          '<td class="t-left">' + (esc(m.org) || '-') + '</td>' +
+          '<td>' + esc(m.joined) + '</td>' +
+          '<td>' + m.classCount + '</td><td>' + m.equipCount + '</td><td>' + m.schedCount + '</td>' +
+          '<td><select class="role-sel" data-uid="' + esc(m.id) + '"' + (me ? ' disabled title="자기 자신은 바꿀 수 없습니다"' : '') + '>' +
+            viewMembers._data.roles.map(function (ro) {
+              return '<option' + (ro === m.role ? ' selected' : '') + '>' + esc(ro) + '</option>';
+            }).join('') + '</select></td>' +
+          '<td>' + (me ? '<span class="st-tag st-ok">정상</span>'
+            : '<button class="st-tag ' + (m.status === '정상' ? 'st-ok' : 'st-off') + '" data-st="' + esc(m.id) +
+              '" data-cur="' + esc(m.status) + '">' + esc(m.status) + '</button>') + '</td>' +
+          '<td><button class="btn btn-ghost btn-sm" data-pw="' + esc(m.id) + '">초기화</button></td>' +
+        '</tr>';
+      }).join('') : '<tr><td colspan="10" style="padding:50px;color:#64748b">검색 결과가 없습니다.</td></tr>') +
+      '</tbody></table></div>' +
+    '</div>';
+
+  $$('#memWrap .chip').forEach(function (b) {
+    b.addEventListener('click', function () { renderMembers._role = b.dataset.role; renderMembers(); });
+  });
+  $('#memSearch').addEventListener('click', function () {
+    renderMembers._q = $('#memQ').value.trim(); renderMembers();
+  });
+  $('#memQ').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('#memSearch').click(); });
+
+  // 권한 변경
+  $$('.role-sel').forEach(function (sel) {
+    sel.addEventListener('change', function () {
+      var uid = sel.dataset.uid, role = sel.value;
+      sel.disabled = true;
+      srv('api_setMemberRole', S.user.id, uid, role).then(function (res) {
+        sel.disabled = false;
+        if (!res.ok) { toast(res.msg); viewMembers(); return; }
+        var m = viewMembers._data.members.filter(function (x) { return x.id === uid; })[0];
+        if (m) m.role = role;
+        toast(uid + ' → ' + role + ' 로 변경했습니다.');
+        renderMembers();
+      });
+    });
+  });
+
+  // 정지 / 복구
+  $$('[data-st]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var uid = b.dataset.st, next = (b.dataset.cur === '정상') ? '정지' : '정상';
+      if (next === '정지' && !confirm(uid + ' 계정을 정지할까요? 로그인할 수 없게 됩니다.')) return;
+      srv('api_setMemberStatus', S.user.id, uid, next).then(function (res) {
+        if (!res.ok) { toast(res.msg); return; }
+        var m = viewMembers._data.members.filter(function (x) { return x.id === uid; })[0];
+        if (m) m.status = res.status;
+        toast(uid + ' 계정을 ' + res.status + ' 처리했습니다.');
+        renderMembers();
+      });
+    });
+  });
+
+  // 비밀번호 초기화
+  $$('[data-pw]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var uid = b.dataset.pw;
+      modal('비밀번호 초기화',
+        '<p style="margin:0 0 14px;font-size:13.5px;color:#475569"><b>' + esc(uid) + '</b> 의 비밀번호를 새로 설정합니다.</p>' +
+        fld('새 비밀번호', '<input type="text" id="newPw" value="1234" placeholder="4자 이상">'),
+        '<button class="btn btn-ghost" id="mCancel">취소</button>' +
+        '<button class="btn btn-primary" id="pwOk">변경</button>');
+      $('#mCancel').addEventListener('click', closeModal);
+      $('#pwOk').addEventListener('click', function () {
+        var pw = $('#newPw').value;
+        if (!pw || pw.length < 4) { toast('4자 이상 입력하세요.'); return; }
+        $('#pwOk').disabled = true;
+        srv('api_resetMemberPw', S.user.id, uid, pw).then(function (res) {
+          if (!res.ok) { toast(res.msg); $('#pwOk').disabled = false; return; }
+          closeModal(); toast(uid + ' 비밀번호를 변경했습니다.');
+        });
+      });
+    });
+  });
 }
 
 /* ═══════════ 마이페이지 · 정보수정 ═══════════ */

@@ -64,12 +64,22 @@
     return (list || []).filter(function (x) { return x.owner === userId; });
   }
 
-  /** 사용자 권한 (기본 계정 + 가입 계정) */
-  function roleOf(userId) {
+  var ROLES = ['관리자', '교사', '학생'];
+
+  /** 기본 계정 + 가입 계정 + 관리자가 바꾼 값(권한·상태·비밀번호)을 합쳐서 본다 */
+  function userOf(userId) {
     var all = SEED.users.concat(get('newUsers', []));
     var u = all.filter(function (x) { return x.id === userId; })[0];
-    return u ? u.role : '';
+    if (!u) return null;
+    var o = (get('memberOverrides', {}) || {})[userId] || {};
+    return {
+      id: u.id, name: u.name, org: u.org, region: u.region,
+      role: o.role || u.role,
+      hash: o.hash || u.hash,
+      status: o.status || '정상'
+    };
   }
+  function roleOf(userId) { var u = userOf(userId); return u ? u.role : ''; }
   function isAdmin(userId) { return roleOf(userId) === '관리자'; }
 
   /* ══════════════ API 구현 ══════════════ */
@@ -78,11 +88,13 @@
     /** 기본 계정 + 이 브라우저에서 가입한 계정을 함께 본다 */
     api_login: function (id, pw) {
       id = String(id).trim();
-      var all = SEED.users.concat(get('newUsers', []));
-      var u = all.filter(function (x) { return x.id === id; })[0];
+      var u = userOf(id);
       if (!u) return Promise.resolve({ ok: false, msg: '존재하지 않는 아이디입니다.' });
       if (get('withdrawn', []).indexOf(id) >= 0) {
         return Promise.resolve({ ok: false, msg: '탈퇴한 계정입니다.' });
+      }
+      if (u.status !== '정상') {
+        return Promise.resolve({ ok: false, msg: '정지된 계정입니다. 관리자에게 문의하세요.' });
       }
       return sha256(pw).then(function (h) {
         if (h !== null && h !== u.hash) {
@@ -149,7 +161,10 @@
         rows[i] = {
           id: obj.id, owner: rows[i].owner,   // 소유자는 그대로 유지
           ym: obj.ym, region: obj.region, school: obj.school,
-          grade: obj.grade, cls: obj.cls, cap: obj.cap, memo: obj.memo || ''
+          grade: obj.grade, cls: obj.cls, cap: obj.cap,
+          // 값을 주지 않은 필드는 기존 값 유지 (커리큘럼 연결이 지워지던 문제)
+          memo: (obj.memo === undefined) ? (rows[i].memo || '') : obj.memo,
+          sched: (obj.sched === undefined) ? (rows[i].sched || '') : obj.sched
         };
         set('classes', rows);
         return { ok: true, id: obj.id };
@@ -162,7 +177,8 @@
       var id = 'CL' + ('00' + (max + 1)).slice(-3);
       rows.push({
         id: id, owner: userId, ym: obj.ym, region: obj.region, school: obj.school,
-        grade: obj.grade, cls: obj.cls, cap: obj.cap, memo: obj.memo || ''
+        grade: obj.grade, cls: obj.cls, cap: obj.cap,
+        memo: obj.memo || '', sched: obj.sched || ''
       });
       set('classes', rows);
       return { ok: true, id: id };
@@ -179,18 +195,68 @@
       return { ok: true };
     },
 
-    /* ── 출석부 ── */
-    api_attendance: function (classId) {
-      return get('attendance', []).filter(function (a) { return a.classId === classId; });
+    /* ── 학급 커리큘럼 ── */
+    api_classCurriculum: function (classId) {
+      var c = get('classes', []).filter(function (x) { return x.id === classId; })[0];
+      if (!c) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+      var label = c.school + ' ' + c.grade + '-' + c.cls;
+      var group = String(c.sched || '').trim();
+      if (!group) return { ok: true, group: '', items: [], className: label };
+      var g = get('schedules', []).filter(function (s) {
+        return s.owner === c.owner && s.name === group;
+      })[0];
+      return { ok: true, group: group, className: label, items: g ? g.items.slice() : [] };
     },
 
-    api_saveAttendance: function (classId, list) {
-      var keep = get('attendance', []).filter(function (a) { return a.classId !== classId; });
+    /* ── 출석부 (날짜별 누적) ── */
+    api_attendance: function (classId, date) {
+      var rows = get('attendance', []).filter(function (a) { return a.classId === classId; });
+      var dates = [];
+      rows.forEach(function (r) { if (r.date && dates.indexOf(r.date) < 0) dates.push(r.date); });
+      dates.sort().reverse();
+
+      var target = (date || '').slice(0, 10) || dates[0] || SEED.today;
+      var list = rows.filter(function (r) { return r.date === target; });
+
+      var isNew = false;
+      if (!list.length && dates.length) {
+        isNew = true;
+        list = rows.filter(function (r) { return r.date === dates[0]; })
+                   .map(function (r) { return { classId: classId, name: r.name, date: target, status: '출' }; });
+      }
+      return { date: target, dates: dates, list: list, isNew: isNew };
+    },
+
+    api_attendanceSummary: function (classId) {
+      var rows = get('attendance', []).filter(function (a) { return a.classId === classId; });
+      var by = {};
+      rows.forEach(function (a) {
+        if (!by[a.name]) by[a.name] = { name: a.name, '출': 0, '결': 0, '지': 0, '조': 0, total: 0 };
+        if (by[a.name][a.status] !== undefined) by[a.name][a.status]++;
+        by[a.name].total++;
+      });
+      return Object.keys(by).map(function (k) { return by[k]; });
+    },
+
+    /** 해당 (수업, 날짜) 조합만 교체 — 지난 회차는 그대로 둔다 */
+    api_saveAttendance: function (classId, date, list) {
+      var d = (date || '').slice(0, 10) || SEED.today;
+      var keep = get('attendance', []).filter(function (a) {
+        return !(a.classId === classId && a.date === d);
+      });
       (list || []).forEach(function (r) {
-        keep.push({ classId: classId, name: r.name, date: r.date || SEED.today, status: r.status || '출' });
+        keep.push({ classId: classId, name: r.name, date: d, status: r.status || '출' });
       });
       set('attendance', keep);
-      return { ok: true, count: (list || []).length };
+      return { ok: true, date: d, count: (list || []).length };
+    },
+
+    api_deleteAttendanceDate: function (classId, date) {
+      var d = (date || '').slice(0, 10);
+      set('attendance', get('attendance', []).filter(function (a) {
+        return !(a.classId === classId && a.date === d);
+      }));
+      return { ok: true };
     },
 
     /* ── 교구 (내 것만) ── */
@@ -237,6 +303,70 @@
 
     /* ── 교재 ── */
     api_textbooks: function () { return SEED.textbooks; },
+
+    /* ── 회원관리 (관리자 전용) ── */
+    api_members: function (userId) {
+      if (!isAdmin(userId)) return { ok: false, msg: '관리자만 볼 수 있습니다.' };
+      var over = get('memberOverrides', {}) || {};
+      var classes = get('classes', []), equip = get('equipment', []), scheds = get('schedules', []);
+      var all = SEED.users.concat(get('newUsers', []));
+      var list = all.map(function (u) {
+        var o = over[u.id] || {};
+        return {
+          id: u.id, name: u.name, org: u.org, region: u.region,
+          role: o.role || u.role,
+          joined: u.joined || SEED.today,
+          status: o.status || (get('withdrawn', []).indexOf(u.id) >= 0 ? '탈퇴' : '정상'),
+          classCount: classes.filter(function (c) { return c.owner === u.id; }).length,
+          equipCount: equip.filter(function (e) { return e.owner === u.id; }).length,
+          schedCount: scheds.filter(function (s) { return s.owner === u.id; }).length
+        };
+      });
+      return { ok: true, members: list, roles: ROLES };
+    },
+
+    api_setMemberRole: function (adminId, targetId, role) {
+      if (!isAdmin(adminId)) return { ok: false, msg: '관리자만 변경할 수 있습니다.' };
+      if (adminId === targetId) return { ok: false, msg: '자기 자신의 권한은 바꿀 수 없습니다.' };
+      if (ROLES.indexOf(role) < 0) return { ok: false, msg: '알 수 없는 권한입니다.' };
+
+      var over = get('memberOverrides', {}) || {};
+      var all = SEED.users.concat(get('newUsers', []));
+      var cur = function (u) { return (over[u.id] && over[u.id].role) || u.role; };
+      var t = all.filter(function (u) { return u.id === targetId; })[0];
+      if (!t) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+      if (cur(t) === '관리자' && role !== '관리자') {
+        var admins = all.filter(function (u) { return cur(u) === '관리자'; }).length;
+        if (admins <= 1) return { ok: false, msg: '마지막 관리자는 권한을 낮출 수 없습니다.' };
+      }
+      over[targetId] = over[targetId] || {};
+      over[targetId].role = role;
+      set('memberOverrides', over);
+      return { ok: true, role: role };
+    },
+
+    api_setMemberStatus: function (adminId, targetId, status) {
+      if (!isAdmin(adminId)) return { ok: false, msg: '관리자만 변경할 수 있습니다.' };
+      if (adminId === targetId) return { ok: false, msg: '자기 자신은 정지할 수 없습니다.' };
+      var st = (status === '정상') ? '정상' : '정지';
+      var over = get('memberOverrides', {}) || {};
+      over[targetId] = over[targetId] || {};
+      over[targetId].status = st;
+      set('memberOverrides', over);
+      return { ok: true, status: st };
+    },
+
+    api_resetMemberPw: function (adminId, targetId, newPw) {
+      if (!isAdmin(adminId)) return { ok: false, msg: '관리자만 변경할 수 있습니다.' };
+      if (!newPw || String(newPw).length < 4) return { ok: false, msg: '비밀번호는 4자 이상이어야 합니다.' };
+      return sha256(newPw).then(function (h) {
+        var over = get('memberOverrides', {}) || {};
+        over[targetId] = over[targetId] || {};
+        over[targetId].hash = h;
+        set('memberOverrides', over);
+        return { ok: true };
+      });
+    },
 
     /* ── 회원 ── */
     api_updateProfile: function (userId, obj) {
