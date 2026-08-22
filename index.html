@@ -1388,12 +1388,36 @@ function gradOf(id) {
 
 function thumbHtml(v) {
   if (v.yt) {
-    return '<img src="https://i.ytimg.com/vi/' + esc(v.yt) + '/maxresdefault.jpg" alt="" loading="lazy" ' +
-      "onerror=\"this.onerror=null;this.src='https://i.ytimg.com/vi/" + esc(v.yt) + "/mqdefault.jpg'\">";
+    // 고해상도부터 시도하고, 없으면 아래에서 hqdefault 로 자동 대체
+    return '<img class="yt-thumb" data-yt="' + esc(v.yt) + '" alt="" loading="lazy" ' +
+      'src="https://i.ytimg.com/vi/' + esc(v.yt) + '/maxresdefault.jpg">';
   }
   var g = gradOf(v.id);
   return '<div class="vthumb-ph" style="background:linear-gradient(145deg,' + g[0] + ',' + g[1] + ')">' +
     esc(v.title) + '</div>';
+}
+
+/**
+ * 썸네일 폴백.
+ * maxresdefault 는 없는 영상이 있고, 유튜브가 404 대신 회색 placeholder 를
+ * 200 으로 돌려주는 경우도 있다. 그래서 에러뿐 아니라 "너무 작게 로드된 경우"까지
+ * 잡아서 항상 존재하는 hqdefault(480x360) 로 갈아끼운다.
+ */
+function bindThumbFallback(root) {
+  $$('img.yt-thumb', root).forEach(function (img) {
+    if (img.dataset.fb) return;
+    img.dataset.fb = '1';
+    var fb = function () {
+      var alt = 'https://i.ytimg.com/vi/' + img.dataset.yt + '/hqdefault.jpg';
+      if (img.src === alt) return;
+      img.src = alt;
+    };
+    img.addEventListener('error', fb);
+    img.addEventListener('load', function () {
+      if (img.naturalWidth && img.naturalWidth < 320) fb();
+    });
+    if (img.complete && img.naturalWidth && img.naturalWidth < 320) fb();
+  });
 }
 
 function renderGrid() {
@@ -1433,6 +1457,8 @@ function renderGrid() {
       '</div>' +
     '</article>';
   }).join('');
+
+  bindThumbFallback($('#grid'));
 
   $$('#grid .vpick input').forEach(function (cb) {
     cb.addEventListener('change', function () {
@@ -1527,7 +1553,8 @@ function openCartModal() {
   }
   var body = S.cart.map(function (id, i) {
     var v = vById(id); if (!v) return '';
-    var th = v.yt ? '<img src="https://i.ytimg.com/vi/' + esc(v.yt) + '/mqdefault.jpg" alt="">' : '';
+    var th = v.yt ? '<img class="yt-thumb" data-yt="' + esc(v.yt) +
+      '" src="https://i.ytimg.com/vi/' + esc(v.yt) + '/mqdefault.jpg" alt="">' : '';
     return '<div class="cart-item">' +
       '<span class="cart-no">' + (i + 1) + '</span>' +
       '<div class="cart-th">' + th + '</div>' +
@@ -1540,6 +1567,8 @@ function openCartModal() {
   modal('담은 영상 ' + S.cart.length + '개', body,
     '<button class="btn btn-ghost" id="cartClear">전체 비우기</button>' +
     '<button class="btn btn-primary" id="cartStart">▶ 수업시작</button>');
+
+  bindThumbFallback($('#modalBody'));
 
   $$('[data-rm]').forEach(function (b) {
     b.addEventListener('click', function () {
