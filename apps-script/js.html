@@ -68,6 +68,50 @@ $('#btnLogout').addEventListener('click', function (e) {
   location.reload();
 });
 
+/* ── 로그인 / 회원가입 전환 ── */
+function showSignup(on) {
+  $('#loginForm').hidden = on;
+  $('#signupForm').hidden = !on;
+  $('#toSignup').hidden = on;
+  $('#toLogin').hidden = !on;
+  $('#loginMsg').textContent = '';
+  $('#suMsg').textContent = '';
+}
+$('#toSignup').addEventListener('click', function () { showSignup(true); });
+$('#toLogin').addEventListener('click', function () { showSignup(false); });
+
+$('#signupForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var msg = $('#suMsg'), btn = $('#suBtn');
+  var obj = {
+    id: $('#suId').value.trim(), pw: $('#suPw').value, name: $('#suName').value.trim(),
+    org: $('#suOrg').value.trim(), region: $('#suRegion').value.trim()
+  };
+  if (!obj.id || !obj.pw || !obj.name) { msg.textContent = '아이디·비밀번호·이름은 필수입니다.'; return; }
+  if (!/^[A-Za-z0-9_]{4,20}$/.test(obj.id)) {
+    msg.textContent = '아이디는 영문·숫자·밑줄 4~20자로 입력하세요.'; return;
+  }
+  if (obj.pw.length < 4) { msg.textContent = '비밀번호는 4자 이상이어야 합니다.'; return; }
+  if (obj.pw !== $('#suPw2').value) { msg.textContent = '비밀번호가 서로 다릅니다.'; return; }
+
+  btn.disabled = true; btn.textContent = '가입 중...'; msg.textContent = '';
+  srv('api_signup', obj)
+    .then(function (r) {
+      btn.disabled = false; btn.textContent = '회원가입';
+      if (!r.ok) { msg.textContent = r.msg; return; }
+      showSignup(false);
+      $('#loginId').value = obj.id;
+      $('#loginPw').value = '';
+      $('#loginMsg').style.color = '#059669';
+      $('#loginMsg').textContent = '가입이 완료되었습니다. 로그인해 주세요.';
+      setTimeout(function () { $('#loginMsg').style.color = ''; }, 4000);
+    })
+    .catch(function (err) {
+      btn.disabled = false; btn.textContent = '회원가입';
+      msg.textContent = '서버 오류: ' + err.message;
+    });
+});
+
 (function () {
   try {
     var saved = localStorage.getItem('sj_user');
@@ -652,14 +696,25 @@ function renderClasses() {
   var years = [], now = new Date().getFullYear();
   for (var y = now - 2; y <= now + 1; y++) years.push(y);
 
-  var fy = renderClasses._y || '', fm = renderClasses._m || '', fq = renderClasses._q || '';
+  var fy = renderClasses._y || '', fm = renderClasses._m || '';
+  var fq = renderClasses._q || '', ff = renderClasses._f || 'both';
+  var cpage = renderClasses._page || 1;
+  var CPS = 10;   // 한 페이지 행 수
+
   var list = S.classes.slice();
   if (fy) list = list.filter(function (c) { return String(c.ym).indexOf(fy) === 0; });
   if (fm) list = list.filter(function (c) { return String(c.ym).split('-')[1] === fm; });
   if (fq) {
     var q = fq.toLowerCase();
-    list = list.filter(function (c) { return (c.school + ' ' + c.region).toLowerCase().indexOf(q) >= 0; });
+    list = list.filter(function (c) {
+      var hay = ff === 'school' ? c.school : (ff === 'region' ? c.region : c.school + ' ' + c.region);
+      return String(hay).toLowerCase().indexOf(q) >= 0;
+    });
   }
+
+  var cpages = Math.max(1, Math.ceil(list.length / CPS));
+  if (cpage > cpages) { cpage = cpages; renderClasses._page = cpage; }
+  var pageList = list.slice((cpage - 1) * CPS, cpage * CPS);
 
   $('#clsWrap').innerHTML =
     '<div class="panel">' +
@@ -676,9 +731,14 @@ function renderClasses() {
           '</select>' +
         '</div>' +
         '<div class="toolbar-r">' +
-          '<input type="text" id="fq" placeholder="학교명 · 지역 검색" value="' + esc(fq) + '" style="min-width:210px">' +
+          '<select id="ff">' +
+            '<option value="both"' + (ff === 'both' ? ' selected' : '') + '>학교명+지역</option>' +
+            '<option value="school"' + (ff === 'school' ? ' selected' : '') + '>학교명</option>' +
+            '<option value="region"' + (ff === 'region' ? ' selected' : '') + '>지역</option>' +
+          '</select>' +
+          '<input type="text" id="fq" placeholder="검색어를 입력하세요." value="' + esc(fq) + '" style="min-width:200px">' +
           '<button class="btn btn-primary btn-sm" id="fSearch">🔍 검색</button>' +
-          '<button class="btn btn-ghost btn-sm" id="fReset">↺</button>' +
+          '<button class="btn btn-ghost btn-sm" id="fReset" title="초기화">↺</button>' +
         '</div>' +
       '</div>' +
       '<div class="count-row"><span class="count-txt">전체 <b>' + S.classes.length + '</b> / 검색 <b>' + list.length + '</b></span>' +
@@ -687,9 +747,9 @@ function renderClasses() {
         '<th>번호</th><th>수업년월</th><th>지역</th><th>학교</th><th>학년</th><th>반</th><th>정원</th>' +
         '<th>출석부</th><th>보기</th><th>수정</th><th>삭제</th>' +
       '</tr></thead><tbody>' +
-      (list.length ? list.map(function (c, i) {
+      (pageList.length ? pageList.map(function (c, i) {
         return '<tr>' +
-          '<td>' + (i + 1) + '</td><td>' + esc(c.ym) + '</td><td class="t-left">' + esc(c.region) + '</td>' +
+          '<td>' + ((cpage - 1) * CPS + i + 1) + '</td><td>' + esc(c.ym) + '</td><td class="t-left">' + esc(c.region) + '</td>' +
           '<td class="t-left t-strong">' + esc(c.school) + '</td><td>' + esc(c.grade) + '</td>' +
           '<td>' + esc(c.cls) + '</td><td>' + esc(c.cap) + '</td>' +
           '<td><button class="ico-btn ico-att" data-att="' + esc(c.id) + '" title="출석부">📋</button></td>' +
@@ -697,17 +757,45 @@ function renderClasses() {
           '<td><button class="ico-btn ico-edit" data-edit="' + esc(c.id) + '" title="수정">✏️</button></td>' +
           '<td><button class="ico-btn ico-del" data-del="' + esc(c.id) + '" title="삭제">🗑</button></td>' +
         '</tr>';
-      }).join('') : '<tr><td colspan="11" style="padding:56px;color:#94a3b8">등록된 수업이 없습니다.</td></tr>') +
+      }).join('') : '<tr><td colspan="11" style="padding:56px;color:#94a3b8">' +
+        (S.classes.length ? '검색 결과가 없습니다.' : '등록된 수업이 없습니다.') + '</td></tr>') +
       '</tbody></table></div>' +
+      '<div class="pager" id="clsPager"></div>' +
     '</div>';
 
-  $('#fSearch').addEventListener('click', function () {
-    renderClasses._y = $('#fy').value; renderClasses._m = $('#fm').value; renderClasses._q = $('#fq').value.trim();
+  // 수업관리 페이지네이션
+  if (cpages > 1) {
+    var ph = '<button ' + (cpage === 1 ? 'disabled' : '') + ' data-cp="1">‹‹</button>';
+    var cf = Math.max(1, cpage - 2), ct = Math.min(cpages, cf + 4);
+    cf = Math.max(1, ct - 4);
+    for (var ci = cf; ci <= ct; ci++) {
+      ph += '<button class="' + (ci === cpage ? 'on' : '') + '" data-cp="' + ci + '">' + ci + '</button>';
+    }
+    ph += '<button ' + (cpage === cpages ? 'disabled' : '') + ' data-cp="' + cpages + '">››</button>';
+    $('#clsPager').innerHTML = ph;
+    $$('#clsPager button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        renderClasses._page = Number(b.dataset.cp); renderClasses();
+      });
+    });
+  }
+
+  function applySearch() {
+    renderClasses._y = $('#fy').value;
+    renderClasses._m = $('#fm').value;
+    renderClasses._q = $('#fq').value.trim();
+    renderClasses._f = $('#ff').value;
+    renderClasses._page = 1;
     renderClasses();
-  });
-  $('#fq').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('#fSearch').click(); });
+  }
+  $('#fSearch').addEventListener('click', applySearch);
+  $('#fq').addEventListener('keydown', function (e) { if (e.key === 'Enter') applySearch(); });
+  $('#fy').addEventListener('change', applySearch);
+  $('#fm').addEventListener('change', applySearch);
   $('#fReset').addEventListener('click', function () {
-    renderClasses._y = ''; renderClasses._m = ''; renderClasses._q = ''; renderClasses();
+    renderClasses._y = ''; renderClasses._m = ''; renderClasses._q = '';
+    renderClasses._f = 'both'; renderClasses._page = 1;
+    renderClasses();
   });
   $('#clsAdd').addEventListener('click', function () { classForm(null); });
 

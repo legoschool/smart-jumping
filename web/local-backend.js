@@ -59,9 +59,15 @@
   /* ══════════════ API 구현 ══════════════ */
   var API = {
 
+    /** 기본 계정 + 이 브라우저에서 가입한 계정을 함께 본다 */
     api_login: function (id, pw) {
-      var u = SEED.users.filter(function (x) { return x.id === String(id).trim(); })[0];
+      id = String(id).trim();
+      var all = SEED.users.concat(get('newUsers', []));
+      var u = all.filter(function (x) { return x.id === id; })[0];
       if (!u) return Promise.resolve({ ok: false, msg: '존재하지 않는 아이디입니다.' });
+      if (get('withdrawn', []).indexOf(id) >= 0) {
+        return Promise.resolve({ ok: false, msg: '탈퇴한 계정입니다.' });
+      }
       return sha256(pw).then(function (h) {
         if (h !== null && h !== u.hash) {
           return { ok: false, msg: '비밀번호가 올바르지 않습니다.' };
@@ -196,12 +202,36 @@
       return { ok: true, user: { id: userId, name: p.name, org: p.org, region: p.region } };
     },
 
-    api_withdraw: function () {
-      return { ok: false, msg: '데모 사이트에서는 탈퇴가 처리되지 않습니다. 구글 시트 연동판에서 동작합니다.' };
+    api_withdraw: function (userId, pw) {
+      var all = SEED.users.concat(get('newUsers', []));
+      var u = all.filter(function (x) { return x.id === userId; })[0];
+      if (!u) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+      return sha256(pw).then(function (h) {
+        if (h !== null && h !== u.hash) return { ok: false, msg: '비밀번호가 올바르지 않습니다.' };
+        var w = get('withdrawn', []);
+        if (w.indexOf(userId) < 0) { w.push(userId); set('withdrawn', w); }
+        return { ok: true };
+      });
     },
 
-    api_signup: function () {
-      return { ok: false, msg: '데모 사이트에서는 가입이 처리되지 않습니다.' };
+    api_signup: function (obj) {
+      if (!obj || !obj.id || !obj.pw || !obj.name) {
+        return { ok: false, msg: '아이디·비밀번호·이름은 필수입니다.' };
+      }
+      var id = String(obj.id).trim();
+      var all = SEED.users.concat(get('newUsers', []));
+      if (all.some(function (x) { return x.id === id; })) {
+        return { ok: false, msg: '이미 사용 중인 아이디입니다.' };
+      }
+      return sha256(obj.pw).then(function (h) {
+        var list = get('newUsers', []);
+        list.push({
+          id: id, hash: h, name: obj.name,
+          org: obj.org || '', region: obj.region || '', role: '교사'
+        });
+        set('newUsers', list);
+        return { ok: true };
+      });
     }
   };
 

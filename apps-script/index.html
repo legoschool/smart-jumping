@@ -46,7 +46,30 @@
         <div id="loginMsg" class="form-msg"></div>
         <button type="submit" class="btn btn-primary btn-block" id="loginBtn">로그인</button>
       </form>
-      <p class="login-hint">체험 계정 &nbsp;teacher / 1234&nbsp; · &nbsp;admin / 1234</p>
+
+      <form id="signupForm" class="login-form" autocomplete="off" hidden>
+        <div class="form-grid2">
+          <label class="fld"><span>아이디 *</span><input type="text" id="suId" required></label>
+          <label class="fld"><span>이름 *</span><input type="text" id="suName" required></label>
+        </div>
+        <div class="form-grid2">
+          <label class="fld"><span>비밀번호 *</span><input type="password" id="suPw" required></label>
+          <label class="fld"><span>비밀번호 확인 *</span><input type="password" id="suPw2" required></label>
+        </div>
+        <div class="form-grid2">
+          <label class="fld"><span>소속</span><input type="text" id="suOrg" placeholder="강동초등학교"></label>
+          <label class="fld"><span>지역</span><input type="text" id="suRegion" placeholder="울산광역시 북구"></label>
+        </div>
+        <div id="suMsg" class="form-msg"></div>
+        <button type="submit" class="btn btn-primary btn-block" id="suBtn">회원가입</button>
+      </form>
+
+      <div class="login-switch">
+        <span id="toSignup">계정이 없으신가요? <b>회원가입</b></span>
+        <span id="toLogin" hidden>이미 계정이 있으신가요? <b>로그인</b></span>
+      </div>
+
+      <p class="login-hint">체험 계정 &nbsp;teacher / 1234&nbsp; · &nbsp;test / 1234</p>
     </div>
   </section>
 </div>
