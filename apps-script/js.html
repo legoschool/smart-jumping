@@ -1,0 +1,1093 @@
+<script>
+/* ═══════════════════════════════════════════
+   미래형학교체육 '스마트점핑' — 프론트 로직
+   ═══════════════════════════════════════════ */
+
+function srv(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (resolve, reject) {
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(reject)
+      [fn].apply(null, args);
+  });
+}
+
+var S = {
+  user: null, categories: [], videos: [], cart: [],
+  c1: null, c2: null, q: '', page: 1, pageSize: 24,
+  classes: [], loaded: false
+};
+
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function nfmt(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+
+function toast(msg) {
+  var t = $('#toast');
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function () { t.hidden = true; }, 2400);
+}
+
+/* ═══════════ 로그인 ═══════════ */
+
+$('#loginForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var btn = $('#loginBtn'), msg = $('#loginMsg');
+  btn.disabled = true; btn.textContent = '확인 중...'; msg.textContent = '';
+
+  srv('api_login', $('#loginId').value, $('#loginPw').value)
+    .then(function (r) {
+      if (!r.ok) {
+        msg.textContent = r.msg;
+        btn.disabled = false; btn.textContent = '로그인';
+        return;
+      }
+      S.user = r.user;
+      try { localStorage.setItem('sj_user', JSON.stringify(r.user)); } catch (e) {}
+      startApp();
+    })
+    .catch(function (err) {
+      msg.textContent = '서버 오류: ' + err.message;
+      btn.disabled = false; btn.textContent = '로그인';
+    });
+});
+
+$('#btnLogout').addEventListener('click', function (e) {
+  e.preventDefault();
+  try { localStorage.removeItem('sj_user'); } catch (e) {}
+  location.hash = '';
+  location.reload();
+});
+
+(function () {
+  try {
+    var saved = localStorage.getItem('sj_user');
+    if (saved) { S.user = JSON.parse(saved); startApp(); }
+  } catch (e) {}
+})();
+
+function startApp() {
+  $('#loginView').hidden = true;
+  $('#app').hidden = false;
+  $('#userName').textContent = S.user.name || S.user.id;
+  $('#userRole').textContent = S.user.role || '교사';
+  startClock();
+
+  if (!location.hash) location.hash = '#/library';
+  renderRoute();
+
+  srv('api_bootstrap', S.user.id)
+    .then(function (d) {
+      S.categories = d.categories || [];
+      S.videos = d.videos || [];
+      S.cart = d.playlist || [];
+      S.loaded = true;
+      if (!S.c1 && S.categories.length) S.c1 = S.categories[0].id;
+      renderGnb();
+      updateFab();
+      renderRoute();
+    })
+    .catch(function (err) {
+      $('#view').innerHTML = '<div class="empty"><span class="ico">⚠️</span>' +
+        '<b>데이터를 불러오지 못했습니다</b>' + esc(err.message) +
+        '<br><br>Apps Script 에서 <code>초기설정_실행()</code> 을 먼저 실행했는지 확인하세요.</div>';
+    });
+}
+
+/* ═══════════ 시계 ═══════════ */
+
+function startClock() {
+  var DAY = ['일', '월', '화', '수', '목', '금', '토'];
+  function tick() {
+    var d = new Date(), h = d.getHours();
+    var ampm = h < 12 ? '오전' : '오후';
+    var h12 = h % 12 === 0 ? 12 : h % 12;
+    var p = function (n) { return ('0' + n).slice(-2); };
+    $('#clock').textContent =
+      d.getFullYear() + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) +
+      ' ' + DAY[d.getDay()] + ' ' + ampm + ' ' + h12 + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+/* ═══════════ 라우터 ═══════════ */
+
+window.addEventListener('hashchange', renderRoute);
+
+function renderRoute() {
+  var h = location.hash.replace('#/', '') || 'library';
+  var parts = h.split('/'), key = parts[0], sub = parts[1] || '';
+
+  $$('.side-nav > a, .sub-nav a').forEach(function (a) { a.classList.remove('active'); });
+  var act = $('[data-nav="' + (key === 'mypage' ? sub : key) + '"]');
+  if (act) act.classList.add('active');
+  if (key === 'mypage') {
+    $('#subMypage').classList.add('open');
+    $('#navMypage .chev').classList.add('up');
+  }
+
+  $('#fabCart').hidden = (key !== 'library');
+
+  if (key === 'library') return viewLibrary();
+  if (key === 'classes') return viewClasses();
+  if (key === 'textbook') return viewTextbook();
+  if (key === 'mypage') {
+    if (sub === 'equipment') return viewEquipment();
+    if (sub === 'schedule') return viewSchedule();
+    if (sub === 'withdraw') return viewWithdraw();
+    return viewProfile();
+  }
+  viewLibrary();
+}
+
+$('#navMypage').addEventListener('click', function (e) {
+  e.preventDefault();
+  $('#subMypage').classList.toggle('open');
+  $('#navMypage .chev').classList.toggle('up');
+});
+
+/* ═══════════ GNB ═══════════ */
+
+function countIn(c1, c2) {
+  return S.videos.filter(function (v) {
+    return v.c1 === c1 && (!c2 || v.c2 === c2);
+  }).length;
+}
+
+function renderGnb() {
+  // 영상이 하나도 없는 대분류는 감춘다
+  var shown = S.categories.filter(function (c) { return countIn(c.id) > 0; });
+  if (shown.length && !shown.some(function (c) { return c.id === S.c1; })) S.c1 = shown[0].id;
+
+  $('#gnbNav').innerHTML = shown.map(function (c) {
+    return '<a href="#/library" data-c1="' + esc(c.id) + '">' + esc(c.name) + '</a>';
+  }).join('');
+
+  $$('#gnbNav a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      S.c1 = a.dataset.c1; S.c2 = null; S.page = 1; S.q = '';
+      if (location.hash === '#/library') viewLibrary(); else location.hash = '#/library';
+    });
+  });
+  markGnb();
+}
+
+function markGnb() {
+  $$('#gnbNav a').forEach(function (a) { a.classList.toggle('active', a.dataset.c1 === S.c1); });
+}
+
+/* ═══════════ 라이브러리 ═══════════ */
+
+function viewLibrary() {
+  if (!S.loaded) { $('#view').innerHTML = skeleton(); return; }
+  markGnb();
+
+  var cat = S.categories.filter(function (c) { return c.id === S.c1; })[0];
+  // 영상이 있는 소분류만 노출
+  var subs = (cat ? cat.subs : []).filter(function (s) { return countIn(S.c1, s.id) > 0; });
+
+  var chips = '<button class="chip' + (S.c2 === null ? ' on' : '') + '" data-c2="">' +
+      '전체<span class="chip-count">' + countIn(S.c1) + '</span></button>' +
+    subs.map(function (s) {
+      return '<button class="chip' + (S.c2 === s.id ? ' on' : '') + '" data-c2="' + esc(s.id) + '">' +
+        esc(s.name) + (s.badge ? '<span class="nb">N</span>' : '') +
+        '<span class="chip-count">' + countIn(S.c1, s.id) + '</span></button>';
+    }).join('');
+
+  $('#view').innerHTML =
+    '<div class="search-row"><div class="search-box">' +
+      '<input type="text" id="q" placeholder="영상 제목으로 검색" value="' + esc(S.q) + '">' +
+      '<button id="qBtn" aria-label="검색">🔍</button>' +
+    '</div></div>' +
+    '<div class="chips">' + chips + '</div>' +
+    '<div class="list-head">' +
+      '<h2 class="list-title" id="listTitle"></h2>' +
+      '<button class="btn btn-ghost btn-sm" id="pickAll">이 페이지 전체담기</button>' +
+    '</div>' +
+    '<div class="grid" id="grid"></div>' +
+    '<div class="pager" id="pager"></div>';
+
+  $$('.chip').forEach(function (b) {
+    b.addEventListener('click', function () { S.c2 = b.dataset.c2 || null; S.page = 1; viewLibrary(); });
+  });
+  $('#qBtn').addEventListener('click', doSearch);
+  $('#q').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+  $('#pickAll').addEventListener('click', pickPage);
+
+  renderGrid();
+}
+
+function doSearch() { S.q = $('#q').value.trim(); S.page = 1; renderGrid(); }
+
+function filtered() {
+  var q = S.q.toLowerCase();
+  return S.videos.filter(function (v) {
+    if (S.q) return v.title.toLowerCase().indexOf(q) >= 0;   // 검색은 전체 대상
+    if (S.c1 && v.c1 !== S.c1) return false;
+    if (S.c2 && v.c2 !== S.c2) return false;
+    return true;
+  });
+}
+
+function subName(id) {
+  for (var i = 0; i < S.categories.length; i++) {
+    var subs = S.categories[i].subs;
+    for (var j = 0; j < subs.length; j++) if (subs[j].id === id) return subs[j].name;
+  }
+  return '';
+}
+function catName(id) {
+  var c = S.categories.filter(function (x) { return x.id === id; })[0];
+  return c ? c.name : '';
+}
+
+var PH_GRAD = [
+  ['#4f46e5', '#7c3aed'], ['#0ea5e9', '#22d3ee'], ['#f59e0b', '#ef4444'],
+  ['#059669', '#84cc16'], ['#7c3aed', '#ec4899'], ['#0f172a', '#334155']
+];
+function gradOf(id) {
+  var n = 0;
+  for (var i = 0; i < id.length; i++) n = (n * 31 + id.charCodeAt(i)) % 997;
+  return PH_GRAD[n % PH_GRAD.length];
+}
+
+function thumbHtml(v) {
+  if (v.yt) {
+    return '<img src="https://i.ytimg.com/vi/' + esc(v.yt) + '/maxresdefault.jpg" alt="" loading="lazy" ' +
+      "onerror=\"this.onerror=null;this.src='https://i.ytimg.com/vi/" + esc(v.yt) + "/mqdefault.jpg'\">";
+  }
+  var g = gradOf(v.id);
+  return '<div class="vthumb-ph" style="background:linear-gradient(145deg,' + g[0] + ',' + g[1] + ')">' +
+    esc(v.title) + '</div>';
+}
+
+function renderGrid() {
+  var list = filtered();
+  var total = list.length;
+  var pages = Math.max(1, Math.ceil(total / S.pageSize));
+  if (S.page > pages) S.page = pages;
+  var slice = list.slice((S.page - 1) * S.pageSize, S.page * S.pageSize);
+
+  var lt = $('#listTitle');
+  if (lt) {
+    lt.innerHTML = S.q
+      ? '"' + esc(S.q) + '" 검색결과 <small>' + total + '건</small>'
+      : esc(S.c2 ? subName(S.c2) : catName(S.c1)) + ' <small>' + total + '건</small>';
+  }
+
+  if (!slice.length) {
+    $('#grid').innerHTML =
+      '<div class="empty" style="grid-column:1/-1"><span class="ico">🔍</span>' +
+      '<b>결과가 없습니다</b>다른 검색어나 분류를 선택해 보세요.</div>';
+    $('#pager').innerHTML = '';
+    return;
+  }
+
+  $('#grid').innerHTML = slice.map(function (v) {
+    var picked = S.cart.indexOf(v.id) >= 0;
+    return '<article class="vcard' + (picked ? ' picked' : '') + '" data-id="' + esc(v.id) + '">' +
+      '<label class="vpick" title="수업에 담기"><input type="checkbox" ' + (picked ? 'checked' : '') + '><i>✓</i></label>' +
+      '<div class="vthumb" data-play="' + esc(v.id) + '">' + thumbHtml(v) +
+        '<div class="vthumb-play"><i>▶</i></div>' +
+        '<span class="vthumb-views">조회 ' + nfmt(v.views) + '</span>' +
+        '<span class="vthumb-meta">' + esc(v.dur) + '</span>' +
+      '</div>' +
+      '<div class="vcard-body">' +
+        '<h3 class="vcard-title">' + esc(v.title) + '</h3>' +
+        '<div class="vcard-path"><b>' + esc(catName(v.c1)) + '</b> › ' + esc(subName(v.c2)) + '</div>' +
+      '</div>' +
+    '</article>';
+  }).join('');
+
+  $$('#grid .vpick input').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+      var card = cb.closest('.vcard');
+      toggleCart(card.dataset.id, cb.checked);
+      card.classList.toggle('picked', cb.checked);
+      if (cb.checked) bumpFab();
+    });
+  });
+  $$('#grid .vthumb').forEach(function (t) {
+    t.addEventListener('click', function () { openPlayer([t.dataset.play]); });
+  });
+
+  renderPager(pages);
+}
+
+function renderPager(pages) {
+  if (pages <= 1) { $('#pager').innerHTML = ''; return; }
+  var html = '<button ' + (S.page === 1 ? 'disabled' : '') + ' data-p="1">‹‹</button>';
+  var from = Math.max(1, S.page - 2), to = Math.min(pages, from + 4);
+  from = Math.max(1, to - 4);
+  for (var i = from; i <= to; i++) {
+    html += '<button class="' + (i === S.page ? 'on' : '') + '" data-p="' + i + '">' + i + '</button>';
+  }
+  html += '<button ' + (S.page === pages ? 'disabled' : '') + ' data-p="' + pages + '">››</button>';
+  $('#pager').innerHTML = html;
+  $$('#pager button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      S.page = Number(b.dataset.p); renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
+
+function skeleton() {
+  var c = '';
+  for (var i = 0; i < 8; i++) c += '<div class="sk sk-card"></div>';
+  return '<div class="search-row"><div class="search-box"><input placeholder="불러오는 중..."><button>🔍</button></div></div>' +
+         '<div class="chips"><span class="sk" style="width:80px;height:34px;border-radius:99px"></span>' +
+         '<span class="sk" style="width:120px;height:34px;border-radius:99px"></span>' +
+         '<span class="sk" style="width:100px;height:34px;border-radius:99px"></span></div>' +
+         '<div class="grid">' + c + '</div>';
+}
+
+/* ═══════════ 영상담기 ═══════════ */
+
+function toggleCart(id, on) {
+  var i = S.cart.indexOf(id);
+  if (on && i < 0) S.cart.push(id);
+  if (!on && i >= 0) S.cart.splice(i, 1);
+  updateFab();
+  saveCartDebounced();
+}
+
+function pickPage() {
+  var added = 0;
+  $$('#grid .vcard').forEach(function (card) {
+    var cb = $('input[type=checkbox]', card);
+    if (!cb.checked) { cb.checked = true; card.classList.add('picked'); toggleCart(card.dataset.id, true); added++; }
+  });
+  bumpFab();
+  toast(added ? added + '개를 담았습니다.' : '이미 모두 담겨 있습니다.');
+}
+
+function updateFab() { $('#fabCount').textContent = S.cart.length; }
+function bumpFab() {
+  var f = $('#fabCart');
+  f.classList.remove('pulse'); void f.offsetWidth; f.classList.add('pulse');
+}
+
+var saveTimer = null;
+function saveCartDebounced() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () {
+    srv('api_savePlaylist', S.user.id, S.cart).catch(function () {});
+  }, 900);
+}
+
+$('#fabCart').addEventListener('click', openCartModal);
+$('#btnStartClass').addEventListener('click', function () {
+  if (!S.cart.length) { toast('먼저 영상을 담아주세요.'); return; }
+  openPlayer(S.cart.slice());
+});
+
+function vById(id) { return S.videos.filter(function (x) { return x.id === id; })[0]; }
+
+function openCartModal() {
+  if (!S.cart.length) {
+    modal('담은 영상', '<div class="empty"><span class="ico">🎬</span><b>담은 영상이 없습니다</b>' +
+      '카드 왼쪽 위 체크박스를 눌러 수업에 쓸 영상을 담아보세요.</div>', '');
+    return;
+  }
+  var body = S.cart.map(function (id, i) {
+    var v = vById(id); if (!v) return '';
+    var th = v.yt ? '<img src="https://i.ytimg.com/vi/' + esc(v.yt) + '/mqdefault.jpg" alt="">' : '';
+    return '<div class="cart-item">' +
+      '<span class="cart-no">' + (i + 1) + '</span>' +
+      '<div class="cart-th">' + th + '</div>' +
+      '<div class="cart-nm">' + esc(v.title) + '<br><span class="cart-dur">' + esc(v.dur) + '</span></div>' +
+      '<button class="btn btn-ghost btn-sm" data-up="' + esc(id) + '" title="위로">▲</button>' +
+      '<button class="btn btn-ghost btn-sm" data-rm="' + esc(id) + '" title="빼기">✕</button>' +
+    '</div>';
+  }).join('');
+
+  modal('담은 영상 ' + S.cart.length + '개', body,
+    '<button class="btn btn-ghost" id="cartClear">전체 비우기</button>' +
+    '<button class="btn btn-primary" id="cartStart">▶ 수업시작</button>');
+
+  $$('[data-rm]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      toggleCart(b.dataset.rm, false); openCartModal();
+      if (location.hash === '#/library') renderGrid();
+    });
+  });
+  $$('[data-up]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var i = S.cart.indexOf(b.dataset.up);
+      if (i > 0) { S.cart.splice(i - 1, 0, S.cart.splice(i, 1)[0]); saveCartDebounced(); openCartModal(); }
+    });
+  });
+  $('#cartClear').addEventListener('click', function () {
+    S.cart = []; updateFab(); saveCartDebounced(); closeModal();
+    if (location.hash === '#/library') renderGrid();
+  });
+  $('#cartStart').addEventListener('click', function () { closeModal(); openPlayer(S.cart.slice()); });
+}
+
+/* ═══════════ 수업 플레이어 ═══════════ */
+
+var P = { list: [], idx: 0, yt: null, demoTimer: null, demoLeft: 0, playing: false };
+var YT_READY = false, ytQueue = null;
+
+(function () {
+  var s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+})();
+window.onYouTubeIframeAPIReady = function () {
+  YT_READY = true;
+  if (ytQueue) { var f = ytQueue; ytQueue = null; f(); }
+};
+
+function openPlayer(ids) {
+  P.list = ids.map(vById).filter(Boolean);
+  if (!P.list.length) { toast('재생할 영상이 없습니다.'); return; }
+  P.idx = 0;
+  $('#player').hidden = false;
+  $('#plCount').textContent = P.list.length + '개';
+  document.body.style.overflow = 'hidden';
+  renderPlayerList();
+  playAt(0);
+}
+
+function closePlayer() {
+  stopDemo(); ytQueue = null;
+  if (P.yt && P.yt.destroy) { try { P.yt.destroy(); } catch (e) {} }
+  P.yt = null;
+  $('#plScreen').innerHTML = '';
+  $('#player').hidden = true;
+  document.body.style.overflow = '';
+}
+
+$('#plClose').addEventListener('click', closePlayer);
+$('#plPrev').addEventListener('click', function () { playAt(P.idx - 1); });
+$('#plNext').addEventListener('click', function () { playAt(P.idx + 1); });
+$('#plToggle').addEventListener('click', togglePlay);
+document.addEventListener('keydown', function (e) {
+  if ($('#player').hidden) return;
+  if (e.key === 'Escape') closePlayer();
+  if (e.key === 'ArrowRight') playAt(P.idx + 1);
+  if (e.key === 'ArrowLeft') playAt(P.idx - 1);
+  if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+});
+
+function renderPlayerList() {
+  $('#plList').innerHTML = P.list.map(function (v, i) {
+    return '<li class="' + (i === P.idx ? 'on' : '') + '" data-i="' + i + '">' +
+      '<span class="pl-no">' + (i + 1) + '</span>' +
+      '<span class="pl-nm">' + esc(v.title) + '<span class="pl-dur">' + esc(v.dur) + '</span></span>' +
+    '</li>';
+  }).join('');
+  $$('#plList li').forEach(function (li) {
+    li.addEventListener('click', function () { playAt(Number(li.dataset.i)); });
+  });
+}
+
+function playAt(i) {
+  if (i < 0) i = 0;
+  if (i >= P.list.length) {
+    if ($('#plLoop').checked) i = 0;
+    else { toast('수업 재생목록이 끝났습니다.'); closePlayer(); return; }
+  }
+  P.idx = i;
+  var v = P.list[i];
+
+  $('#plTitle').textContent = v.title;
+  $('#plPos').textContent = i + 1;
+  $('#plTotal').textContent = P.list.length;
+  $$('#plList li').forEach(function (li, k) {
+    li.classList.toggle('on', k === i);
+    if (k === i) li.scrollIntoView({ block: 'nearest' });
+  });
+
+  srv('api_addView', v.id).catch(function () {});
+
+  stopDemo(); ytQueue = null;
+  if (P.yt && P.yt.destroy) { try { P.yt.destroy(); } catch (e) {} P.yt = null; }
+  $('#plScreen').innerHTML = '';
+
+  if (!v.yt) { startDemo(v); return; }
+  if (!YT_READY) {
+    $('#plScreen').innerHTML = '<div class="demo-screen"><div class="demo-tag">Loading</div>' +
+      '<div class="demo-title">' + esc(v.title) + '</div>' +
+      '<div class="demo-note">유튜브 플레이어를 불러오는 중입니다…</div></div>';
+    ytQueue = function () { if (P.idx === i) mountYT(v, i); };
+    return;
+  }
+  mountYT(v, i);
+}
+
+function mountYT(v, i) {
+  var holder = document.createElement('div');
+  $('#plScreen').innerHTML = '';
+  $('#plScreen').appendChild(holder);
+  P.yt = new YT.Player(holder, {
+    videoId: v.yt,
+    playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1 },
+    events: {
+      onReady: function (e) { e.target.playVideo(); P.playing = true; syncToggle(); },
+      onStateChange: function (e) {
+        if (e.data === YT.PlayerState.ENDED) { playAt(P.idx + 1); return; }
+        P.playing = (e.data === YT.PlayerState.PLAYING);
+        syncToggle();
+      },
+      onError: function (e) { if (P.idx === i) ytError(v, e.data); }
+    }
+  });
+}
+
+/** 유튜브 재생 실패 — 5초 뒤 자동으로 다음 영상 */
+function ytError(v, code) {
+  var why = ({
+    2: '영상 주소가 올바르지 않습니다',
+    5: '이 브라우저에서 재생할 수 없습니다',
+    100: '삭제되었거나 비공개 영상입니다',
+    101: '외부 재생이 허용되지 않은 영상입니다',
+    150: '외부 재생이 허용되지 않은 영상입니다'
+  })[code] || '재생할 수 없는 영상입니다';
+
+  P.playing = false; syncToggle();
+  var left = 5;
+  $('#plScreen').innerHTML =
+    '<div class="err-screen"><div class="demo-tag">재생 오류</div>' +
+      '<div class="demo-title">' + esc(v.title) + '</div>' +
+      '<div class="demo-note">' + esc(why) + ' (코드 ' + code + ')<br>' +
+      '<b id="errLeft">5</b>초 뒤 다음 영상으로 넘어갑니다.<br><br>' +
+      '유튜브에서 직접 보기: <a href="https://www.youtube.com/watch?v=' + esc(v.yt) +
+      '" target="_blank" rel="noopener" style="color:#818cf8">youtu.be/' + esc(v.yt) + '</a></div></div>';
+
+  stopDemo();
+  P.demoTimer = setInterval(function () {
+    left--;
+    var el = $('#errLeft'); if (el) el.textContent = left;
+    if (left <= 0) { stopDemo(); playAt(P.idx + 1); }
+  }, 1000);
+}
+
+/** youtube_id 가 비어 있는 영상 — 10초 뒤 자동으로 다음 */
+function startDemo(v) {
+  P.demoLeft = 10; P.playing = true; syncToggle();
+  $('#plScreen').innerHTML =
+    '<div class="demo-screen"><div class="demo-tag">Sample Mode</div>' +
+      '<div class="demo-title">' + esc(v.title) + '</div>' +
+      '<div class="demo-timer" id="demoTimer">10</div>' +
+      '<div class="demo-note">이 항목은 아직 유튜브 영상이 연결되지 않았습니다. 10초 뒤 다음으로 넘어갑니다.<br>' +
+      '시트 <b>videos</b> 탭의 <b>youtube_id</b> 열을 채우면 여기서 바로 재생됩니다.</div></div>';
+  P.demoTimer = setInterval(tickDemo, 1000);
+}
+
+function tickDemo() {
+  P.demoLeft--;
+  var el = $('#demoTimer'); if (el) el.textContent = P.demoLeft;
+  if (P.demoLeft <= 0) { stopDemo(); playAt(P.idx + 1); }
+}
+
+function stopDemo() { if (P.demoTimer) { clearInterval(P.demoTimer); P.demoTimer = null; } }
+
+function togglePlay() {
+  if (P.yt && P.yt.pauseVideo) {
+    if (P.playing) P.yt.pauseVideo(); else P.yt.playVideo();
+    return;
+  }
+  if (P.demoTimer) { stopDemo(); P.playing = false; }
+  else { P.playing = true; P.demoTimer = setInterval(tickDemo, 1000); }
+  syncToggle();
+}
+
+function syncToggle() { $('#plToggle').textContent = P.playing ? '⏸ 일시정지' : '▶ 재생'; }
+
+/* ═══════════ 수업관리 ═══════════ */
+
+function viewClasses() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">수업관리</h1>' +
+    '<p class="page-desc">학교·학급별 수업을 등록하고 출석부를 관리합니다.</p></div>' +
+    '<div id="clsWrap">' + skelPanel() + '</div>';
+
+  srv('api_classes', S.user.id).then(function (rows) {
+    S.classes = rows; renderClasses();
+  }).catch(function (e) { $('#clsWrap').innerHTML = errBox(e); });
+}
+
+function renderClasses() {
+  var years = [], now = new Date().getFullYear();
+  for (var y = now - 2; y <= now + 1; y++) years.push(y);
+
+  var fy = renderClasses._y || '', fm = renderClasses._m || '', fq = renderClasses._q || '';
+  var list = S.classes.slice();
+  if (fy) list = list.filter(function (c) { return String(c.ym).indexOf(fy) === 0; });
+  if (fm) list = list.filter(function (c) { return String(c.ym).split('-')[1] === fm; });
+  if (fq) {
+    var q = fq.toLowerCase();
+    list = list.filter(function (c) { return (c.school + ' ' + c.region).toLowerCase().indexOf(q) >= 0; });
+  }
+
+  $('#clsWrap').innerHTML =
+    '<div class="panel">' +
+      '<div class="toolbar">' +
+        '<div class="toolbar-l"><label>기간</label>' +
+          '<select id="fy"><option value="">전체</option>' +
+            years.map(function (y) { return '<option ' + (String(y) === fy ? 'selected' : '') + '>' + y + '</option>'; }).join('') +
+          '</select>' +
+          '<select id="fm"><option value="">전체</option>' +
+            Array.from({ length: 12 }, function (_, i) {
+              var m = ('0' + (i + 1)).slice(-2);
+              return '<option value="' + m + '" ' + (m === fm ? 'selected' : '') + '>' + (i + 1) + '월</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="toolbar-r">' +
+          '<input type="text" id="fq" placeholder="학교명 · 지역 검색" value="' + esc(fq) + '" style="min-width:210px">' +
+          '<button class="btn btn-primary btn-sm" id="fSearch">🔍 검색</button>' +
+          '<button class="btn btn-ghost btn-sm" id="fReset">↺</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="count-row"><span class="count-txt">전체 <b>' + S.classes.length + '</b> / 검색 <b>' + list.length + '</b></span>' +
+        '<button class="btn btn-primary btn-sm" id="clsAdd">＋ 등록</button></div>' +
+      '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
+        '<th>번호</th><th>수업년월</th><th>지역</th><th>학교</th><th>학년</th><th>반</th><th>정원</th>' +
+        '<th>출석부</th><th>보기</th><th>수정</th><th>삭제</th>' +
+      '</tr></thead><tbody>' +
+      (list.length ? list.map(function (c, i) {
+        return '<tr>' +
+          '<td>' + (i + 1) + '</td><td>' + esc(c.ym) + '</td><td class="t-left">' + esc(c.region) + '</td>' +
+          '<td class="t-left t-strong">' + esc(c.school) + '</td><td>' + esc(c.grade) + '</td>' +
+          '<td>' + esc(c.cls) + '</td><td>' + esc(c.cap) + '</td>' +
+          '<td><button class="ico-btn ico-att" data-att="' + esc(c.id) + '" title="출석부">📋</button></td>' +
+          '<td><button class="ico-btn ico-view" data-view="' + esc(c.id) + '" title="보기">🔎</button></td>' +
+          '<td><button class="ico-btn ico-edit" data-edit="' + esc(c.id) + '" title="수정">✏️</button></td>' +
+          '<td><button class="ico-btn ico-del" data-del="' + esc(c.id) + '" title="삭제">🗑</button></td>' +
+        '</tr>';
+      }).join('') : '<tr><td colspan="11" style="padding:56px;color:#94a3b8">등록된 수업이 없습니다.</td></tr>') +
+      '</tbody></table></div>' +
+    '</div>';
+
+  $('#fSearch').addEventListener('click', function () {
+    renderClasses._y = $('#fy').value; renderClasses._m = $('#fm').value; renderClasses._q = $('#fq').value.trim();
+    renderClasses();
+  });
+  $('#fq').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('#fSearch').click(); });
+  $('#fReset').addEventListener('click', function () {
+    renderClasses._y = ''; renderClasses._m = ''; renderClasses._q = ''; renderClasses();
+  });
+  $('#clsAdd').addEventListener('click', function () { classForm(null); });
+
+  $$('[data-edit]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      classForm(S.classes.filter(function (c) { return c.id === b.dataset.edit; })[0]);
+    });
+  });
+  $$('[data-del]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (!confirm('이 수업을 삭제할까요?')) return;
+      srv('api_deleteClass', b.dataset.del).then(function () {
+        S.classes = S.classes.filter(function (c) { return c.id !== b.dataset.del; });
+        renderClasses(); toast('삭제했습니다.');
+      });
+    });
+  });
+  $$('[data-att]').forEach(function (b) {
+    b.addEventListener('click', function () { attendanceModal(b.dataset.att); });
+  });
+  $$('[data-view]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var c = S.classes.filter(function (x) { return x.id === b.dataset.view; })[0];
+      modal('수업 정보',
+        '<dl class="deflist">' +
+          defRow('수업년월', esc(c.ym)) + defRow('지역', esc(c.region)) + defRow('학교', esc(c.school)) +
+          defRow('학년 / 반', esc(c.grade) + '학년 ' + esc(c.cls) + '반') + defRow('정원', esc(c.cap) + '명') +
+          defRow('메모', esc(c.memo) || '-') +
+        '</dl>', '');
+    });
+  });
+}
+
+function defRow(k, v) { return '<div class="defrow"><dt>' + k + '</dt><dd>' + v + '</dd></div>'; }
+function fld(label, input) { return '<label class="fld"><span>' + label + '</span>' + input + '</label>'; }
+
+function classForm(c) {
+  var isNew = !c;
+  c = c || { ym: '', region: '', school: '', grade: 1, cls: 1, cap: 20, memo: '' };
+  var body =
+    '<div class="form-grid">' +
+      fld('수업년월', '<input type="month" id="cYm" value="' + esc(c.ym) + '">') +
+      fld('정원', '<input type="number" id="cCap" value="' + esc(c.cap) + '" min="1">') +
+      fld('지역', '<input type="text" id="cRegion" value="' + esc(c.region) + '" placeholder="울산광역시 북구">') +
+      fld('학교', '<input type="text" id="cSchool" value="' + esc(c.school) + '" placeholder="강동초등학교">') +
+      fld('학년', '<input type="number" id="cGrade" value="' + esc(c.grade) + '" min="1" max="6">') +
+      fld('반', '<input type="number" id="cCls" value="' + esc(c.cls) + '" min="1">') +
+      '<div class="full">' + fld('메모', '<input type="text" id="cMemo" value="' + esc(c.memo) + '">') + '</div>' +
+    '</div>';
+
+  modal(isNew ? '수업 등록' : '수업 수정', body,
+    '<button class="btn btn-ghost" id="mCancel">취소</button>' +
+    '<button class="btn btn-primary" id="mSave">저장</button>');
+
+  $('#mCancel').addEventListener('click', closeModal);
+  $('#mSave').addEventListener('click', function () {
+    var obj = {
+      id: isNew ? '' : c.id,
+      ym: $('#cYm').value, region: $('#cRegion').value.trim(), school: $('#cSchool').value.trim(),
+      grade: Number($('#cGrade').value), cls: Number($('#cCls').value),
+      cap: Number($('#cCap').value), memo: $('#cMemo').value.trim()
+    };
+    if (!obj.ym || !obj.school) { toast('수업년월과 학교는 필수입니다.'); return; }
+    $('#mSave').disabled = true;
+    srv('api_saveClass', S.user.id, obj).then(function (r) {
+      if (!r.ok) { toast(r.msg); $('#mSave').disabled = false; return; }
+      closeModal();
+      return srv('api_classes', S.user.id).then(function (rows) {
+        S.classes = rows; renderClasses(); toast('저장했습니다.');
+      });
+    });
+  });
+}
+
+function attendanceModal(classId) {
+  var c = S.classes.filter(function (x) { return x.id === classId; })[0];
+  var ttl = '출석부 · ' + c.school + ' ' + c.grade + '-' + c.cls;
+  modal(ttl, '<div class="empty">불러오는 중...</div>', '');
+
+  srv('api_attendance', classId).then(function (rows) {
+    var body =
+      '<div style="margin-bottom:14px;display:flex;gap:8px">' +
+        '<input type="text" id="newStu" placeholder="학생 이름" style="flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px">' +
+        '<button class="btn btn-ghost btn-sm" id="addStu">＋ 추가</button>' +
+      '</div>' +
+      '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>학생명</th><th>출결</th><th></th></tr></thead><tbody id="attBody">' +
+      (rows.length ? rows.map(function (r, i) { return attRow(r.name, r.status, i); }).join('')
+                   : '<tr><td colspan="3" style="padding:40px;color:#94a3b8">등록된 학생이 없습니다.</td></tr>') +
+      '</tbody></table></div>';
+
+    modal(ttl, body,
+      '<button class="btn btn-ghost" id="mCancel">닫기</button>' +
+      '<button class="btn btn-primary" id="attSave">저장</button>');
+
+    $('#mCancel').addEventListener('click', closeModal);
+    $('#addStu').addEventListener('click', function () {
+      var nm = $('#newStu').value.trim(); if (!nm) return;
+      var tb = $('#attBody');
+      if (tb.querySelector('td[colspan]')) tb.innerHTML = '';
+      tb.insertAdjacentHTML('beforeend', attRow(nm, '출', tb.children.length));
+      $('#newStu').value = ''; bindAttDel();
+    });
+    $('#newStu').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('#addStu').click(); });
+    bindAttDel();
+
+    $('#attSave').addEventListener('click', function () {
+      var list = $$('#attBody tr[data-nm]').map(function (tr) {
+        return { name: tr.dataset.nm, status: $('select', tr).value };
+      });
+      $('#attSave').disabled = true;
+      srv('api_saveAttendance', classId, list).then(function () {
+        closeModal(); toast('출석부를 저장했습니다.');
+      });
+    });
+  });
+}
+
+function attRow(name, status, i) {
+  var opts = ['출', '결', '지', '조'].map(function (s) {
+    return '<option ' + (s === status ? 'selected' : '') + '>' + s + '</option>';
+  }).join('');
+  return '<tr data-nm="' + esc(name) + '"><td class="t-left t-strong">' + esc(name) + '</td>' +
+    '<td><select style="border:1px solid #cbd5e1;border-radius:7px;padding:6px 9px">' + opts + '</select></td>' +
+    '<td><button class="ico-btn ico-del" data-attdel="' + i + '">🗑</button></td></tr>';
+}
+function bindAttDel() {
+  $$('[data-attdel]').forEach(function (b) { b.onclick = function () { b.closest('tr').remove(); }; });
+}
+
+/* ═══════════ 마이페이지 · 정보수정 ═══════════ */
+
+function viewProfile() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">정보수정</h1></div>' +
+    '<div class="panel" style="max-width:880px;margin:0 auto">' +
+      '<dl class="deflist">' +
+        defRow('아이디', '<b>' + esc(S.user.id) + '</b>') +
+        defRow('이름', '<input type="text" id="pName" value="' + esc(S.user.name) + '">') +
+        defRow('소속', '<input type="text" id="pOrg" value="' + esc(S.user.org || '') + '">') +
+        defRow('지역', '<input type="text" id="pRegion" value="' + esc(S.user.region || '') + '">') +
+        defRow('새 비밀번호', '<input type="password" id="pPw" placeholder="변경할 때만 입력하세요">') +
+      '</dl>' +
+      '<div class="save-bar"><button id="pSave">저장</button></div>' +
+    '</div>';
+
+  $('#pSave').addEventListener('click', function () {
+    var obj = {
+      name: $('#pName').value.trim(), org: $('#pOrg').value.trim(),
+      region: $('#pRegion').value.trim(), pw: $('#pPw').value
+    };
+    if (!obj.name) { toast('이름은 필수입니다.'); return; }
+    $('#pSave').disabled = true;
+    srv('api_updateProfile', S.user.id, obj).then(function (r) {
+      $('#pSave').disabled = false;
+      if (!r.ok) { toast(r.msg); return; }
+      S.user.name = obj.name; S.user.org = obj.org; S.user.region = obj.region;
+      try { localStorage.setItem('sj_user', JSON.stringify(S.user)); } catch (e) {}
+      $('#userName').textContent = S.user.name;
+      $('#pPw').value = '';
+      toast('저장했습니다.');
+    });
+  });
+}
+
+/* ═══════════ 마이페이지 · 교구보유현황 ═══════════ */
+
+function viewEquipment() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">교구보유현황</h1>' +
+    '<p class="page-desc">보유 중인 교구를 새제품 / 중고제품으로 나눠 관리합니다.</p></div>' +
+    '<div id="eqWrap">' + skelPanel() + '</div>';
+
+  srv('api_equipment', S.user.id).then(function (rows) {
+    if (!rows.length) rows = [{ name: '', agency: '', fresh: 0, used: 0 }];
+    renderEquipment(rows);
+  }).catch(function (e) { $('#eqWrap').innerHTML = errBox(e); });
+}
+
+function renderEquipment(rows) {
+  $('#eqWrap').innerHTML =
+    '<div class="panel" style="max-width:960px;margin:0 auto">' +
+      '<div id="eqRows">' + rows.map(eqBlock).join('') + '</div>' +
+      '<div style="padding:16px 22px;border-top:1px solid #e2e8f0">' +
+        '<button class="btn btn-ghost btn-sm" id="eqAdd">＋ 교구 추가</button></div>' +
+      '<div class="save-bar"><button id="eqSave">저장</button></div>' +
+    '</div>';
+
+  $('#eqAdd').addEventListener('click', function () {
+    $('#eqRows').insertAdjacentHTML('beforeend', eqBlock({ name: '', agency: '', fresh: 0, used: 0 }));
+    bindEqDel();
+  });
+  bindEqDel();
+
+  $('#eqSave').addEventListener('click', function () {
+    var list = $$('#eqRows .eq-block').map(function (b) {
+      return {
+        name: $('.eq-name', b).value.trim(), agency: $('.eq-agency', b).value.trim(),
+        fresh: Number($('.eq-fresh', b).value) || 0, used: Number($('.eq-used', b).value) || 0
+      };
+    }).filter(function (r) { return r.name; });
+    $('#eqSave').disabled = true;
+    srv('api_saveEquipment', S.user.id, list).then(function () {
+      $('#eqSave').disabled = false; toast('저장했습니다.');
+    });
+  });
+}
+
+function eqBlock(r) {
+  return '<div class="eq-block" style="border-bottom:8px solid #f6f8fc">' +
+    '<dl class="deflist">' +
+      '<div class="defrow"><dt>교구명</dt><dd>' +
+        '<input type="text" class="eq-name" value="' + esc(r.name) + '" placeholder="스마트점핑 로프">' +
+        '<button class="btn btn-ghost btn-sm eq-del" style="margin-left:auto">삭제</button></dd></div>' +
+      '<div class="defrow"><dt>대리점명</dt><dd>' +
+        '<input type="text" class="eq-agency" value="' + esc(r.agency) + '"></dd></div>' +
+      '<div class="defrow"><dt>보유수량</dt><dd style="flex-direction:column;align-items:flex-start;gap:9px">' +
+        '<div style="display:flex;gap:10px;align-items:center"><span class="inline-lbl">새제품</span>' +
+          '<input type="number" class="eq-fresh" value="' + esc(r.fresh) + '" min="0"></div>' +
+        '<div style="display:flex;gap:10px;align-items:center"><span class="inline-lbl">중고제품</span>' +
+          '<input type="number" class="eq-used" value="' + esc(r.used) + '" min="0"></div>' +
+      '</dd></div>' +
+    '</dl></div>';
+}
+
+function bindEqDel() {
+  $$('.eq-del').forEach(function (b) {
+    b.onclick = function () {
+      if ($$('#eqRows .eq-block').length <= 1) { toast('최소 1개는 남겨야 합니다.'); return; }
+      b.closest('.eq-block').remove();
+    };
+  });
+}
+
+/* ═══════════ 마이페이지 · 프로그램스케줄 ═══════════ */
+
+function viewSchedule() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">프로그램 스케줄</h1>' +
+    '<p class="page-desc">차시별로 영상을 묶어두면 그대로 수업을 시작할 수 있습니다.</p></div>' +
+    '<div id="schWrap">' + skelPanel() + '</div>';
+
+  srv('api_schedules', S.user.id).then(function (groups) {
+    var html = '<div style="max-width:960px;margin:0 auto">';
+    if (!groups.length) {
+      html += '<div class="panel panel-pad"><div class="empty"><span class="ico">🗂</span>' +
+              '<b>프로그램 스케줄 그룹이 없습니다</b>영상을 담은 뒤 아래 버튼으로 차시를 만들어 보세요.</div></div>';
+    } else {
+      html += groups.map(function (g) {
+        return '<div class="sch-group">' +
+          '<div class="sch-head"><span>' + esc(g.name) + '</span>' +
+            '<button class="btn btn-ghost btn-sm" data-schdel="' + esc(g.name) + '">그룹 삭제</button></div>' +
+          g.items.map(function (it) {
+            var names = it.videoIds.map(function (id) {
+              var v = vById(id); return v ? v.title : id;
+            });
+            return '<div class="sch-item">' +
+              '<div class="sch-no">' + it.no + '차시</div>' +
+              '<div class="sch-vids">' + esc(names.join(' · ')) + '</div>' +
+              '<button class="btn btn-primary btn-sm" data-schplay="' + esc(it.videoIds.join(',')) + '">▶ 재생</button>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      }).join('');
+    }
+    html += '<button class="btn btn-primary btn-sm" id="schAdd" style="margin-top:10px">＋ 현재 담은 영상으로 차시 추가</button></div>';
+    $('#schWrap').innerHTML = html;
+
+    $$('[data-schplay]').forEach(function (b) {
+      b.addEventListener('click', function () { openPlayer(b.dataset.schplay.split(',')); });
+    });
+    $$('[data-schdel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!confirm('"' + b.dataset.schdel + '" 그룹을 삭제할까요?')) return;
+        srv('api_deleteScheduleGroup', S.user.id, b.dataset.schdel).then(function () {
+          viewSchedule(); toast('삭제했습니다.');
+        });
+      });
+    });
+    $('#schAdd').addEventListener('click', function () {
+      if (!S.cart.length) { toast('먼저 스마트점핑 화면에서 영상을 담아주세요.'); return; }
+      var body = '<div class="form-grid">' +
+        fld('그룹명', '<input type="text" id="sgName" placeholder="1학기 기본과정">') +
+        fld('차시', '<input type="number" id="sgNo" value="1" min="1">') +
+        '</div><p style="margin-top:16px;font-size:13px;color:#64748b">현재 담은 영상 ' + S.cart.length + '개가 이 차시에 저장됩니다.</p>';
+      modal('차시 추가', body,
+        '<button class="btn btn-ghost" id="mCancel">취소</button>' +
+        '<button class="btn btn-primary" id="sgSave">저장</button>');
+      $('#mCancel').addEventListener('click', closeModal);
+      $('#sgSave').addEventListener('click', function () {
+        var nm = $('#sgName').value.trim();
+        if (!nm) { toast('그룹명을 입력하세요.'); return; }
+        $('#sgSave').disabled = true;
+        srv('api_saveSchedule', S.user.id, nm, Number($('#sgNo').value), S.cart)
+          .then(function () { closeModal(); viewSchedule(); toast('저장했습니다.'); });
+      });
+    });
+  }).catch(function (e) { $('#schWrap').innerHTML = errBox(e); });
+}
+
+/* ═══════════ 마이페이지 · 회원탈퇴 ═══════════ */
+
+function viewWithdraw() {
+  var reasons = ['사용이 불편함', '자주 이용하지 않음', '서비스 다양성 및 품질불만', '실질적인 혜택부족', '개인정보 유출우려'];
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">회원탈퇴</h1></div>' +
+    '<div class="panel panel-pad" style="max-width:920px;margin:0 auto">' +
+      '<div class="notice">' +
+        '<h4>⚠ 해당 아이디 재가입 불가능</h4>' +
+        '<p>회원탈퇴를 신청하시면 해당 아이디는 즉시 탈퇴 처리되며, 이후 해당 아이디는 사이트 관리자에게 연락시 사용이 가능합니다.</p>' +
+        '<h4>⚠ 회원가입 불가능 기간</h4>' +
+        '<p>회원탈퇴 이후, 7일간 회원가입은 불가능합니다.</p>' +
+        '<p>탈퇴와 재가입을 통하여 아이디를 교체하면서 다른 회원님들께 피해를 끼치는 행위를 방지하기 위한 조치이오니 넓은 양해 바랍니다.</p>' +
+      '</div>' +
+      '<dl class="deflist" style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">' +
+        defRow('아이디', '<input type="text" id="wId" value="' + esc(S.user.id) + '" readonly>') +
+        defRow('비밀번호', '<input type="password" id="wPw">') +
+        '<div class="defrow"><dt>탈퇴사유</dt><dd style="flex-direction:column;align-items:flex-start">' +
+          '<div class="radio-list">' + reasons.map(function (r, i) {
+            return '<label><input type="radio" name="wr" value="' + esc(r) + '" ' + (i === 0 ? 'checked' : '') + '>' + esc(r) + '</label>';
+          }).join('') + '</div>' +
+          '<textarea id="wDetail" placeholder="자세한 사유를 적어주세요 (선택)" style="margin-top:14px"></textarea>' +
+        '</dd></div>' +
+      '</dl>' +
+      '<p style="margin:18px 0 0;font-size:13px;color:#64748b">정말 회원탈퇴를 하시겠습니까?</p>' +
+      '<button class="btn btn-danger btn-block" id="wBtn" style="margin-top:12px">회원탈퇴</button>' +
+    '</div>';
+
+  $('#wBtn').addEventListener('click', function () {
+    if (!$('#wPw').value) { toast('비밀번호를 입력하세요.'); return; }
+    if (!confirm('정말 탈퇴하시겠습니까? 되돌릴 수 없습니다.')) return;
+    var reason = ($('input[name=wr]:checked') || {}).value || '';
+    $('#wBtn').disabled = true;
+    srv('api_withdraw', S.user.id, $('#wPw').value, reason, $('#wDetail').value.trim())
+      .then(function (r) {
+        if (!r.ok) { toast(r.msg); $('#wBtn').disabled = false; return; }
+        alert('탈퇴 처리되었습니다.');
+        try { localStorage.removeItem('sj_user'); } catch (e) {}
+        location.reload();
+      });
+  });
+}
+
+/* ═══════════ 온라인교재 ═══════════ */
+
+function viewTextbook() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">온라인교재</h1></div>' +
+    '<div class="search-row"><div class="search-box">' +
+      '<input type="text" id="bq" placeholder="교재명으로 검색"><button id="bqBtn">🔍</button>' +
+    '</div></div><div id="bkWrap">' + skelPanel() + '</div>';
+
+  srv('api_textbooks').then(function (books) {
+    viewTextbook._all = books;
+    drawBooks(books);
+    $('#bqBtn').addEventListener('click', filterBooks);
+    $('#bq').addEventListener('keydown', function (e) { if (e.key === 'Enter') filterBooks(); });
+  }).catch(function (e) { $('#bkWrap').innerHTML = errBox(e); });
+}
+
+function filterBooks() {
+  var q = $('#bq').value.trim().toLowerCase();
+  drawBooks(viewTextbook._all.filter(function (b) { return b.title.toLowerCase().indexOf(q) >= 0; }));
+}
+
+function drawBooks(books) {
+  if (!books.length) {
+    $('#bkWrap').innerHTML = '<div class="empty"><span class="ico">📚</span><b>교재가 없습니다</b></div>';
+    return;
+  }
+  $('#bkWrap').innerHTML = '<div class="book-grid">' + books.map(function (b) {
+    var cover = b.cover
+      ? '<img src="' + esc(b.cover) + '" alt="">'
+      : '<div class="bt1">스마트점핑</div><div class="bt2">SMART JUMPING</div>' +
+        '<div class="bt3">' + ('0' + b.no).slice(-2) + '</div>';
+    return '<div class="book" data-link="' + esc(b.link) + '">' +
+      '<div class="book-cover">' + cover +
+        (b.badge ? '<span class="book-badge">' + esc(b.badge) + '</span>' : '') +
+      '</div><div class="book-name">' + esc(b.title) + '</div></div>';
+  }).join('') + '</div>';
+
+  $$('.book').forEach(function (el) {
+    el.addEventListener('click', function () {
+      if (el.dataset.link) window.open(el.dataset.link, '_blank');
+      else toast('뷰어 링크가 아직 등록되지 않았습니다. (시트 textbooks 탭의 뷰어링크 열)');
+    });
+  });
+}
+
+/* ═══════════ 공통 ═══════════ */
+
+function modal(title, body, foot) {
+  $('#modalTitle').textContent = title;
+  $('#modalBody').innerHTML = body;
+  $('#modalFoot').innerHTML = foot || '';
+  $('#modalFoot').hidden = !foot;
+  $('#modal').hidden = false;
+}
+function closeModal() { $('#modal').hidden = true; }
+$('#modalX').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', function (e) { if (e.target === $('#modal')) closeModal(); });
+
+function skelPanel() {
+  var r = '';
+  for (var i = 0; i < 5; i++) r += '<div class="sk" style="height:48px;border-radius:9px;margin-bottom:11px"></div>';
+  return '<div class="panel panel-pad">' + r + '</div>';
+}
+
+function errBox(e) {
+  return '<div class="empty"><span class="ico">⚠️</span><b>불러오지 못했습니다</b>' +
+    esc(e && e.message ? e.message : e) + '</div>';
+}
+</script>
