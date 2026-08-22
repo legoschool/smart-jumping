@@ -32,17 +32,11 @@
      이게 없으면 교사가 담은 영상이 학생 계정에도 그대로 보인다. */
   if (get('ver') !== SEED.ver) {
     set('ver', SEED.ver);
-    set('classes', SEED.classes.map(function (c) {
-      return { id: c.id, owner: SEED.seedOwner, ym: c.ym, region: c.region,
-               school: c.school, grade: c.grade, cls: c.cls, cap: c.cap, memo: c.memo || '' };
-    }));
-    set('attendance', SEED.attendance);
-    set('equipment', SEED.equipment.map(function (e) {
-      return { owner: SEED.seedOwner, name: e.name, agency: e.agency, fresh: e.fresh, used: e.used };
-    }));
-    set('schedules', SEED.schedules.map(function (g) {
-      return { owner: SEED.seedOwner, name: g.name, items: g.items };
-    }));
+    // 시드에 소유자(owner)가 행마다 들어 있으므로 그대로 복사한다
+    set('classes', SEED.classes.slice());
+    set('attendance', SEED.attendance.slice());
+    set('equipment', SEED.equipment.slice());
+    set('schedules', SEED.schedules.slice());
     set('views', {});
     set('playlists', {});
     set('profiles', {});
@@ -69,6 +63,14 @@
   function mine(list, userId) {
     return (list || []).filter(function (x) { return x.owner === userId; });
   }
+
+  /** 사용자 권한 (기본 계정 + 가입 계정) */
+  function roleOf(userId) {
+    var all = SEED.users.concat(get('newUsers', []));
+    var u = all.filter(function (x) { return x.id === userId; })[0];
+    return u ? u.role : '';
+  }
+  function isAdmin(userId) { return roleOf(userId) === '관리자'; }
 
   /* ══════════════ API 구현 ══════════════ */
   var API = {
@@ -130,17 +132,23 @@
       return { ok: true };
     },
 
-    /* ── 수업관리 (내 수업만) ── */
-    api_classes: function (userId) { return mine(get('classes', []), userId); },
+    /* ── 수업관리 — 관리자는 전체, 교사는 내 것만 ── */
+    api_classes: function (userId) {
+      var rows = get('classes', []);
+      return isAdmin(userId) ? rows.slice() : mine(rows, userId);
+    },
 
     api_saveClass: function (userId, obj) {
       var rows = get('classes', []);
       if (obj.id) {
         var i = rows.findIndex(function (c) { return c.id === obj.id; });
         if (i < 0) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
-        if (rows[i].owner !== userId) return { ok: false, msg: '수정 권한이 없습니다.' };
+        if (rows[i].owner !== userId && !isAdmin(userId)) {
+          return { ok: false, msg: '수정 권한이 없습니다.' };
+        }
         rows[i] = {
-          id: obj.id, owner: userId, ym: obj.ym, region: obj.region, school: obj.school,
+          id: obj.id, owner: rows[i].owner,   // 소유자는 그대로 유지
+          ym: obj.ym, region: obj.region, school: obj.school,
           grade: obj.grade, cls: obj.cls, cap: obj.cap, memo: obj.memo || ''
         };
         set('classes', rows);
@@ -160,8 +168,14 @@
       return { ok: true, id: id };
     },
 
-    api_deleteClass: function (classId) {
-      set('classes', get('classes', []).filter(function (c) { return c.id !== classId; }));
+    api_deleteClass: function (classId, userId) {
+      var rows = get('classes', []);
+      var t = rows.filter(function (c) { return c.id === classId; })[0];
+      if (!t) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+      if (userId && t.owner !== userId && !isAdmin(userId)) {
+        return { ok: false, msg: '삭제 권한이 없습니다.' };
+      }
+      set('classes', rows.filter(function (c) { return c.id !== classId; }));
       return { ok: true };
     },
 

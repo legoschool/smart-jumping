@@ -194,13 +194,28 @@ function api_addView(videoId) {
    수업관리
    ═══════════════════════════════════════════ */
 
+/** 사용자의 권한을 읽는다 */
+function roleOf_(userId) {
+  const u = readAll_(T.USERS).filter(function (x) {
+    return String(x['아이디']) === String(userId);
+  })[0];
+  return u ? String(u['권한']) : '';
+}
+
+/**
+ * 수업 목록.
+ * 관리자는 모든 교사의 수업을 보고, 교사는 자기 수업만 본다.
+ * (마이페이지의 교구·스케줄은 '내 것'이므로 관리자도 본인 것만 본다)
+ */
 function api_classes(userId) {
+  const isAdmin = roleOf_(userId) === '관리자';
   const rows = readAll_(T.CLASSES).filter(function (c) {
-    return String(c['소유자']) === String(userId);
+    return isAdmin || String(c['소유자']) === String(userId);
   });
   return rows.map(function (c) {
     return {
-      id: String(c['수업ID']), ym: String(c['수업년월']), region: String(c['지역']),
+      id: String(c['수업ID']), owner: String(c['소유자']),
+      ym: String(c['수업년월']), region: String(c['지역']),
       school: String(c['학교']), grade: c['학년'], cls: c['반'],
       cap: c['정원'], memo: String(c['메모'] || '')
     };
@@ -215,6 +230,10 @@ function api_saveClass(userId, obj) {
     if (obj.id) {
       const idx = rows.findIndex(function (x) { return String(x['수업ID']) === String(obj.id); });
       if (idx < 0) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+      // 남의 수업은 관리자만 고칠 수 있다. 소유자 열(2번)은 건드리지 않는다.
+      if (String(rows[idx]['소유자']) !== String(userId) && roleOf_(userId) !== '관리자') {
+        return { ok: false, msg: '수정 권한이 없습니다.' };
+      }
       sh.getRange(idx + 2, 3, 1, 7).setValues([[
         obj.ym, obj.region, obj.school, obj.grade, obj.cls, obj.cap, obj.memo || ''
       ]]);
@@ -235,12 +254,15 @@ function api_saveClass(userId, obj) {
   });
 }
 
-function api_deleteClass(classId) {
+function api_deleteClass(classId, userId) {
   return withLock_(function () {
     const sh = sheet_(T.CLASSES);
     const rows = readAll_(T.CLASSES);
     const idx = rows.findIndex(function (x) { return String(x['수업ID']) === String(classId); });
-    if (idx < 0) return { ok: false };
+    if (idx < 0) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+    if (userId && String(rows[idx]['소유자']) !== String(userId) && roleOf_(userId) !== '관리자') {
+      return { ok: false, msg: '삭제 권한이 없습니다.' };
+    }
     sh.deleteRow(idx + 2);
     return { ok: true };
   });
