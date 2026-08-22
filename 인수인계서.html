@@ -1,0 +1,591 @@
+<title>스마트점핑 인수인계서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --paper:#F6F7F4;
+  --paper-2:#FFFFFF;
+  --paper-3:#EDEFEA;
+  --ink:#1A2430;
+  --ink-2:#3C4A57;
+  --ink-3:#6B7986;
+  --rule:#D8DCD4;
+  --rule-2:#C3C9BE;
+  --accent:#0F5E52;
+  --accent-soft:#E2EDE9;
+  --warn:#8A5410;
+  --warn-soft:#F7EEDF;
+  --danger:#9C312D;
+  --danger-soft:#F8E8E6;
+  --ok:#2F6B3A;
+
+  --f-display:"Gowun Batang",Georgia,serif;
+  --f-body:"IBM Plex Sans KR",-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+
+  --w:78ch;
+}
+
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#14181A;
+    --paper-2:#1B2023;
+    --paper-3:#232A2D;
+    --ink:#E6EAE5;
+    --ink-2:#B8C1BC;
+    --ink-3:#8B968F;
+    --rule:#2E3639;
+    --rule-2:#3D474B;
+    --accent:#5EC4AC;
+    --accent-soft:#17322D;
+    --warn:#D9A552;
+    --warn-soft:#2E2617;
+    --danger:#E08079;
+    --danger-soft:#31201E;
+    --ok:#7DBE88;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14181A;
+  --paper-2:#1B2023;
+  --paper-3:#232A2D;
+  --ink:#E6EAE5;
+  --ink-2:#B8C1BC;
+  --ink-3:#8B968F;
+  --rule:#2E3639;
+  --rule-2:#3D474B;
+  --accent:#5EC4AC;
+  --accent-soft:#17322D;
+  --warn:#D9A552;
+  --warn-soft:#2E2617;
+  --danger:#E08079;
+  --danger-soft:#31201E;
+  --ok:#7DBE88;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--f-body); font-size:15px; line-height:1.72;
+  font-weight:400; letter-spacing:-.003em;
+  -webkit-font-smoothing:antialiased;
+}
+a{ color:var(--accent); text-decoration:none; border-bottom:1px solid currentColor; padding-bottom:1px; }
+a:hover{ opacity:.72; }
+a:focus-visible, summary:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:2px; }
+
+/* ── 레이아웃 ── */
+.wrap{ display:grid; grid-template-columns:220px minmax(0,var(--w)); gap:56px;
+  max-width:1120px; margin:0 auto; padding:0 32px 120px; }
+
+/* ── 좌측 목차 ── */
+.toc{ position:sticky; top:0; align-self:start; padding:52px 0 40px;
+  max-height:100vh; overflow-y:auto; }
+.toc-label{ font-family:var(--f-mono); font-size:10.5px; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);
+  padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid var(--rule); }
+.toc ol{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; }
+.toc a{ display:flex; gap:9px; padding:5px 0; font-size:13px; line-height:1.45;
+  color:var(--ink-2); border:0; }
+.toc a:hover{ color:var(--accent); opacity:1; }
+.toc .n{ font-family:var(--f-mono); font-size:11px; color:var(--ink-3);
+  padding-top:2px; font-variant-numeric:tabular-nums; }
+
+/* ── 문서 머리 ── */
+.doc{ padding-top:52px; }
+.eyebrow{ font-family:var(--f-mono); font-size:11px; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+h1{ font-family:var(--f-display); font-weight:700; font-size:clamp(34px,5vw,46px);
+  line-height:1.2; letter-spacing:-.02em; margin:14px 0 8px; text-wrap:balance; }
+.sub{ font-size:16px; color:var(--ink-2); margin:0 0 30px; }
+
+.meta{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:0; border-top:2px solid var(--ink); border-bottom:1px solid var(--rule);
+  margin-bottom:44px; }
+.meta div{ padding:14px 16px 14px 0; border-right:1px solid var(--rule); }
+.meta div:last-child{ border-right:0; }
+.meta dt{ font-family:var(--f-mono); font-size:10px; font-weight:600;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); margin-bottom:5px; }
+.meta dd{ margin:0; font-size:14.5px; font-weight:500; }
+.meta dd.big{ font-family:var(--f-mono); font-size:21px; font-weight:600;
+  font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+
+/* ── 섹션 ── */
+section{ margin-bottom:60px; scroll-margin-top:24px; }
+h2{ font-family:var(--f-display); font-weight:700; font-size:25px; line-height:1.3;
+  letter-spacing:-.015em; margin:0 0 6px; display:flex; align-items:baseline; gap:13px;
+  padding-bottom:12px; border-bottom:2px solid var(--ink); text-wrap:balance; }
+h2 .n{ font-family:var(--f-mono); font-size:13px; font-weight:600; color:var(--accent);
+  flex:0 0 auto; font-variant-numeric:tabular-nums; }
+.lede{ color:var(--ink-2); margin:16px 0 22px; font-size:15px; }
+h3{ font-size:15.5px; font-weight:600; margin:32px 0 10px; letter-spacing:-.01em; }
+h3::before{ content:"— "; color:var(--accent); }
+p{ margin:0 0 15px; }
+strong{ font-weight:600; }
+ul,ol{ margin:0 0 16px; padding-left:20px; }
+li{ margin-bottom:7px; }
+li::marker{ color:var(--ink-3); }
+
+code{ font-family:var(--f-mono); font-size:.86em; background:var(--paper-3);
+  padding:2px 5px; border-radius:3px; color:var(--ink); white-space:nowrap; }
+a code{ color:inherit; }
+
+/* ── 표 ── */
+.tw{ overflow-x:auto; margin:0 0 20px; border:1px solid var(--rule);
+  border-radius:3px; background:var(--paper-2); }
+table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+th,td{ text-align:left; padding:9px 13px; border-bottom:1px solid var(--rule);
+  vertical-align:top; }
+thead th{ background:var(--paper-3); font-family:var(--f-mono); font-size:10.5px;
+  font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-2);
+  white-space:nowrap; border-bottom:1px solid var(--rule-2); }
+tbody tr:last-child td{ border-bottom:0; }
+td.mono,th.mono{ font-family:var(--f-mono); font-size:12.5px;
+  font-variant-numeric:tabular-nums; white-space:nowrap; }
+td.num{ font-family:var(--f-mono); text-align:right; font-variant-numeric:tabular-nums; }
+.ok{ color:var(--ok); font-weight:600; }
+.no{ color:var(--ink-3); }
+
+/* ── 콜아웃 ── */
+.note{ border-left:3px solid var(--accent); background:var(--accent-soft);
+  padding:14px 18px; margin:0 0 20px; border-radius:0 3px 3px 0; font-size:14px; }
+.note.warn{ border-color:var(--warn); background:var(--warn-soft); }
+.note.danger{ border-color:var(--danger); background:var(--danger-soft); }
+.note p:last-child{ margin-bottom:0; }
+.note .tag{ font-family:var(--f-mono); font-size:10px; font-weight:600;
+  letter-spacing:.12em; text-transform:uppercase; display:block; margin-bottom:6px;
+  color:var(--accent); }
+.note.warn .tag{ color:var(--warn); }
+.note.danger .tag{ color:var(--danger); }
+
+/* ── 함정 목록 ── */
+.traps{ list-style:none; padding:0; margin:0; counter-reset:trap; }
+.traps > li{ counter-increment:trap; position:relative; padding:18px 0 18px 46px;
+  border-bottom:1px solid var(--rule); margin:0; }
+.traps > li:last-child{ border-bottom:0; }
+.traps > li::before{ content:counter(trap); position:absolute; left:0; top:18px;
+  width:28px; height:28px; border:1.5px solid var(--danger); color:var(--danger);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-family:var(--f-mono); font-size:12px; font-weight:600; }
+.traps b{ display:block; font-size:15px; font-weight:600; margin-bottom:5px; }
+.traps p{ margin:0 0 8px; font-size:14px; color:var(--ink-2); }
+.traps p:last-child{ margin-bottom:0; }
+
+/* ── 흐름도 ── */
+.flow{ font-family:var(--f-mono); font-size:12.5px; line-height:2;
+  background:var(--paper-2); border:1px solid var(--rule); border-radius:3px;
+  padding:18px 20px; margin:0 0 20px; overflow-x:auto; white-space:pre; color:var(--ink-2); }
+
+/* ── 파일 트리 ── */
+.tree{ font-family:var(--f-mono); font-size:12.5px; line-height:1.95;
+  background:var(--paper-2); border:1px solid var(--rule); border-radius:3px;
+  padding:18px 20px; margin:0 0 20px; overflow-x:auto; }
+.tree .c{ color:var(--ink-3); }
+.tree .d{ color:var(--accent); font-weight:600; }
+
+footer{ border-top:2px solid var(--ink); padding-top:18px; margin-top:16px;
+  font-size:13px; color:var(--ink-3); display:flex; justify-content:space-between;
+  gap:16px; flex-wrap:wrap; }
+
+@media (max-width:960px){
+  .wrap{ grid-template-columns:1fr; gap:0; padding:0 22px 80px; }
+  .toc{ position:static; max-height:none; padding:40px 0 8px; }
+  .toc ol{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:0 14px; }
+  .doc{ padding-top:24px; }
+  .meta div{ border-right:0; border-bottom:1px solid var(--rule); }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+}
+html{ scroll-behavior:smooth; }
+</style>
+
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-label">목차</div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span><span>무엇을 만든 것인가</span></a></li>
+    <li><a href="#s2"><span class="n">02</span><span>두 개의 배포본</span></a></li>
+    <li><a href="#s3"><span class="n">03</span><span>저장소 구조</span></a></li>
+    <li><a href="#s4"><span class="n">04</span><span>데이터 스키마</span></a></li>
+    <li><a href="#s5"><span class="n">05</span><span>계정과 권한</span></a></li>
+    <li><a href="#s6"><span class="n">06</span><span>개발 워크플로</span></a></li>
+    <li><a href="#s7"><span class="n">07</span><span>반드시 지킬 것</span></a></li>
+    <li><a href="#s8"><span class="n">08</span><span>왜 이렇게 돼 있나</span></a></li>
+    <li><a href="#s9"><span class="n">09</span><span>지금 상태 · 남은 일</span></a></li>
+    <li><a href="#s10"><span class="n">10</span><span>v2 후보</span></a></li>
+  </ol>
+</nav>
+
+<main class="doc">
+
+  <div class="eyebrow">인수인계서 · Handover</div>
+  <h1>미래형학교체육 '스마트점핑'</h1>
+  <p class="sub">교실에서 바로 쓰는 학교체육 수업 영상 플랫폼. 이 문서 하나로 인수받아 운영·개발을 이어갈 수 있도록 썼습니다.</p>
+
+  <dl class="meta">
+    <div><dt>인계일</dt><dd>2026-08-22</dd></div>
+    <div><dt>수록 영상</dt><dd class="big">104</dd></div>
+    <div><dt>백엔드 테스트</dt><dd class="big">125/125</dd></div>
+    <div><dt>커밋</dt><dd class="big">12</dd></div>
+  </dl>
+
+  <div class="note">
+    <span class="tag">바로 확인</span>
+    <p><strong>데모 사이트</strong> — <a href="https://legoschool.github.io/smart-jumping/" target="_blank" rel="noopener">legoschool.github.io/smart-jumping</a><br>
+    <strong>저장소</strong> — <a href="https://github.com/legoschool/smart-jumping" target="_blank" rel="noopener">github.com/legoschool/smart-jumping</a> (public)</p>
+  </div>
+
+  <!-- ══════════ 01 ══════════ -->
+  <section id="s1">
+    <h2><span class="n">01</span>무엇을 만든 것인가</h2>
+    <p class="lede">교사가 <strong>수업 전에 영상을 담아두고, 교실에서는 재생 버튼 하나로 한 차시를 진행</strong>하게 하는 것이 이 제품의 전부입니다. 나머지 기능은 그 흐름을 받쳐주는 부속입니다.</p>
+
+    <div class="flow">영상 라이브러리        수업 준비              교실
+─────────────       ─────────────        ─────────────
+검색 · 필터 · 정렬  →  ★ 즐겨찾기          →  ▶ 수업시작
+104편 / 23분류         🎬 영상담기             전체화면 연속재생
+                       학급에 커리큘럼 연결  →  ▶ 차시 바로 열기</div>
+
+    <p>참고한 상용 사이트는 <code>jjinbro.co.kr/sj</code> 의 「신개념 교실체육 스마트점프」입니다. 화면 구성(좌측 사이드바 + 상단 영역 탭 + 카드 그리드 + 영상담기)은 그 구조를 따랐고, 권한 제어·날짜별 출석·수업 리포트는 이번에 새로 설계했습니다.</p>
+
+    <h3>수록 콘텐츠</h3>
+    <div class="tw"><table>
+      <thead><tr><th>영역</th><th>세부 분류</th><th class="mono">영상</th></tr></thead>
+      <tbody>
+        <tr><td>명상</td><td>호흡 명상 · 마음챙김 명상 · 어린이 명상</td><td class="num">11</td></tr>
+        <tr><td>시간타이머</td><td>휴식영상 타이머 · 카운터 타이머 (1·3·5·10분)</td><td class="num">18</td></tr>
+        <tr><td>준비운동 | 타바타</td><td>몸풀기&amp;스트레칭 · 타바타&amp;기초체력 · 기초체력 조합 · 점핑 근력운동 · 정리운동·쿨다운 · 레크리에이션 놀이</td><td class="num">32</td></tr>
+        <tr><td>스마트점핑</td><td>급수 친구들 1~3단계 · 쌩쌩이·2단뛰기 · 음악줄넘기 · 지도자 필수교육</td><td class="num">23</td></tr>
+        <tr><td>비트 트레이닝</td><td>동요 율동 · 체조 메들리 · K-POP 키즈댄스</td><td class="num">9</td></tr>
+        <tr><td>Killing Time Zone</td><td>나라별 국기맞추기 · 숨은그림·틀린그림 찾기 · 넌센스 퀴즈</td><td class="num">11</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="note warn">
+      <span class="tag">저작권 주의</span>
+      <p>수록 영상 104편은 <strong>전부 제3자 유튜브 채널의 공개 영상</strong>입니다. 임베드로 재생만 하고 재배포하지 않지만, <strong>상용 서비스로 전환할 때는 반드시 자체 제작 영상으로 교체</strong>해야 합니다. 교체는 <code>videos</code> 탭의 <code>youtube_id</code> 열만 바꾸면 되고, 카테고리명도 원래 제품 분류로 되돌리면 됩니다.</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 02 ══════════ -->
+  <section id="s2">
+    <h2><span class="n">02</span>두 개의 배포본</h2>
+    <p class="lede">같은 프론트 코드가 백엔드만 갈아끼워 두 곳에서 돕니다. 이걸 이해하면 나머지는 쉽습니다.</p>
+
+    <div class="flow">[브라우저]  ──google.script.run──▶  [Apps Script]  ──▶  [구글 시트 10탭]   ← 풀스택
+     │
+     └──── 같은 app.js ────▶  [local-backend.js]  ──▶  [localStorage]     ← 데모</div>
+
+    <p><code>web/local-backend.js</code> 가 <code>google.script.run</code> 과 <strong>똑같은 인터페이스</strong>를 localStorage 위에 구현합니다. 그래서 프론트는 자기가 어느 백엔드에 붙어 있는지 모릅니다.</p>
+
+    <div class="tw"><table>
+      <thead><tr><th></th><th>데모 (GitHub Pages)</th><th>풀스택 (Apps Script)</th></tr></thead>
+      <tbody>
+        <tr><td>위치</td><td class="mono">index.html</td><td class="mono">apps-script/</td></tr>
+        <tr><td>백엔드</td><td>localStorage</td><td>구글 시트</td></tr>
+        <tr><td>데이터 공유</td><td class="no">브라우저 1대</td><td class="ok">계정 전체</td></tr>
+        <tr><td>현재 상태</td><td class="ok">운영 중</td><td class="no">미배포</td></tr>
+        <tr><td>비용</td><td>0원</td><td>0원</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="note danger">
+      <span class="tag">인수 즉시 확인</span>
+      <p><strong>풀스택 판은 아직 배포되지 않았습니다.</strong> 지금 도는 사이트는 데모라 방문자마다 데이터가 따로 놉니다. 여러 교사가 실제로 함께 쓰려면 <a href="#s6">06 개발 워크플로</a> 의 배포 절차를 밟아야 합니다.</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 03 ══════════ -->
+  <section id="s3">
+    <h2><span class="n">03</span>저장소 구조</h2>
+
+    <div class="tree"><span class="d">smart-jumping/</span>
+├─ <span class="d">apps-script/</span>              <span class="c">구글 시트 연동 풀스택 소스 (6개 파일)</span>
+│   ├─ 00_설정.gs             <span class="c">160줄 · 스키마(HEADERS) · 시트 접근 · 유틸</span>
+│   ├─ 01_초기설정.gs         <span class="c">377줄 · 시트 생성 + 시드 데이터 (영상 104편)</span>
+│   ├─ 02_API.gs              <span class="c">752줄 · doGet + API 28개</span>
+│   ├─ index.html             <span class="c">194줄 · 화면 골격 · SVG 아이콘</span>
+│   ├─ css.html               <span class="c">881줄 · 디자인 시스템 전체</span>
+│   └─ js.html               <span class="c">1823줄 · 프론트 로직 (라우터·플레이어·전 화면)</span>
+├─ <span class="d">web/</span>
+│   └─ local-backend.js       <span class="c">556줄 · localStorage 백엔드 (API 동일 인터페이스)</span>
+├─ <span class="d">tools/</span>                    <span class="c">빌드·테스트 도구 — tools/README.md 참고</span>
+│   ├─ test.js                <span class="c">통합 테스트 125건</span>
+│   ├─ build-static.js        <span class="c">index.html 생성 (무결성 검사 12종)</span>
+│   ├─ mock.js                <span class="c">Apps Script 런타임 흉내</span>
+│   └─ data/                  <span class="c">검증 통과한 유튜브 메타</span>
+├─ index.html                 <span class="c">⚠ 생성물 — 직접 고치지 말 것</span>
+├─ 스마트점핑_DB.xlsx          <span class="c">구글 시트 가져오기용 (10탭)</span>
+├─ package.json               <span class="c">npm 명령</span>
+└─ README.md</div>
+
+    <div class="note warn">
+      <span class="tag">가장 중요한 한 줄</span>
+      <p>루트의 <code>index.html</code> 은 <strong>생성물</strong>입니다. <code>apps-script/</code> 를 고치고 <code>npm run build</code> 를 돌리세요. 직접 고치면 다음 빌드에 사라집니다.</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 04 ══════════ -->
+  <section id="s4">
+    <h2><span class="n">04</span>데이터 스키마</h2>
+    <p class="lede">구글 시트 10개 탭이 곧 DB입니다. 열 이름이 한글 그대로 키로 쓰이므로 <strong>열 이름을 바꾸면 코드가 깨집니다</strong>.</p>
+
+    <div class="tw"><table>
+      <thead><tr><th>탭</th><th>열</th><th class="mono">행</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">categories</td><td>대분류ID, 대분류명, 대분류순서, 소분류ID, 소분류명, 소분류순서, N뱃지</td><td class="num">23</td></tr>
+        <tr><td class="mono">videos</td><td>영상ID, 대분류ID, 소분류ID, 제목, <strong>youtube_id</strong>, 재생시간, 조회수, 등록일, 노출여부</td><td class="num">104</td></tr>
+        <tr><td class="mono">users</td><td>아이디, 비번해시, 이름, 소속, 지역, 권한, 가입일, 상태</td><td class="num">3</td></tr>
+        <tr><td class="mono">classes</td><td>수업ID, 소유자, 수업년월, 지역, 학교, 학년, 반, 정원, 메모, <strong>스케줄그룹</strong></td><td class="num">6</td></tr>
+        <tr><td class="mono">attendance</td><td>수업ID, 학생명, <strong>날짜</strong>, 출결 — (수업, 날짜) 조합마다 한 회차</td><td class="num">27</td></tr>
+        <tr><td class="mono">equipment</td><td>소유자, 교구명, 대리점명, 새제품수량, 중고제품수량, 수정일</td><td class="num">3</td></tr>
+        <tr><td class="mono">schedules</td><td>소유자, 그룹명, 차시, 영상ID목록</td><td class="num">5</td></tr>
+        <tr><td class="mono">textbooks</td><td>권차, 제목, 표지URL, 뷰어링크, 뱃지</td><td class="num">12</td></tr>
+        <tr><td class="mono">playlists</td><td>소유자, 담은영상ID목록, 수정일</td><td class="num">0</td></tr>
+        <tr><td class="mono">favorites</td><td>소유자, 즐겨찾기영상ID목록, 수정일</td><td class="num">1</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>알아둘 설계 규칙</h3>
+    <ul>
+      <li><strong>소유자 열이 곧 접근 제어</strong>입니다. <code>classes</code> · <code>equipment</code> · <code>schedules</code> 는 소유자로 걸러 조회합니다. 단 <code>api_classes</code> 만 관리자에게 전체를 돌려줍니다.</li>
+      <li><strong>영상이 0건인 분류는 화면에 안 나옵니다.</strong> 분류를 미리 다 적어두고 영상을 채워가도 화면이 깨지지 않습니다.</li>
+      <li><strong>출석은 (수업, 날짜) 단위로 교체</strong>됩니다. 저장해도 다른 날짜 회차는 그대로 남습니다.</li>
+      <li><strong>비밀번호는 SHA-256 해시</strong>로만 저장합니다. 평문이 시트에 들어가면 안 됩니다.</li>
+      <li>영상·카테고리는 <strong>6시간 캐싱</strong>됩니다. 시트를 직접 고쳤으면 Apps Script 에서 <code>캐시비우기</code> 를 실행하세요.</li>
+    </ul>
+  </section>
+
+  <!-- ══════════ 05 ══════════ -->
+  <section id="s5">
+    <h2><span class="n">05</span>계정과 권한</h2>
+
+    <div class="tw"><table>
+      <thead><tr><th class="mono">계정</th><th class="mono">비번</th><th>권한</th><th>보이는 것</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">teacher</td><td class="mono">1234</td><td><strong>관리자</strong></td><td>전체 메뉴 + 모든 교사의 수업</td></tr>
+        <tr><td class="mono">test</td><td class="mono">1234</td><td>교사</td><td>전체 메뉴 + 자기 수업만</td></tr>
+        <tr><td class="mono">teststu</td><td class="mono">1234</td><td>학생</td><td>영상 · 교재 · 내 출결 · 정보수정 · 탈퇴</td></tr>
+        <tr><td class="no">(로그인 없음)</td><td class="no">—</td><td>게스트</td><td>영상 열람·재생 · 교재</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>권한 제어는 <strong>두 겹</strong>입니다. 화면에서는 <code>data-role</code> 속성으로 메뉴를 감추고, 그 뒤에서 <code>guardRoute()</code> 가 URL 직접 접근을 막습니다. 서버 쪽도 <code>roleOf_()</code> 로 다시 확인하므로 API 를 직접 호출해도 통과하지 못합니다.</p>
+
+    <div class="note">
+      <span class="tag">안전장치</span>
+      <p>자기 자신의 권한·상태는 바꿀 수 없고, <strong>마지막 관리자는 강등할 수 없습니다.</strong> 아무도 관리할 수 없는 상태가 되는 걸 막기 위한 것이니 지우지 마세요.</p>
+    </div>
+
+    <div class="note warn">
+      <span class="tag">보안 한계</span>
+      <p>비밀번호를 SHA-256 으로 해시하지만 <strong>솔트가 없고 반복 해싱도 하지 않습니다.</strong> 교내 시범 운영 수준이지 은행급이 아닙니다. 실제 학교 계정을 받아 운영할 계획이면 <strong>구글 로그인으로 전환</strong>하는 편이 안전합니다.</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 06 ══════════ -->
+  <section id="s6">
+    <h2><span class="n">06</span>개발 워크플로</h2>
+    <p class="lede">저장소 루트에서 <code>npm install</code> 한 번, 이후는 아래 명령만 씁니다.</p>
+
+    <div class="tw"><table>
+      <thead><tr><th class="mono">명령</th><th>하는 일</th><th>언제</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">npm test</td><td>백엔드 통합 테스트 125건</td><td><strong>코드 고칠 때마다</strong></td></tr>
+        <tr><td class="mono">npm run build</td><td>루트 <code>index.html</code> 생성 (검사 12종)</td><td>프론트·데이터 수정 후 <strong>반드시</strong></td></tr>
+        <tr><td class="mono">npm run serve</td><td><code>localhost:8790</code> 에 띄움</td><td>눈으로 확인</td></tr>
+        <tr><td class="mono">npm run xlsx</td><td>XLSX 재생성</td><td>시드·스키마 수정 후</td></tr>
+        <tr><td class="mono">npm run seed</td><td>영상 목록 재생성 후 주입</td><td>영상 추가·교체</td></tr>
+        <tr><td class="mono">npm run verify:yt</td><td>유튜브 생존·임베드·재생시간 검증</td><td>새 영상 넣기 <strong>전</strong></td></tr>
+        <tr><td class="mono">npm run check</td><td>테스트 + 빌드</td><td>커밋 직전</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>구글 시트 연동판 배포 (아직 안 됨)</h3>
+    <ol>
+      <li><strong>시트 채우기</strong> — <code>스마트점핑_DB.xlsx</code> 를 구글 시트에서 <em>파일 → 가져오기 → 업로드 → 스프레드시트 바꾸기</em>. 10개 탭이 그대로 들어갑니다.</li>
+      <li><strong>Apps Script 프로젝트</strong> — <code>apps-script/</code> 의 6개 파일을 붙여넣습니다. <code>index</code> · <code>css</code> · <code>js</code> 는 반드시 <strong>HTML 파일</strong>로 만들고 확장자는 붙이지 않습니다. 기본 <code>코드.gs</code> 는 지웁니다.</li>
+      <li><strong>시트 연결</strong> — <code>00_설정.gs</code> 의 <code>TARGET_SHEET_ID</code> 에 시트 ID를 넣습니다. 시트에서 <em>확장 프로그램 → Apps Script</em> 로 열었다면 비워둬도 자동으로 잡습니다.</li>
+      <li><strong>웹앱 배포</strong> — 배포 → 새 배포 → 웹 앱 / 실행 계정 <strong>나</strong> / 액세스 <strong>링크가 있는 모든 사용자</strong>.</li>
+    </ol>
+
+    <h3>영상 추가하는 법</h3>
+    <p>가장 자주 하게 될 작업입니다. <code>videos</code> 탭에 행을 넣고 <code>youtube_id</code> 만 채우면 썸네일·재생이 자동으로 붙습니다.</p>
+    <div class="flow">https://www.youtube.com/watch?v=AbCdEfGh123   →   AbCdEfGh123
+https://youtu.be/AbCdEfGh123                  →   AbCdEfGh123</div>
+    <p>대량으로 넣을 때는 <code>npm run verify:yt</code> 로 <strong>생존 · 임베드 허용 · 재생시간</strong>을 먼저 검증하세요. 이 검증을 건너뛰면 삭제되거나 외부 재생이 막힌 영상이 섞여 교실에서 검은 화면이 뜹니다.</p>
+  </section>
+
+  <!-- ══════════ 07 ══════════ -->
+  <section id="s7">
+    <h2><span class="n">07</span>반드시 지킬 것</h2>
+    <p class="lede">전부 실제로 한 번씩 사고가 났던 지점입니다. 읽고 넘어가면 같은 자리에서 또 걸립니다.</p>
+
+    <ol class="traps">
+      <li>
+        <b>루트 <code>index.html</code> 을 직접 고치지 않는다</b>
+        <p>생성물입니다. <code>apps-script/</code> 를 고치고 <code>npm run build</code>. 직접 고친 내용은 다음 빌드에 사라집니다.</p>
+      </li>
+      <li>
+        <b><code>String.replace(a, b)</code> 로 코드를 치환하지 않는다</b>
+        <p>치환 <em>문자열</em> 안의 <code>$$</code> 를 <code>$</code> 하나로 축약합니다. 이것 때문에 <code>$$</code> 헬퍼 함수가 통째로 망가져 로그인 버튼이 죽은 적이 있습니다.</p>
+        <p>반드시 함수형으로: <code>s.replace(a, () =&gt; b)</code></p>
+      </li>
+      <li>
+        <b><code>01_초기설정.gs</code> 를 통째로 다시 쓰지 않는다</b>
+        <p><code>write-setup-gs.js</code> 는 파일 전체를 덮어써서 손으로 고친 계정·소유자·<code>TARGET_SHEET_ID</code> 를 날립니다. 영상만 바꿀 때는 <code>npm run seed</code> 를 쓰세요. 이쪽은 <strong>영상 블록만 외과적으로 교체</strong>하고 9가지 무결성 검사를 통과해야 저장합니다.</p>
+      </li>
+      <li>
+        <b>스키마를 바꾸면 세 곳을 같이 고친다</b>
+        <p><code>00_설정.gs</code> 의 <code>HEADERS</code> → <code>02_API.gs</code> 의 읽기/쓰기 → <code>web/local-backend.js</code> 의 같은 함수. 한쪽만 고치면 시트판과 데모판이 어긋납니다.</p>
+      </li>
+      <li>
+        <b>시드 구조를 바꾸면 <code>ver</code> 를 올린다</b>
+        <p><code>build-static.js</code> 의 <code>sj-s6-</code> → <code>sj-s7-</code>. 안 올리면 방문자 브라우저의 localStorage 가 옛 구조를 계속 붙들고 있어 화면이 어긋납니다.</p>
+      </li>
+      <li>
+        <b>새 API 는 양쪽 백엔드에 다 넣는다</b>
+        <p><code>02_API.gs</code> 에만 넣고 <code>local-backend.js</code> 를 빠뜨리면 데모 사이트에서만 조용히 실패합니다. 함수 이름·인자 순서·반환 모양을 똑같이 맞추세요.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ══════════ 08 ══════════ -->
+  <section id="s8">
+    <h2><span class="n">08</span>왜 이렇게 돼 있나</h2>
+    <p class="lede">"이건 왜 이렇게 짰지?" 싶을 만한 결정들의 배경입니다. 잡았던 버그가 곧 설계 이유인 경우가 많습니다.</p>
+
+    <div class="tw"><table>
+      <thead><tr><th>보이는 것</th><th>이유</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>썸네일이 <code>onerror</code> 가 아니라 <strong>크기 검사</strong>로 대체된다</td>
+          <td>유튜브가 없는 <code>maxresdefault</code> 에 404 대신 회색 placeholder 를 200 으로 주는 경우가 있어 <code>onerror</code> 가 안 걸립니다. 지금은 <code>naturalWidth &lt; 320</code> 이면 <code>hqdefault</code> 로 갈아끼웁니다.</td>
+        </tr>
+        <tr>
+          <td>담은 영상·즐겨찾기가 <strong>계정별 맵</strong>에 저장된다</td>
+          <td>초기 데모판은 <code>userId</code> 를 받고도 무시해 단일 키에 저장했습니다. 교사가 담은 영상이 학생 계정에도 그대로 보였습니다.</td>
+        </tr>
+        <tr>
+          <td><code>api_saveClass</code> 가 <strong>값 없는 필드를 유지</strong>한다</td>
+          <td><code>sched</code> 를 빼고 부르면 학급의 커리큘럼 연결이 조용히 지워졌습니다. 지금은 <code>undefined</code> 면 기존 값을 그대로 둡니다.</td>
+        </tr>
+        <tr>
+          <td>앱 진입점이 <strong>스크립트 맨 끝</strong>에 있다</td>
+          <td>세션 복구 코드가 <code>GUEST_NAV</code> 선언보다 먼저 돌아 첫 화면이 빈 채로 떴습니다.</td>
+        </tr>
+        <tr>
+          <td>시드 스케줄이 <strong>영상ID를 직접 안 적는다</strong></td>
+          <td>ID를 박아두니 영상 목록이 바뀔 때 "명상 + 명상 + 타이머" 같은 엉뚱한 차시가 됐습니다. 지금은 소분류에서 골라 <em>명상 → 준비운동 → 본운동 → 정리</em> 흐름으로 엮습니다.</td>
+        </tr>
+        <tr>
+          <td>본문 색이 <code>n-500</code> 이상만 쓴다</td>
+          <td><code>n-400</code>(#94a3b8)은 흰 배경에서 2.56:1 로 WCAG AA(4.5:1) 미달이었습니다. 어두운 배경에서는 반대로 <code>n-600</code> 이 2.49:1 이라 밝은 톤을 씁니다.</td>
+        </tr>
+        <tr>
+          <td>재생 실패 시 <strong>5초 뒤 자동으로 다음</strong></td>
+          <td>임베드가 막힌 영상 하나에 수업이 멈추면 안 됩니다. 사유를 띄우고 넘어갑니다.</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ══════════ 09 ══════════ -->
+  <section id="s9">
+    <h2><span class="n">09</span>지금 상태 · 남은 일</h2>
+
+    <h3>완료</h3>
+    <div class="tw"><table>
+      <thead><tr><th>항목</th><th>결과</th></tr></thead>
+      <tbody>
+        <tr><td>백엔드 통합 테스트</td><td class="ok">125 / 125 통과</td></tr>
+        <tr><td>유튜브 영상</td><td class="ok">104건 전수 생존·임베드·재생시간 확인</td></tr>
+        <tr><td>썸네일</td><td class="ok">커버리지 100%</td></tr>
+        <tr><td>권한 제어</td><td class="ok">게스트·학생·교사·관리자 4시점 검증</td></tr>
+        <tr><td>색 대비</td><td class="ok">본문 전 항목 WCAG AA 이상</td></tr>
+        <tr><td>모바일 375px</td><td class="ok">가로 스크롤 없음</td></tr>
+        <tr><td>콘솔 에러</td><td class="ok">0건</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>남은 일</h3>
+    <div class="tw"><table>
+      <thead><tr><th>할 일</th><th>담당</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td><strong>구글 시트 채우기</strong></td><td>인수자</td><td>XLSX 가져오기 30초. 현재 시트는 비어 있음</td></tr>
+        <tr><td><strong>Apps Script 웹앱 배포</strong></td><td>인수자</td><td>여러 교사가 함께 쓰려면 필수</td></tr>
+        <tr><td>교재 표지·뷰어링크</td><td>운영</td><td><code>textbooks</code> 탭. 지금은 그라데이션 표지</td></tr>
+        <tr><td>자체 제작 영상으로 교체</td><td>제작</td><td>저작권 정리 필요 — <a href="#s1">01 참고</a></td></tr>
+        <tr><td>로고 이미지</td><td>디자인</td><td>현재 텍스트 로고</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="note warn">
+      <span class="tag">데모의 한계</span>
+      <p>지금 사이트는 백엔드가 없어 <strong>데이터가 방문자 브라우저에만 저장</strong>됩니다. 시연에는 충분하지만 실제 운영 데이터를 넣지 마세요. 콘솔에서 <code>sjReset()</code> 을 실행하면 초기화됩니다.</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 10 ══════════ -->
+  <section id="s10">
+    <h2><span class="n">10</span>v2 후보</h2>
+    <p class="lede">지금 구조에서 무리 없이 이어지는 것부터 적었습니다. 위쪽일수록 지금 코드에 자연스럽게 붙습니다.</p>
+
+    <div class="tw"><table>
+      <thead><tr><th>후보</th><th>왜 필요한가</th><th>난이도</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>구글 로그인 전환</strong></td>
+          <td>지금 방식은 솔트 없는 해시입니다. 학교 계정을 받으려면 이게 먼저입니다</td>
+          <td>중</td>
+        </tr>
+        <tr>
+          <td><strong>수업 진도 기록</strong></td>
+          <td>차시를 언제 진행했는지 남지 않습니다. 커리큘럼 + 출석은 있는데 그 사이 연결이 비어 있습니다</td>
+          <td>하</td>
+        </tr>
+        <tr>
+          <td><strong>영상 시청 로그</strong></td>
+          <td>조회수만 세고 누가 어디까지 봤는지는 모릅니다. 학생 자율학습을 붙이려면 필요합니다</td>
+          <td>중</td>
+        </tr>
+        <tr>
+          <td><strong>학부모 계정</strong></td>
+          <td>「내 출결」이 이름 매칭이라 자녀 연결이 안 됩니다. <code>users</code> 에 자녀 연결 열이 필요합니다</td>
+          <td>중</td>
+        </tr>
+        <tr>
+          <td><strong>급수 평가·인증서</strong></td>
+          <td>「급수 친구들」 콘텐츠는 있는데 급수를 딴 기록이 남지 않습니다. 이 제품의 정체성과 가장 맞닿은 기능</td>
+          <td>상</td>
+        </tr>
+        <tr>
+          <td><strong>영상 업로드 관리</strong></td>
+          <td>지금은 시트를 직접 고쳐야 합니다. 관리자 화면에서 URL만 붙여 넣으면 메타를 자동으로 채우는 흐름</td>
+          <td>중</td>
+        </tr>
+        <tr>
+          <td><strong>오프라인 대비</strong></td>
+          <td>교실 인터넷이 끊기면 아무것도 안 됩니다. 최소한 담은 목록과 커리큘럼은 캐시해 둘 만합니다</td>
+          <td>상</td>
+        </tr>
+      </tbody>
+    </table></div>
+
+    <div class="note">
+      <span class="tag">권하는 순서</span>
+      <p>운영을 먼저 안정시키는 쪽이면 <strong>시트 배포 → 구글 로그인 → 수업 진도 기록</strong>. 제품을 키우는 쪽이면 <strong>급수 평가 → 영상 시청 로그 → 학부모 계정</strong> 순이 자연스럽습니다.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>미래형학교체육 '스마트점핑'(Smart-Jumping) 인수인계서</span>
+    <span>2026-08-22 · 커밋 <code>e7c069a</code></span>
+  </footer>
+
+</main>
+</div>

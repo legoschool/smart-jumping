@@ -1,0 +1,20 @@
+{
+  "name": "smart-jumping",
+  "version": "1.0.0",
+  "description": "미래형학교체육 '스마트점핑'(Smart-Jumping) — 교실용 학교체육 수업 영상 플랫폼",
+  "private": true,
+  "scripts": {
+    "test": "node tools/test.js",
+    "build": "node tools/build-static.js",
+    "xlsx": "node tools/make-xlsx.js",
+    "serve": "node tools/serve-root.js",
+    "seed": "node tools/gen-seed2.js && node tools/patch-seed.js",
+    "verify:yt": "node tools/verify-yt.js",
+    "verify:thumb": "node tools/chk-thumb.js",
+    "check": "npm test && npm run build"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "license": "MIT"
+}
