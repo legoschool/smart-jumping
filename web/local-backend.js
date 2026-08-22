@@ -37,6 +37,8 @@
     set('views', {});
     set('playlist', []);
     set('profile', null);
+    // 로그인 세션 캐시도 비운다. 안 그러면 이전 시드의 이름·소속이 그대로 남는다.
+    try { localStorage.removeItem('sj_user'); } catch (e) {}
   }
 
   /* ── SHA-256 (로그인 확인용) ── */
