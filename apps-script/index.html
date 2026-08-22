@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>미래형학교체육 '스마트점핑'(Smart-Jumping)</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M25 18l20 14-20 14z' fill='%23fff'/%3E%3C/svg%3E">
   <?!= include('css'); ?>
 </head>
 <body>
@@ -69,7 +70,7 @@
         <span id="toLogin" hidden>이미 계정이 있으신가요? <b>로그인</b></span>
       </div>
 
-      <p class="login-hint">체험 계정 &nbsp;teacher / 1234&nbsp; · &nbsp;test / 1234</p>
+      <p class="login-hint">체험 계정 &nbsp;<b>teacher</b> 교사 · <b>test</b> 관리자 · <b>teststu</b> 학생<br>비밀번호는 모두 1234</p>
     </div>
   </section>
 </div>
@@ -78,11 +79,11 @@
 <div id="app" class="app" hidden>
 
   <aside class="sidebar">
-    <div class="brand">
+    <a href="#/library" class="brand" id="brandHome" title="홈으로">
       <div class="brand-sub">미래형학교체육</div>
       <div class="brand-main">스마트점핑</div>
       <div class="brand-en">Smart-Jumping</div>
-    </div>
+    </a>
 
     <div class="user-card">
       <div class="user-name"><b id="userName">-</b><span>님</span></div>
@@ -93,12 +94,12 @@
 
     <nav class="side-nav">
       <a href="#/library" data-nav="library"><i class="nav-ico">▶</i><span class="nav-txt">스마트점핑</span></a>
-      <a href="#/classes" data-nav="classes"><i class="nav-ico">📋</i><span class="nav-txt">수업관리</span></a>
+      <a href="#/classes" data-nav="classes" data-role="교사,관리자"><i class="nav-ico">📋</i><span class="nav-txt">수업관리</span></a>
       <a href="#" class="has-sub" id="navMypage"><i class="nav-ico">👤</i><span class="nav-txt">마이페이지</span><i class="chev">▼</i></a>
       <div class="sub-nav" id="subMypage">
         <a href="#/mypage/info" data-nav="info">정보수정</a>
-        <a href="#/mypage/equipment" data-nav="equipment">교구보유현황</a>
-        <a href="#/mypage/schedule" data-nav="schedule">프로그램스케줄</a>
+        <a href="#/mypage/equipment" data-nav="equipment" data-role="교사,관리자">교구보유현황</a>
+        <a href="#/mypage/schedule" data-nav="schedule" data-role="교사,관리자">프로그램스케줄</a>
         <a href="#/mypage/withdraw" data-nav="withdraw">회원탈퇴</a>
       </div>
       <a href="#/textbook" data-nav="textbook"><i class="nav-ico">📚</i><span class="nav-txt">온라인교재</span></a>

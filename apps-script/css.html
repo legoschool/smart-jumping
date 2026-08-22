@@ -169,7 +169,12 @@ ul{ margin:0; padding:0; list-style:none; }
   position:sticky; top:0; height:100vh; overflow-y:auto; z-index:20;
 }
 .sidebar::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.25); background-clip:content-box; }
-.brand{ padding:22px 20px 18px; }
+.brand{
+  display:block; padding:22px 20px 18px; border-radius:var(--r-sm);
+  margin:6px 10px 0; transition:background .16s var(--ease);
+}
+.brand:hover{ background:rgba(255,255,255,.12); }
+.brand:active{ background:rgba(255,255,255,.18); }
 .brand-sub{ font-size:11px; opacity:.72; font-weight:600; letter-spacing:.01em; }
 .brand-main{ font-size:23px; font-weight:800; letter-spacing:-.035em; margin:2px 0 3px; }
 .brand-en{ font-size:9px; opacity:.6; letter-spacing:.2em; text-transform:uppercase; font-weight:700; }
@@ -186,6 +191,8 @@ ul{ margin:0; padding:0; list-style:none; }
   display:inline-block; margin:5px 0 11px; padding:2.5px 9px; border-radius:99px;
   background:var(--indigo-50); color:var(--indigo-600); font-size:11px; font-weight:700;
 }
+.user-role[data-r="관리자"]{ background:#fef3c7; color:#b45309; }
+.user-role[data-r="학생"]{ background:#dcfce7; color:#15803d; }
 .link-logout{ display:inline-block; margin-top:10px; font-size:12px; color:var(--muted); }
 .link-logout:hover{ color:var(--ink); text-decoration:underline; }
 
