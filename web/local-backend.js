@@ -27,16 +27,25 @@
     return val;
   }
 
-  /* 최초 진입 시 시드 주입 (시드 버전이 바뀌면 다시 주입) */
+  /* 최초 진입 시 시드 주입 (시드 버전이 바뀌면 다시 주입)
+     구글 시트와 동일하게 소유자(owner) 를 함께 저장한다.
+     이게 없으면 교사가 담은 영상이 학생 계정에도 그대로 보인다. */
   if (get('ver') !== SEED.ver) {
     set('ver', SEED.ver);
-    set('classes', SEED.classes);
+    set('classes', SEED.classes.map(function (c) {
+      return { id: c.id, owner: SEED.seedOwner, ym: c.ym, region: c.region,
+               school: c.school, grade: c.grade, cls: c.cls, cap: c.cap, memo: c.memo || '' };
+    }));
     set('attendance', SEED.attendance);
-    set('equipment', SEED.equipment);
-    set('schedules', SEED.schedules);
+    set('equipment', SEED.equipment.map(function (e) {
+      return { owner: SEED.seedOwner, name: e.name, agency: e.agency, fresh: e.fresh, used: e.used };
+    }));
+    set('schedules', SEED.schedules.map(function (g) {
+      return { owner: SEED.seedOwner, name: g.name, items: g.items };
+    }));
     set('views', {});
-    set('playlist', []);
-    set('profile', null);
+    set('playlists', {});
+    set('profiles', {});
     // 로그인 세션 캐시도 비운다. 안 그러면 이전 시드의 이름·소속이 그대로 남는다.
     try { localStorage.removeItem('sj_user'); } catch (e) {}
   }
@@ -52,8 +61,13 @@
     });
   }
 
-  function profile() {
-    return get('profile', null) || {};
+  /** 사용자별 프로필 덮어쓰기 값 */
+  function profile(userId) {
+    return (get('profiles', {}) || {})[userId] || {};
+  }
+  /** 소유자 기준 필터 — 구글 시트판의 '소유자' 열과 같은 역할 */
+  function mine(list, userId) {
+    return (list || []).filter(function (x) { return x.owner === userId; });
   }
 
   /* ══════════════ API 구현 ══════════════ */
@@ -72,7 +86,7 @@
         if (h !== null && h !== u.hash) {
           return { ok: false, msg: '비밀번호가 올바르지 않습니다.' };
         }
-        var p = profile();
+        var p = profile(u.id);
         return {
           ok: true,
           user: {
@@ -86,7 +100,7 @@
       });
     },
 
-    api_bootstrap: function () {
+    api_bootstrap: function (userId) {
       var views = get('views', {});
       return {
         categories: SEED.categories,
@@ -96,13 +110,16 @@
             dur: v.dur, views: (v.views || 0) + (views[v.id] || 0), date: v.date
           };
         }),
-        playlist: get('playlist', []),
+        // 담은 영상은 계정별로 따로 보관한다
+        playlist: (get('playlists', {}) || {})[userId] || [],
         appTitle: SEED.appTitle
       };
     },
 
     api_savePlaylist: function (userId, ids) {
-      set('playlist', ids || []);
+      var all = get('playlists', {}) || {};
+      all[userId] = ids || [];
+      set('playlists', all);
       return { ok: true, count: (ids || []).length };
     },
 
@@ -113,16 +130,17 @@
       return { ok: true };
     },
 
-    /* ── 수업관리 ── */
-    api_classes: function () { return get('classes', []); },
+    /* ── 수업관리 (내 수업만) ── */
+    api_classes: function (userId) { return mine(get('classes', []), userId); },
 
     api_saveClass: function (userId, obj) {
       var rows = get('classes', []);
       if (obj.id) {
         var i = rows.findIndex(function (c) { return c.id === obj.id; });
         if (i < 0) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+        if (rows[i].owner !== userId) return { ok: false, msg: '수정 권한이 없습니다.' };
         rows[i] = {
-          id: obj.id, ym: obj.ym, region: obj.region, school: obj.school,
+          id: obj.id, owner: userId, ym: obj.ym, region: obj.region, school: obj.school,
           grade: obj.grade, cls: obj.cls, cap: obj.cap, memo: obj.memo || ''
         };
         set('classes', rows);
@@ -135,7 +153,7 @@
       });
       var id = 'CL' + ('00' + (max + 1)).slice(-3);
       rows.push({
-        id: id, ym: obj.ym, region: obj.region, school: obj.school,
+        id: id, owner: userId, ym: obj.ym, region: obj.region, school: obj.school,
         grade: obj.grade, cls: obj.cls, cap: obj.cap, memo: obj.memo || ''
       });
       set('classes', rows);
@@ -161,21 +179,33 @@
       return { ok: true, count: (list || []).length };
     },
 
-    /* ── 교구 ── */
-    api_equipment: function () { return get('equipment', []); },
+    /* ── 교구 (내 것만) ── */
+    api_equipment: function (userId) {
+      return mine(get('equipment', []), userId).map(function (e) {
+        return { name: e.name, agency: e.agency, fresh: e.fresh, used: e.used };
+      });
+    },
 
     api_saveEquipment: function (userId, list) {
-      set('equipment', list || []);
+      var others = get('equipment', []).filter(function (e) { return e.owner !== userId; });
+      (list || []).forEach(function (r) {
+        others.push({ owner: userId, name: r.name, agency: r.agency, fresh: r.fresh, used: r.used });
+      });
+      set('equipment', others);
       return { ok: true };
     },
 
-    /* ── 스케줄 ── */
-    api_schedules: function () { return get('schedules', []); },
+    /* ── 스케줄 (내 것만) ── */
+    api_schedules: function (userId) {
+      return mine(get('schedules', []), userId).map(function (g) {
+        return { name: g.name, items: g.items };
+      });
+    },
 
     api_saveSchedule: function (userId, groupName, no, videoIds) {
       var groups = get('schedules', []);
-      var g = groups.filter(function (x) { return x.name === groupName; })[0];
-      if (!g) { g = { name: groupName, items: [] }; groups.push(g); }
+      var g = groups.filter(function (x) { return x.owner === userId && x.name === groupName; })[0];
+      if (!g) { g = { owner: userId, name: groupName, items: [] }; groups.push(g); }
       var it = g.items.filter(function (x) { return Number(x.no) === Number(no); })[0];
       if (it) it.videoIds = videoIds || [];
       else g.items.push({ no: Number(no), videoIds: videoIds || [] });
@@ -185,7 +215,9 @@
     },
 
     api_deleteScheduleGroup: function (userId, groupName) {
-      set('schedules', get('schedules', []).filter(function (g) { return g.name !== groupName; }));
+      set('schedules', get('schedules', []).filter(function (g) {
+        return !(g.owner === userId && g.name === groupName);
+      }));
       return { ok: true };
     },
 
@@ -194,11 +226,13 @@
 
     /* ── 회원 ── */
     api_updateProfile: function (userId, obj) {
-      var p = profile();
+      var all = get('profiles', {}) || {};
+      var p = all[userId] || {};
       if (obj.name) p.name = obj.name;
       if (obj.org !== undefined) p.org = obj.org;
       if (obj.region !== undefined) p.region = obj.region;
-      set('profile', p);
+      all[userId] = p;
+      set('profiles', all);
       return { ok: true, user: { id: userId, name: p.name, org: p.org, region: p.region } };
     },
 
