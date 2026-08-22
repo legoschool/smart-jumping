@@ -140,8 +140,39 @@ function api_bootstrap(userId) {
   }
 
   payload.playlist = userId ? loadPlaylist_(userId) : [];
+  payload.favorites = userId ? loadFavorites_(userId) : [];
   payload.appTitle = APP.TITLE;
   return payload;
+}
+
+/* ═══════════════════════════════════════════
+   즐겨찾기
+   ═══════════════════════════════════════════ */
+
+function loadFavorites_(userId) {
+  const r = readAll_(T.FAVORITES).filter(function (x) {
+    return String(x['소유자']) === String(userId);
+  })[0];
+  if (!r) return [];
+  return String(r['즐겨찾기영상ID목록'] || '').split(',')
+    .map(function (s) { return s.trim(); }).filter(Boolean);
+}
+
+function api_saveFavorites(userId, ids) {
+  return withLock_(function () {
+    const sh = sheet_(T.FAVORITES);
+    const rows = readAll_(T.FAVORITES);
+    const idx = rows.findIndex(function (x) { return String(x['소유자']) === String(userId); });
+    const list = (ids || []).join(',');
+
+    if (idx < 0) {
+      appendRows_(T.FAVORITES, [{ '소유자': userId, '즐겨찾기영상ID목록': list, '수정일': now_() }]);
+    } else {
+      sh.getRange(idx + 2, 2).setValue(list);
+      sh.getRange(idx + 2, 3).setValue(now_());
+    }
+    return { ok: true, count: (ids || []).length };
+  });
 }
 
 /* ═══════════════════════════════════════════
@@ -494,6 +525,135 @@ function api_textbooks() {
       badge: String(b['뱃지'] || '')
     };
   }).sort(function (a, b) { return a.no - b.no; });
+}
+
+/* ═══════════════════════════════════════════
+   내 출결 조회 (학생·학부모)
+   ═══════════════════════════════════════════ */
+
+/**
+ * 로그인한 사람의 이름과 같은 학생명의 출결을 모아준다.
+ * 출석부는 학생명(문자열)으로 기록되므로 계정 이름과 매칭한다.
+ */
+function api_myAttendance(userId) {
+  const u = readAll_(T.USERS).filter(function (x) {
+    return String(x['아이디']) === String(userId);
+  })[0];
+  if (!u) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+
+  const myName = String(u['이름']).trim();
+  const classes = readAll_(T.CLASSES);
+  const clsById = {};
+  classes.forEach(function (c) { clsById[String(c['수업ID'])] = c; });
+
+  const mine = readAll_(T.ATTENDANCE).filter(function (a) {
+    return String(a['학생명']).trim() === myName;
+  });
+
+  // 학급별로 묶는다
+  const byClass = {};
+  mine.forEach(function (a) {
+    const cid = String(a['수업ID']);
+    const c = clsById[cid];
+    if (!byClass[cid]) {
+      byClass[cid] = {
+        classId: cid,
+        className: c ? classLabel_(c) : cid,
+        school: c ? String(c['학교']) : '',
+        records: [], 출: 0, 결: 0, 지: 0, 조: 0, total: 0
+      };
+    }
+    const st = String(a['출결']);
+    byClass[cid].records.push({ date: dateStr_(a['날짜']), status: st });
+    if (byClass[cid][st] !== undefined) byClass[cid][st]++;
+    byClass[cid].total++;
+  });
+
+  const list = Object.keys(byClass).map(function (k) {
+    byClass[k].records.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    byClass[k].rate = byClass[k].total
+      ? Math.round(byClass[k]['출'] / byClass[k].total * 100) : 0;
+    return byClass[k];
+  });
+
+  return { ok: true, name: myName, classes: list };
+}
+
+/* ═══════════════════════════════════════════
+   수업 리포트 (인쇄 · PDF)
+   ═══════════════════════════════════════════ */
+
+/** 학급 한 곳의 정보 + 커리큘럼 + 출결을 한 번에 모아준다 */
+function api_classReport(classId, userId) {
+  const c = readAll_(T.CLASSES).filter(function (x) {
+    return String(x['수업ID']) === String(classId);
+  })[0];
+  if (!c) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+
+  const isAdmin = roleOf_(userId) === '관리자';
+  if (!isAdmin && String(c['소유자']) !== String(userId)) {
+    return { ok: false, msg: '조회 권한이 없습니다.' };
+  }
+
+  const cur = api_classCurriculum(classId, userId);
+
+  // 회차별 출결
+  const att = readAll_(T.ATTENDANCE).filter(function (a) {
+    return String(a['수업ID']) === String(classId);
+  });
+  const dates = [];
+  att.forEach(function (a) {
+    const d = dateStr_(a['날짜']);
+    if (d && dates.indexOf(d) < 0) dates.push(d);
+  });
+  dates.sort();
+
+  const names = [];
+  att.forEach(function (a) {
+    const n = String(a['학생명']);
+    if (names.indexOf(n) < 0) names.push(n);
+  });
+  names.sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+
+  const grid = names.map(function (n) {
+    const row = { name: n, cells: [], 출: 0, 결: 0, 지: 0, 조: 0 };
+    dates.forEach(function (d) {
+      const rec = att.filter(function (a) {
+        return String(a['학생명']) === n && dateStr_(a['날짜']) === d;
+      })[0];
+      const st = rec ? String(rec['출결']) : '';
+      row.cells.push(st);
+      if (row[st] !== undefined) row[st]++;
+    });
+    row.total = dates.length;
+    row.rate = dates.length ? Math.round(row['출'] / dates.length * 100) : 0;
+    return row;
+  });
+
+  // 커리큘럼 영상 제목까지 붙여서 돌려준다
+  const videos = readAll_(T.VIDEOS);
+  const vTitle = {};
+  videos.forEach(function (v) { vTitle[String(v['영상ID'])] = String(v['제목']); });
+  const curItems = (cur.items || []).map(function (it) {
+    return {
+      no: it.no,
+      videos: it.videoIds.map(function (id) { return vTitle[id] || id; })
+    };
+  });
+
+  return {
+    ok: true,
+    printedAt: now_(),
+    cls: {
+      id: String(c['수업ID']), ym: String(c['수업년월']), region: String(c['지역']),
+      school: String(c['학교']), grade: c['학년'], cls: c['반'], cap: c['정원'],
+      owner: String(c['소유자']), memo: String(c['메모'] || '')
+    },
+    group: cur.group || '',
+    curriculum: curItems,
+    dates: dates,
+    grid: grid
+  };
 }
 
 /* ═══════════════════════════════════════════

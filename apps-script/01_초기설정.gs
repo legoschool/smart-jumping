@@ -53,6 +53,7 @@ function 초기설정_실행() {
   seedEquipment_();
   seedSchedules_();
   seedTextbooks_();
+  seedFavorites_();
 
   clearCache_();
 
@@ -287,9 +288,12 @@ function seedClasses_() {
   replaceAll_(T.CLASSES, rows);
 }
 
-/** 출석은 날짜별로 쌓인다. 시드는 최근 3회차를 만들어 둔다. */
+/**
+ * 출석은 날짜별로 쌓인다. 시드는 최근 3회차를 만들어 둔다.
+ * 명단 끝의 '학생' 은 teststu 계정의 이름 — 학생이 자기 출결을 조회할 수 있게 넣어둔다.
+ */
 function seedAttendance_() {
-  const names = ['김민준', '이서연', '박지호', '최수아', '정예준', '강하윤', '조은우', '윤채원'];
+  const names = ['김민준', '이서연', '박지호', '최수아', '정예준', '강하윤', '조은우', '윤채원', '학생'];
   const rows = [];
   const base = new Date();
   // 7일 전 · 3일 전 · 오늘 (요일이 다른 3회차)
@@ -342,6 +346,19 @@ function seedSchedules_() {
       '영상ID목록': seq(pick('S31', 2), pick('S32', 0), pick('S33', 0), pick('S35', 2)) },
     { '소유자': 'test', '그룹명': '체력왕 도전', '차시': 2,
       '영상ID목록': seq(pick('S36', 0), pick('S34', 0), pick('S62', 0)) }
+  ]);
+}
+
+/** 즐겨찾기 시드 — 각 영역에서 하나씩 담아 ⭐ 메뉴가 비어 보이지 않게 한다 */
+function seedFavorites_() {
+  function pick(subId) {
+    const v = VIDEO_DATA.filter(function (x) { return x[2] === subId; })[0];
+    return v ? v[0] : '';
+  }
+  const favs = [pick('S13'), pick('S22'), pick('S31'), pick('S41'), pick('S51')]
+    .filter(Boolean).join(',');
+  replaceAll_(T.FAVORITES, [
+    { '소유자': 'teacher', '즐겨찾기영상ID목록': favs, '수정일': now_() }
   ]);
 }
 

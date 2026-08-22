@@ -22,7 +22,8 @@ const T = {
   EQUIPMENT: 'equipment',
   SCHEDULES: 'schedules',
   TEXTBOOKS: 'textbooks',
-  PLAYLISTS: 'playlists'
+  PLAYLISTS: 'playlists',
+  FAVORITES: 'favorites'
 };
 
 /** 각 탭의 헤더 정의 */
@@ -35,7 +36,8 @@ const HEADERS = {
   equipment:  ['소유자', '교구명', '대리점명', '새제품수량', '중고제품수량', '수정일'],
   schedules:  ['소유자', '그룹명', '차시', '영상ID목록'],
   textbooks:  ['권차', '제목', '표지URL', '뷰어링크', '뱃지'],
-  playlists:  ['소유자', '담은영상ID목록', '수정일']
+  playlists:  ['소유자', '담은영상ID목록', '수정일'],
+  favorites:  ['소유자', '즐겨찾기영상ID목록', '수정일']
 };
 
 /* ─────────────────────────────────────────────

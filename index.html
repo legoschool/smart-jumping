@@ -96,59 +96,8 @@ ul{ margin:0; padding:0; list-style:none; }
 .btn-sm{ padding:7px 13px; font-size:13px; border-radius:7px; }
 .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
 
-/* ═══════════════ 로그인 ═══════════════ */
-.login-wrap{
-  min-height:100vh; display:grid; grid-template-columns:1.05fr .95fr;
-  background:var(--n-900);
-}
-.login-hero{
-  position:relative; overflow:hidden; padding:60px 56px;
-  display:flex; flex-direction:column; justify-content:space-between;
-  background:
-    radial-gradient(900px 620px at 12% 8%, rgba(124,58,237,.55), transparent 62%),
-    radial-gradient(760px 560px at 88% 92%, rgba(14,165,233,.45), transparent 60%),
-    linear-gradient(150deg,#3b0764 0%,#312e81 46%,#0c4a6e 100%);
-  color:#fff;
-}
-.login-hero::after{
-  content:''; position:absolute; inset:0; pointer-events:none;
-  background-image:radial-gradient(rgba(255,255,255,.14) 1px, transparent 1px);
-  background-size:26px 26px; opacity:.5;
-  mask-image:radial-gradient(circle at 30% 30%, #000, transparent 78%);
-}
-.hero-badge{
-  position:relative; z-index:1; align-self:flex-start;
-  border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.1);
-  backdrop-filter:blur(6px); border-radius:99px; padding:7px 16px;
-  font-size:12.5px; font-weight:600; letter-spacing:.02em;
-}
-.hero-mid{ position:relative; z-index:1; }
-.hero-title{
-  font-size:clamp(38px,4.4vw,60px); font-weight:800; line-height:1.1;
-  letter-spacing:-.035em; margin:0 0 18px;
-}
-.hero-title em{
-  font-style:normal;
-  background:linear-gradient(96deg,#fbbf24,#f97316 55%,#fb7185);
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-}
-.hero-sub{ font-size:16px; color:rgba(255,255,255,.78); line-height:1.7; max-width:430px; margin:0; }
-.hero-stats{ position:relative; z-index:1; display:flex; gap:34px; }
-.hero-stat b{ display:block; font-size:27px; font-weight:800; letter-spacing:-.02em; }
-.hero-stat span{ font-size:12.5px; color:rgba(255,255,255,.6); }
-
-.login-panel{
-  background:#fff; display:flex; align-items:center; justify-content:center; padding:48px 40px;
-}
-.login-card{ width:100%; max-width:376px; }
-.login-brand{ margin-bottom:34px; }
-.login-brand-sub{ font-size:13px; color:var(--muted); font-weight:600; }
-.login-brand-main{
-  font-size:34px; font-weight:800; letter-spacing:-.04em; margin:3px 0 4px;
-  background:linear-gradient(96deg,var(--violet-600),var(--indigo-600) 52%,var(--sky-500));
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-}
-.login-brand-en{ font-size:11px; color:var(--n-500); letter-spacing:.22em; text-transform:uppercase; font-weight:600; }
+/* ═══════════════ 로그인 (모달) ═══════════════ */
+.auth-box{ max-width:430px; }
 .login-form{ display:flex; flex-direction:column; gap:16px; }
 .fld{ display:flex; flex-direction:column; gap:7px; }
 .fld > span{ font-size:13px; font-weight:600; color:var(--n-700); }
@@ -215,6 +164,13 @@ ul{ margin:0; padding:0; list-style:none; }
 }
 .link-logout:hover{ color:var(--ink); background:var(--n-100); }
 
+/* 로그인 전 카드 */
+.guest-card{ padding:18px 15px 13px; }
+.guest-msg{
+  font-size:12.5px; color:var(--n-600); line-height:1.6;
+  margin-bottom:13px; text-align:center;
+}
+
 .side-nav{ display:flex; flex-direction:column; padding-bottom:24px; }
 .side-nav > a{
   position:relative; padding:13px 20px; font-size:14px; font-weight:600;
@@ -230,7 +186,17 @@ ul{ margin:0; padding:0; list-style:none; }
 .side-nav > a:hover{ background:rgba(255,255,255,.11); color:#fff; }
 .side-nav > a.active{ background:rgba(0,0,0,.26); color:#fff; }
 .side-nav > a.active::before{ transform:scaleY(1); }
-.nav-ico{ width:18px; text-align:center; opacity:.9; font-size:15px; }
+/* 사이드바 아이콘 — 선 기반 SVG */
+.nav-ico{
+  width:19px; height:19px; flex:0 0 19px;
+  fill:none; stroke:currentColor; stroke-width:1.7;
+  stroke-linecap:round; stroke-linejoin:round;
+  opacity:.9; transition:opacity .16s var(--ease);
+}
+.side-nav > a:hover .nav-ico, .side-nav > a.active .nav-ico{ opacity:1; }
+.btn-ico{
+  width:15px; height:15px; fill:currentColor; stroke:none; flex:0 0 15px;
+}
 .nav-txt{ flex:1; }
 .chev{ font-style:normal; font-size:11px; opacity:.75; transition:transform .2s var(--ease); }
 .chev.up{ transform:rotate(180deg); }
@@ -801,11 +767,97 @@ button.st-tag:hover{ filter:brightness(.94); }
 }
 @keyframes toastIn{ from{opacity:0; transform:translate(-50%,10px)} to{opacity:1; transform:translate(-50%,0)} }
 
+/* ═══════════════ 즐겨찾기 ═══════════════ */
+.vfav{
+  position:absolute; top:9px; right:9px; z-index:2;
+  width:28px; height:28px; border-radius:8px; border:0; cursor:pointer;
+  background:rgba(15,23,42,.5); backdrop-filter:blur(4px);
+  color:rgba(255,255,255,.55); font-size:15px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .16s var(--ease);
+}
+.vfav:hover{ background:rgba(15,23,42,.75); color:#fbbf24; transform:scale(1.08); }
+.vfav.on{ background:rgba(251,191,36,.95); color:#fff; }
+.gnb-fav{ margin-left:6px; }
+.gnb-fav.active{ color:#b45309 !important; background:#fef3c7 !important; }
+.gnb-fav.active::after{ background:linear-gradient(90deg,#f59e0b,#fbbf24) !important; }
+.gnb-fav-cnt{
+  display:inline-block; margin-left:6px; background:var(--n-200); color:var(--n-600);
+  font-size:11px; font-weight:700; padding:1px 7px; border-radius:99px;
+}
+.gnb-fav.active .gnb-fav-cnt{ background:#fde68a; color:#92400e; }
+
+/* ═══════════════ 내 출결 ═══════════════ */
+.mya-head{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:20px 22px; border-bottom:1px solid var(--line);
+}
+.mya-cls{ font-size:17px; font-weight:800; letter-spacing:-.02em; }
+.mya-sub{ font-size:12.5px; color:var(--muted); margin-top:3px; }
+.mya-rate{ text-align:right; }
+.mya-rate b{ display:block; font-size:26px; font-weight:800; letter-spacing:-.02em; }
+.mya-rate span{ font-size:11.5px; color:var(--muted); }
+.mya-rate.ok b{ color:var(--ok); }
+.mya-rate.warn b{ color:#b45309; }
+.mya-rate.bad b{ color:var(--danger); }
+.mya-stat{ display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--line); }
+.mya-cell{ padding:16px 10px; text-align:center; border-right:1px solid var(--n-100); }
+.mya-cell:last-child{ border-right:0; }
+.mya-cell b{ display:block; font-size:21px; font-weight:800; color:var(--n-800); }
+.mya-cell span{ font-size:11.5px; color:var(--muted); }
+.mya-cell.bad b{ color:var(--danger); }
+.st-chip{
+  display:inline-block; padding:3px 12px; border-radius:99px;
+  font-size:11.5px; font-weight:700;
+}
+.st-chip.st-ok{ background:#dcfce7; color:#15803d; }
+.st-chip.st-bad{ background:#fee2e2; color:#b91c1c; }
+.st-chip.st-mid{ background:#fef3c7; color:#b45309; }
+.ico-rep{ background:#0891b2; }
+
+/* ═══════════════ 수업 리포트 ═══════════════ */
+.report-preview{ max-height:60vh; overflow-y:auto; background:var(--n-50); padding:18px; border-radius:var(--r); }
+.rep{ background:#fff; padding:26px 28px; font-size:12.5px; color:#111827; }
+.rep-top{ display:flex; justify-content:space-between; align-items:flex-start;
+  padding-bottom:14px; border-bottom:2.5px solid var(--indigo-600); margin-bottom:18px; }
+.rep-brand{ font-size:11px; font-weight:700; color:var(--indigo-600); letter-spacing:.04em; }
+.rep-title{ margin:4px 0 0; font-size:23px; font-weight:800; letter-spacing:-.03em; }
+.rep-when{ font-size:11px; color:var(--n-500); white-space:nowrap; }
+.rep-info{ width:100%; border-collapse:collapse; margin-bottom:22px; }
+.rep-info th, .rep-info td{ border:1px solid var(--n-300); padding:8px 11px; text-align:left; }
+.rep-info th{ background:var(--n-50); width:88px; font-weight:700; color:var(--n-700); font-size:12px; }
+.rep-h2{ font-size:14.5px; font-weight:800; margin:22px 0 10px; padding-left:9px;
+  border-left:4px solid var(--indigo-600); letter-spacing:-.02em; }
+.rep-sub{ font-size:11.5px; font-weight:600; color:var(--n-500); margin-left:5px; }
+.rep-tbl{ width:100%; border-collapse:collapse; }
+.rep-tbl th, .rep-tbl td{ border:1px solid var(--n-300); padding:7px 9px; vertical-align:top; }
+.rep-tbl th{ background:var(--n-50); font-weight:700; font-size:11.5px; }
+.rep-tbl .c{ text-align:center; }
+.rep-att th, .rep-att td{ padding:6px 5px; font-size:11.5px; }
+.rep-att .st-ok{ color:#15803d; }
+.rep-att .st-bad{ background:#fee2e2; color:#b91c1c; font-weight:700; }
+.rep-att .st-mid{ background:#fef3c7; color:#b45309; font-weight:700; }
+.rep-att .st-none{ color:var(--n-300); }
+.rep-tbl td.bad{ color:#b91c1c; font-weight:700; }
+.rep-none{ color:var(--n-500); font-size:12px; padding:10px 0; }
+.rep-memo{ border:1px solid var(--n-300); padding:11px 13px; margin:0; line-height:1.6; }
+.rep-foot{ margin-top:26px; padding-top:12px; border-top:1px solid var(--n-300);
+  text-align:center; font-size:10.5px; color:var(--n-500); }
+
+.print-area{ display:none; }
+
+@media print{
+  body.printing > *{ display:none !important; }
+  body.printing .print-area{ display:block !important; }
+  body.printing{ background:#fff; }
+  .rep{ padding:0; }
+  .rep-att tr{ page-break-inside:avoid; }
+  @page{ margin:14mm; }
+}
+
 /* ═══════════════ 반응형 ═══════════════ */
 @media (max-width:1080px){
-  .login-wrap{ grid-template-columns:1fr; }
-  .login-hero{ padding:44px 36px; gap:30px; }
-  .hero-title{ font-size:clamp(30px,7vw,44px); }
+  .auth-box{ max-width:100%; }
 }
 @media (max-width:900px){
   .app{ flex-direction:column; }
@@ -847,31 +899,14 @@ button.st-tag:hover{ filter:brightness(.94); }
 </head>
 <body>
 
-<!-- ═══════════ 로그인 ═══════════ -->
-<div id="loginView" class="login-wrap">
-  <section class="login-hero">
-    <div class="hero-badge">미래형학교체육 · Smart-Jumping</div>
-    <div class="hero-mid">
-      <h1 class="hero-title">수업 전에 <em>담고</em>,<br>수업 중엔 <em>재생만</em>.</h1>
-      <p class="hero-sub">
-        명상부터 준비운동·타바타·줄넘기 급수·리듬 트레이닝까지.
-        필요한 영상을 미리 담아두면 교실에서는 재생 버튼 하나로 한 차시가 흘러갑니다.
-      </p>
+<!-- ═══════════ 로그인 / 회원가입 (모달) ═══════════ -->
+<div id="authModal" class="modal" hidden>
+  <div class="modal-box auth-box">
+    <div class="modal-head">
+      <h3 id="authTitle">로그인</h3>
+      <button class="modal-x" id="authX">✕</button>
     </div>
-    <div class="hero-stats">
-      <div class="hero-stat"><b id="heroV">59</b><span>수업 영상</span></div>
-      <div class="hero-stat"><b>6</b><span>영역</span></div>
-      <div class="hero-stat"><b>18</b><span>세부 분류</span></div>
-    </div>
-  </section>
-
-  <section class="login-panel">
-    <div class="login-card">
-      <div class="login-brand">
-        <div class="login-brand-sub">미래형학교체육</div>
-        <div class="login-brand-main">스마트점핑</div>
-        <div class="login-brand-en">Smart-Jumping</div>
-      </div>
+    <div class="modal-body">
       <form id="loginForm" class="login-form" autocomplete="off">
         <label class="fld">
           <span>아이디</span>
@@ -909,11 +944,11 @@ button.st-tag:hover{ filter:brightness(.94); }
 
       <p class="login-hint" style="background:#fff7ed;color:#c2410c">데모 사이트 · 데이터는 이 브라우저에만 저장됩니다<br><a href="https://github.com/legoschool/smart-jumping" target="_blank" rel="noopener" style="color:#c2410c;text-decoration:underline">구글 시트 연동판 소스 보기</a></p><p class="login-hint" style="margin-top:8px">체험 계정 &nbsp;<b>teacher</b> 관리자 · <b>test</b> 교사 · <b>teststu</b> 학생<br>비밀번호는 모두 1234</p>
     </div>
-  </section>
+  </div>
 </div>
 
 <!-- ═══════════ 본 화면 ═══════════ -->
-<div id="app" class="app" hidden>
+<div id="app" class="app">
 
   <aside class="sidebar">
     <a href="#/library" class="brand" id="brandHome" title="홈으로">
@@ -922,25 +957,66 @@ button.st-tag:hover{ filter:brightness(.94); }
       <div class="brand-en">Smart-Jumping</div>
     </a>
 
-    <div class="user-card">
+    <!-- 로그인 전 -->
+    <div class="user-card guest-card" id="guestCard">
+      <div class="guest-msg">로그인하면 영상을 담아<br>수업을 만들 수 있습니다.</div>
+      <button class="btn btn-primary btn-block" id="btnLogin">로그인</button>
+      <a href="#" id="btnSignup" class="link-logout">회원가입</a>
+    </div>
+
+    <!-- 로그인 후 -->
+    <div class="user-card" id="userCard" hidden>
       <div class="user-name"><b id="userName">-</b><span>님</span></div>
       <div class="user-role" id="userRole">교사</div>
-      <button class="btn btn-primary btn-block" id="btnStartClass">▶ 수업시작</button>
+      <button class="btn btn-primary btn-block" id="btnStartClass">
+        <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5-12-7.5z"/></svg>
+        수업시작
+      </button>
       <a href="#" id="btnLogout" class="link-logout">로그아웃</a>
     </div>
 
     <nav class="side-nav">
-      <a href="#/library" data-nav="library"><i class="nav-ico">▶</i><span class="nav-txt">스마트점핑</span></a>
-      <a href="#/classes" data-nav="classes" data-role="교사,관리자"><i class="nav-ico">📋</i><span class="nav-txt">수업관리</span></a>
-      <a href="#/members" data-nav="members" data-role="관리자"><i class="nav-ico">👥</i><span class="nav-txt">회원관리</span></a>
-      <a href="#" class="has-sub" id="navMypage"><i class="nav-ico">👤</i><span class="nav-txt">마이페이지</span><i class="chev">▼</i></a>
+      <a href="#/library" data-nav="library">
+        <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/>
+        </svg><span class="nav-txt">스마트점핑</span></a>
+
+      <a href="#/classes" data-nav="classes" data-role="교사,관리자">
+        <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 4.5H6.5A1.5 1.5 0 0 0 5 6v13a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V6a1.5 1.5 0 0 0-1.5-1.5H16"/>
+          <rect x="8" y="2.8" width="8" height="3.4" rx="1.2"/>
+          <path d="M8.5 11h7M8.5 15h4.5"/>
+        </svg><span class="nav-txt">수업관리</span></a>
+
+      <a href="#/members" data-nav="members" data-role="관리자">
+        <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="9.5" cy="8.5" r="3"/>
+          <path d="M3.5 19.5c0-3 2.7-5 6-5s6 2 6 5"/>
+          <path d="M16.5 6.2a3 3 0 0 1 0 5.6M18 14.9c2 .7 3.4 2.4 3.4 4.6"/>
+        </svg><span class="nav-txt">회원관리</span></a>
+
+      <a href="#/myatt" data-nav="myatt">
+        <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/>
+          <path d="M3.5 9.5h17M8 3v4M16 3v4M9.3 14.6l2 2 3.4-3.6"/>
+        </svg><span class="nav-txt">내 출결</span></a>
+
+      <a href="#" class="has-sub" id="navMypage">
+        <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="3.4"/><path d="M4.8 20c0-3.6 3.2-6 7.2-6s7.2 2.4 7.2 6"/>
+        </svg><span class="nav-txt">마이페이지</span><i class="chev">▾</i></a>
       <div class="sub-nav" id="subMypage">
         <a href="#/mypage/info" data-nav="info">정보수정</a>
         <a href="#/mypage/equipment" data-nav="equipment" data-role="교사,관리자">교구보유현황</a>
         <a href="#/mypage/schedule" data-nav="schedule" data-role="교사,관리자">프로그램스케줄</a>
         <a href="#/mypage/withdraw" data-nav="withdraw">회원탈퇴</a>
       </div>
-      <a href="#/textbook" data-nav="textbook"><i class="nav-ico">📚</i><span class="nav-txt">온라인교재</span></a>
+
+      <a href="#/textbook" data-nav="textbook">
+        <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 6.8C10.5 5.3 8.4 4.6 5.5 4.6c-.9 0-1.5.6-1.5 1.4v11c0 .8.6 1.4 1.5 1.4 2.9 0 5 .7 6.5 2.2 1.5-1.5 3.6-2.2 6.5-2.2.9 0 1.5-.6 1.5-1.4V6c0-.8-.6-1.4-1.5-1.4-2.9 0-5 .7-6.5 2.2z"/>
+          <path d="M12 6.8v13.8"/>
+        </svg><span class="nav-txt">온라인교재</span></a>
     </nav>
   </aside>
 
@@ -999,9 +1075,12 @@ button.st-tag:hover{ filter:brightness(.94); }
 
 <div id="toast" class="toast" hidden></div>
 
+<!-- 인쇄 전용 영역 (수업 리포트) -->
+<div id="printArea" class="print-area" hidden></div>
+
 
 <script>
-  window.SJ_DATA = {"ver":"sj-s4-104-6-teacher:테스트:관리자|test:교사:교사|teststu:학생:학생","appTitle":"미래형학교체육 '스마트점핑'(Smart-Jumping)","today":"2026-08-22","categories":[{"id":"C1","name":"명상","order":1,"subs":[{"id":"S11","name":"호흡 명상","order":1,"badge":""},{"id":"S12","name":"마음챙김 명상","order":2,"badge":""},{"id":"S13","name":"어린이 명상","order":3,"badge":"N"}]},{"id":"C2","name":"시간타이머","order":2,"subs":[{"id":"S21","name":"휴식영상 타이머","order":1,"badge":""},{"id":"S22","name":"카운터 타이머","order":2,"badge":"N"}]},{"id":"C3","name":"준비운동 | 타바타","order":3,"subs":[{"id":"S31","name":"몸풀기 & 스트레칭","order":1,"badge":""},{"id":"S32","name":"타바타 & 기초체력","order":2,"badge":""},{"id":"S33","name":"기초체력 추천 조합","order":3,"badge":""},{"id":"S34","name":"점핑 근력운동","order":4,"badge":""},{"id":"S35","name":"정리운동 · 쿨다운","order":5,"badge":"N"},{"id":"S36","name":"레크리에이션 놀이","order":6,"badge":"N"}]},{"id":"C4","name":"스마트점핑","order":4,"subs":[{"id":"S41","name":"급수 친구들 1단계 [브로빗]","order":1,"badge":""},{"id":"S42","name":"급수 친구들 2단계 [월라비]","order":2,"badge":""},{"id":"S43","name":"급수 친구들 3단계 [이글]","order":3,"badge":""},{"id":"S44","name":"쌩쌩이 · 2단뛰기","order":4,"badge":""},{"id":"S45","name":"음악줄넘기","order":5,"badge":"N"},{"id":"S46","name":"[지도자 필수교육]","order":6,"badge":""}]},{"id":"C5","name":"비트 트레이닝","order":5,"subs":[{"id":"S51","name":"동요 율동","order":1,"badge":""},{"id":"S52","name":"체조 메들리","order":2,"badge":""},{"id":"S53","name":"K-POP 키즈댄스","order":3,"badge":"N"}]},{"id":"C6","name":"Killing Time Zone","order":6,"subs":[{"id":"S61","name":"나라별 국기맞추기","order":1,"badge":""},{"id":"S62","name":"숨은그림 · 틀린그림 찾기","order":2,"badge":"N"},{"id":"S63","name":"넌센스 퀴즈","order":3,"badge":"N"}]}],"videos":[{"id":"V0001","c1":"C1","c2":"S11","title":"명상 초보자를 위한 마음챙김 명상 가이드 5분 ㅣ 생각이 복잡할 때 알아차림 명상","yt":"2x4ECODdULE","dur":"06:16","views":1091,"date":"2026-08-22"},{"id":"V0002","c1":"C1","c2":"S11","title":"마음이 차분해지는 5분 호흡운동 | 브레스워크 | 명상 | 잠 잘 오는 명상 | 편안해지는 명상 | 휴식 명상","yt":"bG4e-HnlJTE","dur":"10:17","views":2062,"date":"2026-08-22"},{"id":"V0003","c1":"C1","c2":"S11","title":"들숨날숨 호흡연습 1단계 (5분 명상) / 마음챙김 기초명상, 쉬운명상","yt":"RJO2qgqVol0","dur":"05:17","views":3033,"date":"2026-08-22"},{"id":"V0004","c1":"C1","c2":"S11","title":"5분 호흡명상 - 뇌를 위한 최고의 휴식법 (스트레스 해소, 뇌 피로회복)","yt":"dZewQEbQQM0","dur":"07:13","views":4004,"date":"2026-08-22"},{"id":"V0005","c1":"C1","c2":"S11","title":"[처음 만나는 마음챙김 명상] 안희영 소장과 쉽게 배워보는 '호흡 마음챙김명상'","yt":"H8DIbAhJ8fg","dur":"14:55","views":4975,"date":"2026-08-22"},{"id":"V0006","c1":"C1","c2":"S12","title":"마음챙김 - 호흡 명상","yt":"tNao3xp5yjM","dur":"01:42","views":5946,"date":"2026-08-22"},{"id":"V0007","c1":"C1","c2":"S12","title":"제주특별자치도교육청 학생건강증진추진단 마음챙김 애니메이션 초등3편 - 감정 마음챙김 _  #명상 #초등 #호흡 #건강 #제주교육 #감정","yt":"uVlUn_c1Xew","dur":"05:42","views":6917,"date":"2026-08-22"},{"id":"V0008","c1":"C1","c2":"S13","title":"초등학생을 위한 소리 듣기 명상 | 어린이 명상 | 마보","yt":"nIICI7cSSUM","dur":"03:57","views":7888,"date":"2026-08-22"},{"id":"V0009","c1":"C1","c2":"S13","title":"🌊어린이 1분 바다명상🌊가장 쉽고 재미있는 명상 - 집중력, 기억력, 행복, 사랑, 자아, 긍정, 감사, 끈기, 인내, 자기조절능력 키우기 명상","yt":"8H44pw20-74","dur":"03:49","views":8859,"date":"2026-08-22"},{"id":"V0010","c1":"C1","c2":"S13","title":"[홍익학당] 어린이 숫자명상","yt":"LjQ0HhOLkuk","dur":"02:08","views":430,"date":"2026-08-22"},{"id":"V0011","c1":"C1","c2":"S13","title":"Me-time 어린이 가을훈련 - 어린이 5분명상(Ver. 대각지)","yt":"WVBh1C-bRbo","dur":"08:20","views":1401,"date":"2026-08-22"},{"id":"V0012","c1":"C2","c2":"S21","title":"5분 타이머 편안한 숲 힐링타임 - 5 Minute Countdown Timer with Forest","yt":"119KVJumA1M","dur":"05:03","views":2372,"date":"2026-08-22"},{"id":"V0013","c1":"C2","c2":"S21","title":"⏰⌛5분 타이머 | 5분 카운트 다운 | 5분 휴식시간 | 5분 쉬는시간 | 배경음악","yt":"mIYObGZ1I_w","dur":"05:05","views":3343,"date":"2026-08-22"},{"id":"V0014","c1":"C2","c2":"S21","title":"[10분]귀여운 고양이 타이머/3분,1분 중간 알람/10minute timer","yt":"pZnefFq4aDk","dur":"10:20","views":4314,"date":"2026-08-22"},{"id":"V0015","c1":"C2","c2":"S21","title":"타이머 10분,  알람 10분 우리나라 수업, 정리 타이머 10 min Timer, 징소리 카운트다운","yt":"w0OHKiIV44E","dur":"10:08","views":5285,"date":"2026-08-22"},{"id":"V0016","c1":"C2","c2":"S22","title":"5 minute timer with music 타이머 5분 카운트다운 countdown","yt":"qIiMFZ88NDI","dur":"05:03","views":6256,"date":"2026-08-22"},{"id":"V0017","c1":"C2","c2":"S22","title":"5분 알람 타이머 (카운트다운)","yt":"Byzwstv74Xw","dur":"05:16","views":7227,"date":"2026-08-22"},{"id":"V0018","c1":"C2","c2":"S22","title":"[5분 타이머] 5minute countdown mineetimer with alarm","yt":"0fZC2y5pCck","dur":"05:11","views":8198,"date":"2026-08-22"},{"id":"V0019","c1":"C2","c2":"S22","title":"5 minute timerㅣ 5분타이머ㅣ봄맞이5분타이머ㅣ정리정돈음악 ㅣ생활습관타이머 ㅣㅣ 교실타이머 ㅣ5minute countdown timer","yt":"ec3vEdyG8oI","dur":"05:23","views":9169,"date":"2026-08-22"},{"id":"V0020","c1":"C2","c2":"S22","title":"5분 타이머","yt":"CXV_DqsWSPU","dur":"05:05","views":740,"date":"2026-08-22"},{"id":"V0021","c1":"C2","c2":"S22","title":"Countdown For 5 Minutes","yt":"3dJ4wFqQzz4","dur":"05:10","views":1711,"date":"2026-08-22"},{"id":"V0022","c1":"C2","c2":"S22","title":"3분 알람 타이머 (카운트다운)","yt":"fJMgbAw_sAI","dur":"03:16","views":2682,"date":"2026-08-22"},{"id":"V0023","c1":"C2","c2":"S22","title":"⏰⌛1분 타이머 | 1분 카운트 다운 | 1분 휴식시간 | 1분 쉬는시간 | 배경음악","yt":"-bobh50VdbA","dur":"01:20","views":3653,"date":"2026-08-22"},{"id":"V0024","c1":"C2","c2":"S22","title":"1분 타이머 / 1분 카운트 다운 / 1분 알람","yt":"KEwM1DMZoo8","dur":"22:23","views":4624,"date":"2026-08-22"},{"id":"V0025","c1":"C2","c2":"S22","title":"10분 알람 타이머 (카운트다운)","yt":"PiU0fht2ENE","dur":"10:16","views":5595,"date":"2026-08-22"},{"id":"V0026","c1":"C2","c2":"S22","title":"이동시간ㅣ3분 타이머ㅣ특별실 이동ㅣ정리 정돈ㅣ질서를 지켜 줄 서기ㅣ학급경영ㅣ쏭쌤TV","yt":"1RZd1U8uGR8","dur":"03:06","views":6566,"date":"2026-08-22"},{"id":"V0027","c1":"C2","c2":"S22","title":"3분 타이머 / 3분 카운트다운 / 3분 알람","yt":"Zgn93PpZUg8","dur":"30:10","views":7537,"date":"2026-08-22"},{"id":"V0028","c1":"C2","c2":"S22","title":"10분 - 타이머&알람 (10분 카운트다운 타이머) │시작음:또로롱 / 중간소리:없음 / 종료음:알람소리","yt":"LE0RWymF1Vc","dur":"10:12","views":8508,"date":"2026-08-22"},{"id":"V0029","c1":"C2","c2":"S22","title":"[Timer][10minutes][타이머][10분]/[카운트다운]/[그라데이션][다크그레이배경][마감소리][나머지무음]","yt":"uPSoj0_OW9A","dur":"10:20","views":9479,"date":"2026-08-22"},{"id":"V0030","c1":"C3","c2":"S31","title":"교실체육 전 3분 워밍업 (준비운동 | 스트레칭 | 교실 체력 트레이닝  )","yt":"hMCvvDHB46o","dur":"03:07","views":1050,"date":"2026-08-22"},{"id":"V0031","c1":"C3","c2":"S31","title":"[서초초등체육교실 시즌3] 준비운동","yt":"ZmUj-E9A44E","dur":"04:43","views":2021,"date":"2026-08-22"},{"id":"V0032","c1":"C3","c2":"S31","title":"온라인 체육 수업 - 5분 스트레칭 [준비운동]","yt":"PFJe9i9UbZ4","dur":"05:09","views":2992,"date":"2026-08-22"},{"id":"V0033","c1":"C3","c2":"S31","title":"의자 앉아 맨손체조ㅣ책상 스트레칭ㅣ의자 스트레칭ㅣ교실 스트레칭ㅣ놀이 준비운동ㅣ쏭쌤TV","yt":"2lru6IsOQ6Y","dur":"04:05","views":3963,"date":"2026-08-22"},{"id":"V0034","c1":"C3","c2":"S31","title":"체육 수업 준비운동 및 정리운동 - 기백반 체육교실의 일상적인 준비운동 따라하기","yt":"erMfzZ5_or8","dur":"05:29","views":4934,"date":"2026-08-22"},{"id":"V0035","c1":"C3","c2":"S31","title":"3분, 초간단 운동 전 워밍업 스트레칭(부상 예방, 운동효과 대박, 가동범위 증가)","yt":"8qf727092l4","dur":"03:29","views":5905,"date":"2026-08-22"},{"id":"V0036","c1":"C3","c2":"S31","title":"준비운동","yt":"_bqes3Cw5ug","dur":"03:27","views":6876,"date":"2026-08-22"},{"id":"V0037","c1":"C3","c2":"S32","title":"[마포구체육회]홈트레이닝/칼로리 폭파 4분 타바타","yt":"G9p1ZehAAnI","dur":"04:38","views":7847,"date":"2026-08-22"},{"id":"V0038","c1":"C3","c2":"S32","title":"체지방↓DOWN, 근력↑UP \"4분 타바타 홈트레이닝\" (초보자,중상급자 모두가능!)","yt":"BL8kwdj-XWU","dur":"05:54","views":8818,"date":"2026-08-22"},{"id":"V0039","c1":"C3","c2":"S32","title":"집에서 누구나 [4분 타바타] 1편 / 화성시문화재단과 홈트레이닝하기","yt":"RFFWIbUcBXo","dur":"10:42","views":389,"date":"2026-08-22"},{"id":"V0040","c1":"C3","c2":"S32","title":"운동초보에게 딱! 홈트 4분 타바타운동으로 저질체력 탈출해보자! | Low physical fitness? You can change it! Tabata for beginner","yt":"BxElnlkcfts","dur":"04:35","views":1360,"date":"2026-08-22"},{"id":"V0041","c1":"C3","c2":"S32","title":"[실전]하루 4분 체지방 태우기 운동 - 집에서 하는 다이어트 타바타 운동 5 [핏분 유쾌한 홈트레이닝]","yt":"ta-Uq_prRT8","dur":"06:34","views":2331,"date":"2026-08-22"},{"id":"V0042","c1":"C3","c2":"S33","title":"뱃살 빼는 최고의 운동 ! 4분 쉬지 않고 (신 타바타 버전)ㅣ고민수","yt":"EPXeswXkJDg","dur":"06:27","views":3302,"date":"2026-08-22"},{"id":"V0043","c1":"C3","c2":"S33","title":"4분 운동으로 1시간 운동효과 ? 타바타 전신편 !/ 홈트레이닝","yt":"4deNtH6p2U0","dur":"04:24","views":4273,"date":"2026-08-22"},{"id":"V0044","c1":"C3","c2":"S33","title":"Day35 하루 4분 홈트 타바타운동(8가지 코어 등척성운동 )","yt":"esPoIcFC_T4","dur":"06:08","views":5244,"date":"2026-08-22"},{"id":"V0045","c1":"C3","c2":"S34","title":"쳐진 엉덩이 올리는 4분 타바타 운동 (홈트레이닝)ㅣ고민수","yt":"AytACfar2AI","dur":"09:18","views":6215,"date":"2026-08-22"},{"id":"V0046","c1":"C3","c2":"S34","title":"[주원홈트] 준비운동 스트레칭 - 운동 전에는 꼭 따라해야 하는 워밍업 영상","yt":"2oN6SFl85VY","dur":"06:24","views":7186,"date":"2026-08-22"},{"id":"V0047","c1":"C3","c2":"S34","title":"하루를 이 동작으로 시작해보세요! (준비운동, 순환운동, 스트레칭, 워밍업, 운동 전 스트레칭) [비온뒤 금쪽 운동 상담소] #9 (김수관 코치 & 정진희 PD)","yt":"zguPP2ymhH0","dur":"16:48","views":8157,"date":"2026-08-22"},{"id":"V0048","c1":"C3","c2":"S35","title":"[Cool-Down] 마무리 스트레칭 누워서 하는 정리운동 탄력에 필수!!","yt":"d3MtqJSDO90","dur":"10:11","views":9128,"date":"2026-08-22"},{"id":"V0049","c1":"C3","c2":"S35","title":"운동 후, 쿨다운 스트레칭 10분 꼭 해주세요 (정리운동 스트레칭, 운동후 근육통 풀기)","yt":"X8t6C07BJ80","dur":"10:06","views":699,"date":"2026-08-22"},{"id":"V0050","c1":"C3","c2":"S35","title":"5분만에 끝나는, 달리기 후 스트레칭, #쿨다운 #마무리운동","yt":"mdvTr_xhiH8","dur":"07:39","views":1670,"date":"2026-08-22"},{"id":"V0051","c1":"C3","c2":"S35","title":"하루 6분 운동 후 마무리 쿨다운 스트레칭 (전신 스트레칭)","yt":"9GawCESbFFk","dur":"06:29","views":2641,"date":"2026-08-22"},{"id":"V0052","c1":"C3","c2":"S35","title":"운동후 스트레칭 모음,  이거 하나면 운동효과 2배! 쿨다운 끝!","yt":"4TwQwVFLi4Q","dur":"07:55","views":3612,"date":"2026-08-22"},{"id":"V0053","c1":"C3","c2":"S35","title":"홈트레이닝 마무리 운동-웃음체조 정리운동 스트레칭버전 집에서따라하기","yt":"YXzPcEATOPg","dur":"04:20","views":4583,"date":"2026-08-22"},{"id":"V0054","c1":"C3","c2":"S36","title":"교실놀이로 레크레이션 진행해보기-재미있는 놀이 게임 레크리에이션","yt":"z149ha1sCbQ","dur":"07:50","views":5554,"date":"2026-08-22"},{"id":"V0055","c1":"C3","c2":"S36","title":"놀이게임 5가지-초등 놀이 레크레이션 신나는 야외놀이 강당놀이 교실놀이","yt":"Gr9qZrju9Pk","dur":"12:18","views":6525,"date":"2026-08-22"},{"id":"V0056","c1":"C3","c2":"S36","title":"교실체육 | 경쟁 없는 놀이! 초간단 원형 놀이 3종 세트!","yt":"36Gc0L7X-_M","dur":"04:56","views":7496,"date":"2026-08-22"},{"id":"V0057","c1":"C3","c2":"S36","title":"교실놀이ㅣ책상을 활용한 13종 교실놀이 설명ㅣ놀이체육ㅣ초등체육","yt":"mOHgNUGpZLE","dur":"11:43","views":8467,"date":"2026-08-22"},{"id":"V0058","c1":"C3","c2":"S36","title":"[교실놀이]  \"준비물 없이 즐기는 재미있는 실내놀이 전편  풀영상\"  |팍찐놀이| 레크리에이션|","yt":"gYQhS1ioY0o","dur":"1:02:43","views":9438,"date":"2026-08-22"},{"id":"V0059","c1":"C3","c2":"S36","title":"원바운딩놀이! 협력놀이! 교실놀이체육!  실내체육! 놀이! 초등체육! fun p.e. games! Physical Education!","yt":"juCbUO6zpL0","dur":"02:11","views":1009,"date":"2026-08-22"},{"id":"V0060","c1":"C3","c2":"S36","title":"교실놀이 ㅣ 새학기 교실놀이 5종세트","yt":"A2X7o51KwuI","dur":"06:54","views":1980,"date":"2026-08-22"},{"id":"V0061","c1":"C3","c2":"S36","title":"교실놀이 ㅣ 오른쪽! 왼쪽! 흔들어~~ ㅣ 레크레이션","yt":"gBsXje_teyg","dur":"01:24","views":2951,"date":"2026-08-22"},{"id":"V0062","c1":"C4","c2":"S41","title":"줄넘기 | 초등체육 | 온라인체육 | 줄넘기기초","yt":"zPGci2cL6j4","dur":"05:14","views":3922,"date":"2026-08-22"},{"id":"V0063","c1":"C4","c2":"S41","title":"[1강]줄넘기 초보를 위한 줄넘기 기본 배우기!","yt":"Mdc7kmOKuMU","dur":"04:31","views":4893,"date":"2026-08-22"},{"id":"V0064","c1":"C4","c2":"S41","title":"줄넘기처음배우기 초급강의 1부 / 줄넘기 잘하는법(온라인체육수업 ) 기초부터 탄탄하게","yt":"_yWerNDS2AQ","dur":"06:58","views":5864,"date":"2026-08-22"},{"id":"V0065","c1":"C4","c2":"S41","title":"[양수쌤 놀이체육] 온라인 체육 - 줄넘기 양발 모아뛰기 2가지!","yt":"nDvxGWOUNk4","dur":"03:22","views":6835,"date":"2026-08-22"},{"id":"V0066","c1":"C4","c2":"S42","title":"[365+체육온활동] 초급 6. 혼자서 줄넘기","yt":"XdQRqIR-x64","dur":"07:59","views":7806,"date":"2026-08-22"},{"id":"V0067","c1":"C4","c2":"S42","title":"제1강 줄넘기 기초과정","yt":"P6RU0NUgu8E","dur":"08:46","views":8777,"date":"2026-08-22"},{"id":"V0068","c1":"C4","c2":"S42","title":"줄넘기 -기초과정","yt":"DnUmpP-_Chk","dur":"08:46","views":348,"date":"2026-08-22"},{"id":"V0069","c1":"C4","c2":"S42","title":"줄넘기2(점프스쿼트)","yt":"zrPszwVKjJE","dur":"02:06","views":1319,"date":"2026-08-22"},{"id":"V0070","c1":"C4","c2":"S43","title":"줄넘기쌩쌩이 쉽게 하기[2단뛰기 연습방법]","yt":"gT9Y9FBb1ic","dur":"01:22","views":2290,"date":"2026-08-22"},{"id":"V0071","c1":"C4","c2":"S43","title":"2중뛰기/쌩쌩이/2단뛰기 뛰는 방법!!","yt":"DwYFyXlwM40","dur":"04:19","views":3261,"date":"2026-08-22"},{"id":"V0072","c1":"C4","c2":"S43","title":"줄넘기 얼마나 아십니까? 줄넘기 2단뛰기 잘하는 법, 정말 천천히 알려드립니다 [ 달팽이레슨 ] 190716","yt":"G_jCU_oL8AE","dur":"05:08","views":4232,"date":"2026-08-22"},{"id":"V0073","c1":"C4","c2":"S43","title":"쌩쌩이, 2단뛰기 성공 하기 '2중뛰기' 하는 방법","yt":"l9chx0Z7qBw","dur":"02:02","views":5203,"date":"2026-08-22"},{"id":"V0074","c1":"C4","c2":"S44","title":"[8강]쌩쌩이 도전! 2단뛰기 마스터하기!","yt":"jmm8k9OmK1Y","dur":"03:47","views":6174,"date":"2026-08-22"},{"id":"V0075","c1":"C4","c2":"S44","title":"2분 안에 배우는 줄넘기 기본동작 - 2중뛰기(=쌩쌩이) (feat.점프스쿨)","yt":"XA3xY1WCvn8","dur":"01:27","views":7145,"date":"2026-08-22"},{"id":"V0076","c1":"C4","c2":"S44","title":"줄넘기 중수에서 고수로! 뒤로 줄넘기+쌩쌩이ㅣ이현준의 명징티비 이카이스 마이풀","yt":"adt2JguLrAo","dur":"02:40","views":8116,"date":"2026-08-22"},{"id":"V0077","c1":"C4","c2":"S44","title":"줄넘기,2단뛰기,100개","yt":"i6gF_5J4fek","dur":"01:02","views":9087,"date":"2026-08-22"},{"id":"V0078","c1":"C4","c2":"S45","title":"[윤쌤의 신나는 음악줄넘기] 초급 1단계 기본 동작","yt":"-hDMjJr9Smc","dur":"02:03","views":658,"date":"2026-08-22"},{"id":"V0079","c1":"C4","c2":"S45","title":"[윤쌤의 신나는 음악줄넘기] 고급 1단계 기본 동작","yt":"aYRIfdsH0u8","dur":"01:59","views":1629,"date":"2026-08-22"},{"id":"V0080","c1":"C4","c2":"S45","title":"방학특집! 신나는 음악과 함께 즐기는 줄넘기 기본동작 7가지!🌈🎶","yt":"SNC04hlGt6Y","dur":"03:46","views":2600,"date":"2026-08-22"},{"id":"V0081","c1":"C4","c2":"S45","title":"초보자도 OK! 인기동요 네잎클로버와 함께 즐기는 음악줄넘기🍀🎶","yt":"23hTV_VXKNE","dur":"01:18","views":3571,"date":"2026-08-22"},{"id":"V0082","c1":"C4","c2":"S45","title":"[음악줄넘기]초등학교 2학년 넘사벽 줄넘기 | 줄넘기 실력을 뽐내는 초등학생 | Jump Rope","yt":"6PvI3f7jZfE","dur":"01:06","views":4542,"date":"2026-08-22"},{"id":"V0083","c1":"C4","c2":"S45","title":"줄넘기시범공연","yt":"wWEsWFTJCnk","dur":"11:30","views":5513,"date":"2026-08-22"},{"id":"V0084","c1":"C4","c2":"S46","title":"(고화질) 초등 줄넘기 공인급수 10~1급 풀영상! (Jump rope)","yt":"HHmor6wmxMo","dur":"09:42","views":6484,"date":"2026-08-22"},{"id":"V0085","c1":"C5","c2":"S51","title":"★튼튼쌤의 율동체조교실 인기율동 특집★ㅣ핑크퐁 인기 율동동요와 함께 하는 신나는 댄스♬ㅣ곰 세마리, 멋쟁이 토마토, 악어 떼, 작은 주전자, 주먹 쥐고ㅣ핑크퐁! 인기동요","yt":"dw31Gdfj7oY","dur":"11:40","views":7455,"date":"2026-08-22"},{"id":"V0086","c1":"C5","c2":"S51","title":"체조 노래모음ㅣ인기동요모음ㅣ친구와 즐거운 노래와 댄스로 신나게 체조 율동을 즐겨보아요!ㅣ랄라라키즈","yt":"FiVBh8pv78Y","dur":"03:22","views":8426,"date":"2026-08-22"},{"id":"V0087","c1":"C5","c2":"S51","title":"높이높이 쭉쭉 ♪ | 신나는 율동 체조 | 응급처치 프린세스와 함께 쭉쭉 체조해요! | 율동동요 | 어린이 인기동요★지니키즈","yt":"OP8fuogWSlQ","dur":"00:58","views":9397,"date":"2026-08-22"},{"id":"V0088","c1":"C5","c2":"S51","title":"쭉쭉 체조 🎶 | 신나는 댄스타임 | 어린이 율동 | 인기율동 | 어린이 홈트 | 로티프렌즈 인기동요 | LOTTY FRIENDS","yt":"mfpamFUdivE","dur":"03:22","views":968,"date":"2026-08-22"},{"id":"V0089","c1":"C5","c2":"S52","title":"신나는 율동동요 댄스 모음 60분 ♪ | 시원하게 몸을 움직여요🤸‍♂️| 동물동요 l 방귀체조 | 어린이 인기동요 연속듣기 ★ 지니키즈","yt":"_EkTLdKEOy4","dur":"48:34","views":1939,"date":"2026-08-22"},{"id":"V0090","c1":"C5","c2":"S52","title":"뚝딱뚝딱 율동 동요! 💃 | 신나게 몸을 움직여요 | 어린이를 위한 운동 노래","yt":"DFT4-ro_iIM","dur":"15:49","views":2910,"date":"2026-08-22"},{"id":"V0091","c1":"C5","c2":"S52","title":"오늘도 튼튼하게💪🏻튼튼쌤과 체조해요! | 인기 체조 모음집 | 몽키 바나나, 아기상어 체조, 쑥쑥 키크기 체조 | 신나는 율동 체조 | 어린이 체조 | 핑크퐁! 인기동요","yt":"5Hll_yymS2w","dur":"1:30:16","views":3881,"date":"2026-08-22"},{"id":"V0092","c1":"C5","c2":"S53","title":"🕺 SODA POP - Saja Boys 간단춤 | 따라하기 쉬운 K-POP 안무 | 케데몬 | 흥딩스쿨","yt":"GKkixovHHro","dur":"01:41","views":4852,"date":"2026-08-22"},{"id":"V0093","c1":"C5","c2":"S53","title":"키즈 댄스 k-pop 안무 기초 배우기 | 캐리tv 히트송-‘럽럽(Love Love)’ 안무 기본기 배우기 part.2 | k-pop Kids dance class","yt":"YDFWIe-ibz8","dur":"05:48","views":5823,"date":"2026-08-22"},{"id":"V0094","c1":"C6","c2":"S61","title":"국기 퀴즈 | 국기 맞히기 195개 | 3초 안에 국기 맞히기 | 국기 100+ 도전 🌏 | flag quiz 2024","yt":"Ln9mCebyeNk","dur":"18:19","views":6794,"date":"2026-08-22"},{"id":"V0095","c1":"C6","c2":"S61","title":"세계여러나라 국기퀴즈 | 국기맞추기 게임 | 세계여러나라 국기 | 세계여러나라 놀이 | 세계여러나라 퀴즈 (어린이 / 유아 / 초등저학년)","yt":"f9PuBMgLtpA","dur":"03:43","views":7765,"date":"2026-08-22"},{"id":"V0096","c1":"C6","c2":"S61","title":"🚩최고 난이도 국기 보고  56개국 나라 이름 맞추기 8단계 퀴즈.","yt":"L73dXfVsLKc","dur":"09:28","views":8736,"date":"2026-08-22"},{"id":"V0097","c1":"C6","c2":"S61","title":"국기 맞히기 퀴즈, 국기 사진 보고 100개 나라 맞히기, 난이도 초중급","yt":"D8vF6CXRhgc","dur":"13:41","views":307,"date":"2026-08-22"},{"id":"V0098","c1":"C6","c2":"S62","title":"집중력 향상 놀이! \"안 숨은그림 찾기 1탄\"","yt":"nA9I1iv_E8w","dur":"06:46","views":1278,"date":"2026-08-22"},{"id":"V0099","c1":"C6","c2":"S62","title":"[다른그림찾기]💥90초 안에 다른점 3개 찾아주세요! 집중력 향상 두뇌 퀴즈 Find the difference 치매 예방 퀴즈 / 두뇌게임 [틀린그림찾기] 678","yt":"DKA9vzuKFio","dur":"09:26","views":2249,"date":"2026-08-22"},{"id":"V0100","c1":"C6","c2":"S62","title":"【다른그림찾기 | 치매예방】천재도 차이점 3개 중 한 곳은 못 찾습니다! 재밌고 건강한 기억 훈련 퀴즈 문제!【두뇌운동 | Find Difference | 틀린그림찾기】#1602","yt":"0FLsBYtNPkg","dur":"09:26","views":3220,"date":"2026-08-22"},{"id":"V0101","c1":"C6","c2":"S63","title":"넌센스 퀴즈! 최고 재미있는 넌센스모음. 빵빵터지는 웃긴 것만 모은 아재퀴즈! 두뇌 트레이닝! 초성퀴즈ㅣ퍼즐ㅣ그림퀴즈ㅣ넌센스ㅣ초등학생퀴즈ㅣ유머퀴즈","yt":"4FR8-GOwlWs","dur":"04:06","views":4191,"date":"2026-08-22"},{"id":"V0102","c1":"C6","c2":"S63","title":"재미있는 넌센스퀴즈 모음 1탄(15문제) #넌센스 #넌센스퀴즈 #아재개그 #유머 #퀴즈 #수수께끼 ","yt":"7gjp3gdZE2U","dur":"04:14","views":5162,"date":"2026-08-22"},{"id":"V0103","c1":"C6","c2":"S63","title":"[두뇌퀴즈] \"뇌가 똑똑해지는 그림 넌센스 퀴즈 \"|수수께끼|아재개그|","yt":"JJRoMT3SiEg","dur":"08:03","views":6133,"date":"2026-08-22"},{"id":"V0104","c1":"C6","c2":"S63","title":"[넌센스] \"뇌가 똑똑해지는 그림 넌센스 퀴즈 30\"|수수께끼|아재개그|","yt":"zRJj-JwMpcc","dur":"10:54","views":7104,"date":"2026-08-22"}],"users":[{"id":"teacher","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"테스트","org":"스마트점핑 본부","region":"울산광역시 북구","role":"관리자"},{"id":"test","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"교사","org":"옥동초등학교","region":"울산광역시 남구","role":"교사"},{"id":"teststu","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"학생","org":"강동초등학교 3학년 2반","region":"울산광역시 북구","role":"학생"}],"classes":[{"id":"CL001","owner":"teacher","ym":"2026-07","region":"울산광역시 북구","school":"강동초등학교","grade":1,"cls":3,"cap":8,"memo":"","sched":"1학기 기본과정"},{"id":"CL002","owner":"teacher","ym":"2026-08","region":"울산광역시 북구","school":"강동초등학교","grade":2,"cls":1,"cap":12,"memo":"","sched":"1학기 기본과정"},{"id":"CL003","owner":"teacher","ym":"2026-07","region":"울산광역시 북구","school":"강동초등학교","grade":3,"cls":2,"cap":15,"memo":"","sched":"리듬 점핑반"},{"id":"CL004","owner":"test","ym":"2026-08","region":"울산광역시 남구","school":"옥동초등학교","grade":4,"cls":1,"cap":20,"memo":"","sched":"체력왕 도전"},{"id":"CL005","owner":"test","ym":"2026-07","region":"부산광역시 해운대구","school":"해운대초등학교","grade":5,"cls":4,"cap":18,"memo":"","sched":"체력왕 도전"},{"id":"CL006","owner":"test","ym":"2026-08","region":"서울특별시 강남구","school":"대치초등학교","grade":6,"cls":2,"cap":22,"memo":"","sched":""}],"attendance":[{"classId":"CL001","name":"김민준","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"박지호","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"최수아","date":"2026-08-15","status":"결"},{"classId":"CL001","name":"정예준","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"강하윤","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"김민준","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"박지호","date":"2026-08-19","status":"결"},{"classId":"CL001","name":"최수아","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"정예준","date":"2026-08-19","status":"지"},{"classId":"CL001","name":"강하윤","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"김민준","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-08-22","status":"결"},{"classId":"CL001","name":"박지호","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"최수아","date":"2026-08-22","status":"지"},{"classId":"CL001","name":"정예준","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"강하윤","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-08-22","status":"출"}],"equipment":[{"owner":"teacher","name":"스마트점핑 로프 (표준형)","agency":"울산대리점","fresh":20,"used":5},{"owner":"teacher","name":"스마트점핑 매트","agency":"울산대리점","fresh":12,"used":3},{"owner":"test","name":"스마트점핑 로프 (학급용)","agency":"울산대리점","fresh":30,"used":2}],"schedules":[{"owner":"teacher","name":"1학기 기본과정","items":[{"no":1,"videoIds":["V0008","V0030","V0062","V0048"]},{"no":2,"videoIds":["V0009","V0031","V0066","V0049"]}]},{"owner":"teacher","name":"리듬 점핑반","items":[{"no":1,"videoIds":["V0012","V0078","V0092"]}]},{"owner":"test","name":"체력왕 도전","items":[{"no":1,"videoIds":["V0032","V0037","V0042","V0050"]},{"no":2,"videoIds":["V0054","V0045","V0098"]}]}],"textbooks":[{"no":1,"title":"스마트점핑 01권","cover":"","link":"","badge":"특호"},{"no":2,"title":"스마트점핑 02권","cover":"","link":"","badge":""},{"no":3,"title":"스마트점핑 03권","cover":"","link":"","badge":""},{"no":4,"title":"스마트점핑 04권","cover":"","link":"","badge":""},{"no":5,"title":"스마트점핑 05권","cover":"","link":"","badge":""},{"no":6,"title":"스마트점핑 06권","cover":"","link":"","badge":""},{"no":7,"title":"스마트점핑 07권","cover":"","link":"","badge":""},{"no":8,"title":"스마트점핑 08권","cover":"","link":"","badge":""},{"no":9,"title":"스마트점핑 09권","cover":"","link":"","badge":""},{"no":10,"title":"스마트점핑 10권","cover":"","link":"","badge":""},{"no":11,"title":"스마트점핑 11권","cover":"","link":"","badge":""},{"no":12,"title":"스마트점핑 12권","cover":"","link":"","badge":""}]};
+  window.SJ_DATA = {"ver":"sj-s6-104-6-teacher:테스트:관리자|test:교사:교사|teststu:학생:학생","appTitle":"미래형학교체육 '스마트점핑'(Smart-Jumping)","today":"2026-08-22","categories":[{"id":"C1","name":"명상","order":1,"subs":[{"id":"S11","name":"호흡 명상","order":1,"badge":""},{"id":"S12","name":"마음챙김 명상","order":2,"badge":""},{"id":"S13","name":"어린이 명상","order":3,"badge":"N"}]},{"id":"C2","name":"시간타이머","order":2,"subs":[{"id":"S21","name":"휴식영상 타이머","order":1,"badge":""},{"id":"S22","name":"카운터 타이머","order":2,"badge":"N"}]},{"id":"C3","name":"준비운동 | 타바타","order":3,"subs":[{"id":"S31","name":"몸풀기 & 스트레칭","order":1,"badge":""},{"id":"S32","name":"타바타 & 기초체력","order":2,"badge":""},{"id":"S33","name":"기초체력 추천 조합","order":3,"badge":""},{"id":"S34","name":"점핑 근력운동","order":4,"badge":""},{"id":"S35","name":"정리운동 · 쿨다운","order":5,"badge":"N"},{"id":"S36","name":"레크리에이션 놀이","order":6,"badge":"N"}]},{"id":"C4","name":"스마트점핑","order":4,"subs":[{"id":"S41","name":"급수 친구들 1단계 [브로빗]","order":1,"badge":""},{"id":"S42","name":"급수 친구들 2단계 [월라비]","order":2,"badge":""},{"id":"S43","name":"급수 친구들 3단계 [이글]","order":3,"badge":""},{"id":"S44","name":"쌩쌩이 · 2단뛰기","order":4,"badge":""},{"id":"S45","name":"음악줄넘기","order":5,"badge":"N"},{"id":"S46","name":"[지도자 필수교육]","order":6,"badge":""}]},{"id":"C5","name":"비트 트레이닝","order":5,"subs":[{"id":"S51","name":"동요 율동","order":1,"badge":""},{"id":"S52","name":"체조 메들리","order":2,"badge":""},{"id":"S53","name":"K-POP 키즈댄스","order":3,"badge":"N"}]},{"id":"C6","name":"Killing Time Zone","order":6,"subs":[{"id":"S61","name":"나라별 국기맞추기","order":1,"badge":""},{"id":"S62","name":"숨은그림 · 틀린그림 찾기","order":2,"badge":"N"},{"id":"S63","name":"넌센스 퀴즈","order":3,"badge":"N"}]}],"videos":[{"id":"V0001","c1":"C1","c2":"S11","title":"명상 초보자를 위한 마음챙김 명상 가이드 5분 ㅣ 생각이 복잡할 때 알아차림 명상","yt":"2x4ECODdULE","dur":"06:16","views":1091,"date":"2026-08-22"},{"id":"V0002","c1":"C1","c2":"S11","title":"마음이 차분해지는 5분 호흡운동 | 브레스워크 | 명상 | 잠 잘 오는 명상 | 편안해지는 명상 | 휴식 명상","yt":"bG4e-HnlJTE","dur":"10:17","views":2062,"date":"2026-08-22"},{"id":"V0003","c1":"C1","c2":"S11","title":"들숨날숨 호흡연습 1단계 (5분 명상) / 마음챙김 기초명상, 쉬운명상","yt":"RJO2qgqVol0","dur":"05:17","views":3033,"date":"2026-08-22"},{"id":"V0004","c1":"C1","c2":"S11","title":"5분 호흡명상 - 뇌를 위한 최고의 휴식법 (스트레스 해소, 뇌 피로회복)","yt":"dZewQEbQQM0","dur":"07:13","views":4004,"date":"2026-08-22"},{"id":"V0005","c1":"C1","c2":"S11","title":"[처음 만나는 마음챙김 명상] 안희영 소장과 쉽게 배워보는 '호흡 마음챙김명상'","yt":"H8DIbAhJ8fg","dur":"14:55","views":4975,"date":"2026-08-22"},{"id":"V0006","c1":"C1","c2":"S12","title":"마음챙김 - 호흡 명상","yt":"tNao3xp5yjM","dur":"01:42","views":5946,"date":"2026-08-22"},{"id":"V0007","c1":"C1","c2":"S12","title":"제주특별자치도교육청 학생건강증진추진단 마음챙김 애니메이션 초등3편 - 감정 마음챙김 _  #명상 #초등 #호흡 #건강 #제주교육 #감정","yt":"uVlUn_c1Xew","dur":"05:42","views":6917,"date":"2026-08-22"},{"id":"V0008","c1":"C1","c2":"S13","title":"초등학생을 위한 소리 듣기 명상 | 어린이 명상 | 마보","yt":"nIICI7cSSUM","dur":"03:57","views":7888,"date":"2026-08-22"},{"id":"V0009","c1":"C1","c2":"S13","title":"🌊어린이 1분 바다명상🌊가장 쉽고 재미있는 명상 - 집중력, 기억력, 행복, 사랑, 자아, 긍정, 감사, 끈기, 인내, 자기조절능력 키우기 명상","yt":"8H44pw20-74","dur":"03:49","views":8859,"date":"2026-08-22"},{"id":"V0010","c1":"C1","c2":"S13","title":"[홍익학당] 어린이 숫자명상","yt":"LjQ0HhOLkuk","dur":"02:08","views":430,"date":"2026-08-22"},{"id":"V0011","c1":"C1","c2":"S13","title":"Me-time 어린이 가을훈련 - 어린이 5분명상(Ver. 대각지)","yt":"WVBh1C-bRbo","dur":"08:20","views":1401,"date":"2026-08-22"},{"id":"V0012","c1":"C2","c2":"S21","title":"5분 타이머 편안한 숲 힐링타임 - 5 Minute Countdown Timer with Forest","yt":"119KVJumA1M","dur":"05:03","views":2372,"date":"2026-08-22"},{"id":"V0013","c1":"C2","c2":"S21","title":"⏰⌛5분 타이머 | 5분 카운트 다운 | 5분 휴식시간 | 5분 쉬는시간 | 배경음악","yt":"mIYObGZ1I_w","dur":"05:05","views":3343,"date":"2026-08-22"},{"id":"V0014","c1":"C2","c2":"S21","title":"[10분]귀여운 고양이 타이머/3분,1분 중간 알람/10minute timer","yt":"pZnefFq4aDk","dur":"10:20","views":4314,"date":"2026-08-22"},{"id":"V0015","c1":"C2","c2":"S21","title":"타이머 10분,  알람 10분 우리나라 수업, 정리 타이머 10 min Timer, 징소리 카운트다운","yt":"w0OHKiIV44E","dur":"10:08","views":5285,"date":"2026-08-22"},{"id":"V0016","c1":"C2","c2":"S22","title":"5 minute timer with music 타이머 5분 카운트다운 countdown","yt":"qIiMFZ88NDI","dur":"05:03","views":6256,"date":"2026-08-22"},{"id":"V0017","c1":"C2","c2":"S22","title":"5분 알람 타이머 (카운트다운)","yt":"Byzwstv74Xw","dur":"05:16","views":7227,"date":"2026-08-22"},{"id":"V0018","c1":"C2","c2":"S22","title":"[5분 타이머] 5minute countdown mineetimer with alarm","yt":"0fZC2y5pCck","dur":"05:11","views":8198,"date":"2026-08-22"},{"id":"V0019","c1":"C2","c2":"S22","title":"5 minute timerㅣ 5분타이머ㅣ봄맞이5분타이머ㅣ정리정돈음악 ㅣ생활습관타이머 ㅣㅣ 교실타이머 ㅣ5minute countdown timer","yt":"ec3vEdyG8oI","dur":"05:23","views":9169,"date":"2026-08-22"},{"id":"V0020","c1":"C2","c2":"S22","title":"5분 타이머","yt":"CXV_DqsWSPU","dur":"05:05","views":740,"date":"2026-08-22"},{"id":"V0021","c1":"C2","c2":"S22","title":"Countdown For 5 Minutes","yt":"3dJ4wFqQzz4","dur":"05:10","views":1711,"date":"2026-08-22"},{"id":"V0022","c1":"C2","c2":"S22","title":"3분 알람 타이머 (카운트다운)","yt":"fJMgbAw_sAI","dur":"03:16","views":2682,"date":"2026-08-22"},{"id":"V0023","c1":"C2","c2":"S22","title":"⏰⌛1분 타이머 | 1분 카운트 다운 | 1분 휴식시간 | 1분 쉬는시간 | 배경음악","yt":"-bobh50VdbA","dur":"01:20","views":3653,"date":"2026-08-22"},{"id":"V0024","c1":"C2","c2":"S22","title":"1분 타이머 / 1분 카운트 다운 / 1분 알람","yt":"KEwM1DMZoo8","dur":"22:23","views":4624,"date":"2026-08-22"},{"id":"V0025","c1":"C2","c2":"S22","title":"10분 알람 타이머 (카운트다운)","yt":"PiU0fht2ENE","dur":"10:16","views":5595,"date":"2026-08-22"},{"id":"V0026","c1":"C2","c2":"S22","title":"이동시간ㅣ3분 타이머ㅣ특별실 이동ㅣ정리 정돈ㅣ질서를 지켜 줄 서기ㅣ학급경영ㅣ쏭쌤TV","yt":"1RZd1U8uGR8","dur":"03:06","views":6566,"date":"2026-08-22"},{"id":"V0027","c1":"C2","c2":"S22","title":"3분 타이머 / 3분 카운트다운 / 3분 알람","yt":"Zgn93PpZUg8","dur":"30:10","views":7537,"date":"2026-08-22"},{"id":"V0028","c1":"C2","c2":"S22","title":"10분 - 타이머&알람 (10분 카운트다운 타이머) │시작음:또로롱 / 중간소리:없음 / 종료음:알람소리","yt":"LE0RWymF1Vc","dur":"10:12","views":8508,"date":"2026-08-22"},{"id":"V0029","c1":"C2","c2":"S22","title":"[Timer][10minutes][타이머][10분]/[카운트다운]/[그라데이션][다크그레이배경][마감소리][나머지무음]","yt":"uPSoj0_OW9A","dur":"10:20","views":9479,"date":"2026-08-22"},{"id":"V0030","c1":"C3","c2":"S31","title":"교실체육 전 3분 워밍업 (준비운동 | 스트레칭 | 교실 체력 트레이닝  )","yt":"hMCvvDHB46o","dur":"03:07","views":1050,"date":"2026-08-22"},{"id":"V0031","c1":"C3","c2":"S31","title":"[서초초등체육교실 시즌3] 준비운동","yt":"ZmUj-E9A44E","dur":"04:43","views":2021,"date":"2026-08-22"},{"id":"V0032","c1":"C3","c2":"S31","title":"온라인 체육 수업 - 5분 스트레칭 [준비운동]","yt":"PFJe9i9UbZ4","dur":"05:09","views":2992,"date":"2026-08-22"},{"id":"V0033","c1":"C3","c2":"S31","title":"의자 앉아 맨손체조ㅣ책상 스트레칭ㅣ의자 스트레칭ㅣ교실 스트레칭ㅣ놀이 준비운동ㅣ쏭쌤TV","yt":"2lru6IsOQ6Y","dur":"04:05","views":3963,"date":"2026-08-22"},{"id":"V0034","c1":"C3","c2":"S31","title":"체육 수업 준비운동 및 정리운동 - 기백반 체육교실의 일상적인 준비운동 따라하기","yt":"erMfzZ5_or8","dur":"05:29","views":4934,"date":"2026-08-22"},{"id":"V0035","c1":"C3","c2":"S31","title":"3분, 초간단 운동 전 워밍업 스트레칭(부상 예방, 운동효과 대박, 가동범위 증가)","yt":"8qf727092l4","dur":"03:29","views":5905,"date":"2026-08-22"},{"id":"V0036","c1":"C3","c2":"S31","title":"준비운동","yt":"_bqes3Cw5ug","dur":"03:27","views":6876,"date":"2026-08-22"},{"id":"V0037","c1":"C3","c2":"S32","title":"[마포구체육회]홈트레이닝/칼로리 폭파 4분 타바타","yt":"G9p1ZehAAnI","dur":"04:38","views":7847,"date":"2026-08-22"},{"id":"V0038","c1":"C3","c2":"S32","title":"체지방↓DOWN, 근력↑UP \"4분 타바타 홈트레이닝\" (초보자,중상급자 모두가능!)","yt":"BL8kwdj-XWU","dur":"05:54","views":8818,"date":"2026-08-22"},{"id":"V0039","c1":"C3","c2":"S32","title":"집에서 누구나 [4분 타바타] 1편 / 화성시문화재단과 홈트레이닝하기","yt":"RFFWIbUcBXo","dur":"10:42","views":389,"date":"2026-08-22"},{"id":"V0040","c1":"C3","c2":"S32","title":"운동초보에게 딱! 홈트 4분 타바타운동으로 저질체력 탈출해보자! | Low physical fitness? You can change it! Tabata for beginner","yt":"BxElnlkcfts","dur":"04:35","views":1360,"date":"2026-08-22"},{"id":"V0041","c1":"C3","c2":"S32","title":"[실전]하루 4분 체지방 태우기 운동 - 집에서 하는 다이어트 타바타 운동 5 [핏분 유쾌한 홈트레이닝]","yt":"ta-Uq_prRT8","dur":"06:34","views":2331,"date":"2026-08-22"},{"id":"V0042","c1":"C3","c2":"S33","title":"뱃살 빼는 최고의 운동 ! 4분 쉬지 않고 (신 타바타 버전)ㅣ고민수","yt":"EPXeswXkJDg","dur":"06:27","views":3302,"date":"2026-08-22"},{"id":"V0043","c1":"C3","c2":"S33","title":"4분 운동으로 1시간 운동효과 ? 타바타 전신편 !/ 홈트레이닝","yt":"4deNtH6p2U0","dur":"04:24","views":4273,"date":"2026-08-22"},{"id":"V0044","c1":"C3","c2":"S33","title":"Day35 하루 4분 홈트 타바타운동(8가지 코어 등척성운동 )","yt":"esPoIcFC_T4","dur":"06:08","views":5244,"date":"2026-08-22"},{"id":"V0045","c1":"C3","c2":"S34","title":"쳐진 엉덩이 올리는 4분 타바타 운동 (홈트레이닝)ㅣ고민수","yt":"AytACfar2AI","dur":"09:18","views":6215,"date":"2026-08-22"},{"id":"V0046","c1":"C3","c2":"S34","title":"[주원홈트] 준비운동 스트레칭 - 운동 전에는 꼭 따라해야 하는 워밍업 영상","yt":"2oN6SFl85VY","dur":"06:24","views":7186,"date":"2026-08-22"},{"id":"V0047","c1":"C3","c2":"S34","title":"하루를 이 동작으로 시작해보세요! (준비운동, 순환운동, 스트레칭, 워밍업, 운동 전 스트레칭) [비온뒤 금쪽 운동 상담소] #9 (김수관 코치 & 정진희 PD)","yt":"zguPP2ymhH0","dur":"16:48","views":8157,"date":"2026-08-22"},{"id":"V0048","c1":"C3","c2":"S35","title":"[Cool-Down] 마무리 스트레칭 누워서 하는 정리운동 탄력에 필수!!","yt":"d3MtqJSDO90","dur":"10:11","views":9128,"date":"2026-08-22"},{"id":"V0049","c1":"C3","c2":"S35","title":"운동 후, 쿨다운 스트레칭 10분 꼭 해주세요 (정리운동 스트레칭, 운동후 근육통 풀기)","yt":"X8t6C07BJ80","dur":"10:06","views":699,"date":"2026-08-22"},{"id":"V0050","c1":"C3","c2":"S35","title":"5분만에 끝나는, 달리기 후 스트레칭, #쿨다운 #마무리운동","yt":"mdvTr_xhiH8","dur":"07:39","views":1670,"date":"2026-08-22"},{"id":"V0051","c1":"C3","c2":"S35","title":"하루 6분 운동 후 마무리 쿨다운 스트레칭 (전신 스트레칭)","yt":"9GawCESbFFk","dur":"06:29","views":2641,"date":"2026-08-22"},{"id":"V0052","c1":"C3","c2":"S35","title":"운동후 스트레칭 모음,  이거 하나면 운동효과 2배! 쿨다운 끝!","yt":"4TwQwVFLi4Q","dur":"07:55","views":3612,"date":"2026-08-22"},{"id":"V0053","c1":"C3","c2":"S35","title":"홈트레이닝 마무리 운동-웃음체조 정리운동 스트레칭버전 집에서따라하기","yt":"YXzPcEATOPg","dur":"04:20","views":4583,"date":"2026-08-22"},{"id":"V0054","c1":"C3","c2":"S36","title":"교실놀이로 레크레이션 진행해보기-재미있는 놀이 게임 레크리에이션","yt":"z149ha1sCbQ","dur":"07:50","views":5554,"date":"2026-08-22"},{"id":"V0055","c1":"C3","c2":"S36","title":"놀이게임 5가지-초등 놀이 레크레이션 신나는 야외놀이 강당놀이 교실놀이","yt":"Gr9qZrju9Pk","dur":"12:18","views":6525,"date":"2026-08-22"},{"id":"V0056","c1":"C3","c2":"S36","title":"교실체육 | 경쟁 없는 놀이! 초간단 원형 놀이 3종 세트!","yt":"36Gc0L7X-_M","dur":"04:56","views":7496,"date":"2026-08-22"},{"id":"V0057","c1":"C3","c2":"S36","title":"교실놀이ㅣ책상을 활용한 13종 교실놀이 설명ㅣ놀이체육ㅣ초등체육","yt":"mOHgNUGpZLE","dur":"11:43","views":8467,"date":"2026-08-22"},{"id":"V0058","c1":"C3","c2":"S36","title":"[교실놀이]  \"준비물 없이 즐기는 재미있는 실내놀이 전편  풀영상\"  |팍찐놀이| 레크리에이션|","yt":"gYQhS1ioY0o","dur":"1:02:43","views":9438,"date":"2026-08-22"},{"id":"V0059","c1":"C3","c2":"S36","title":"원바운딩놀이! 협력놀이! 교실놀이체육!  실내체육! 놀이! 초등체육! fun p.e. games! Physical Education!","yt":"juCbUO6zpL0","dur":"02:11","views":1009,"date":"2026-08-22"},{"id":"V0060","c1":"C3","c2":"S36","title":"교실놀이 ㅣ 새학기 교실놀이 5종세트","yt":"A2X7o51KwuI","dur":"06:54","views":1980,"date":"2026-08-22"},{"id":"V0061","c1":"C3","c2":"S36","title":"교실놀이 ㅣ 오른쪽! 왼쪽! 흔들어~~ ㅣ 레크레이션","yt":"gBsXje_teyg","dur":"01:24","views":2951,"date":"2026-08-22"},{"id":"V0062","c1":"C4","c2":"S41","title":"줄넘기 | 초등체육 | 온라인체육 | 줄넘기기초","yt":"zPGci2cL6j4","dur":"05:14","views":3922,"date":"2026-08-22"},{"id":"V0063","c1":"C4","c2":"S41","title":"[1강]줄넘기 초보를 위한 줄넘기 기본 배우기!","yt":"Mdc7kmOKuMU","dur":"04:31","views":4893,"date":"2026-08-22"},{"id":"V0064","c1":"C4","c2":"S41","title":"줄넘기처음배우기 초급강의 1부 / 줄넘기 잘하는법(온라인체육수업 ) 기초부터 탄탄하게","yt":"_yWerNDS2AQ","dur":"06:58","views":5864,"date":"2026-08-22"},{"id":"V0065","c1":"C4","c2":"S41","title":"[양수쌤 놀이체육] 온라인 체육 - 줄넘기 양발 모아뛰기 2가지!","yt":"nDvxGWOUNk4","dur":"03:22","views":6835,"date":"2026-08-22"},{"id":"V0066","c1":"C4","c2":"S42","title":"[365+체육온활동] 초급 6. 혼자서 줄넘기","yt":"XdQRqIR-x64","dur":"07:59","views":7806,"date":"2026-08-22"},{"id":"V0067","c1":"C4","c2":"S42","title":"제1강 줄넘기 기초과정","yt":"P6RU0NUgu8E","dur":"08:46","views":8777,"date":"2026-08-22"},{"id":"V0068","c1":"C4","c2":"S42","title":"줄넘기 -기초과정","yt":"DnUmpP-_Chk","dur":"08:46","views":348,"date":"2026-08-22"},{"id":"V0069","c1":"C4","c2":"S42","title":"줄넘기2(점프스쿼트)","yt":"zrPszwVKjJE","dur":"02:06","views":1319,"date":"2026-08-22"},{"id":"V0070","c1":"C4","c2":"S43","title":"줄넘기쌩쌩이 쉽게 하기[2단뛰기 연습방법]","yt":"gT9Y9FBb1ic","dur":"01:22","views":2290,"date":"2026-08-22"},{"id":"V0071","c1":"C4","c2":"S43","title":"2중뛰기/쌩쌩이/2단뛰기 뛰는 방법!!","yt":"DwYFyXlwM40","dur":"04:19","views":3261,"date":"2026-08-22"},{"id":"V0072","c1":"C4","c2":"S43","title":"줄넘기 얼마나 아십니까? 줄넘기 2단뛰기 잘하는 법, 정말 천천히 알려드립니다 [ 달팽이레슨 ] 190716","yt":"G_jCU_oL8AE","dur":"05:08","views":4232,"date":"2026-08-22"},{"id":"V0073","c1":"C4","c2":"S43","title":"쌩쌩이, 2단뛰기 성공 하기 '2중뛰기' 하는 방법","yt":"l9chx0Z7qBw","dur":"02:02","views":5203,"date":"2026-08-22"},{"id":"V0074","c1":"C4","c2":"S44","title":"[8강]쌩쌩이 도전! 2단뛰기 마스터하기!","yt":"jmm8k9OmK1Y","dur":"03:47","views":6174,"date":"2026-08-22"},{"id":"V0075","c1":"C4","c2":"S44","title":"2분 안에 배우는 줄넘기 기본동작 - 2중뛰기(=쌩쌩이) (feat.점프스쿨)","yt":"XA3xY1WCvn8","dur":"01:27","views":7145,"date":"2026-08-22"},{"id":"V0076","c1":"C4","c2":"S44","title":"줄넘기 중수에서 고수로! 뒤로 줄넘기+쌩쌩이ㅣ이현준의 명징티비 이카이스 마이풀","yt":"adt2JguLrAo","dur":"02:40","views":8116,"date":"2026-08-22"},{"id":"V0077","c1":"C4","c2":"S44","title":"줄넘기,2단뛰기,100개","yt":"i6gF_5J4fek","dur":"01:02","views":9087,"date":"2026-08-22"},{"id":"V0078","c1":"C4","c2":"S45","title":"[윤쌤의 신나는 음악줄넘기] 초급 1단계 기본 동작","yt":"-hDMjJr9Smc","dur":"02:03","views":658,"date":"2026-08-22"},{"id":"V0079","c1":"C4","c2":"S45","title":"[윤쌤의 신나는 음악줄넘기] 고급 1단계 기본 동작","yt":"aYRIfdsH0u8","dur":"01:59","views":1629,"date":"2026-08-22"},{"id":"V0080","c1":"C4","c2":"S45","title":"방학특집! 신나는 음악과 함께 즐기는 줄넘기 기본동작 7가지!🌈🎶","yt":"SNC04hlGt6Y","dur":"03:46","views":2600,"date":"2026-08-22"},{"id":"V0081","c1":"C4","c2":"S45","title":"초보자도 OK! 인기동요 네잎클로버와 함께 즐기는 음악줄넘기🍀🎶","yt":"23hTV_VXKNE","dur":"01:18","views":3571,"date":"2026-08-22"},{"id":"V0082","c1":"C4","c2":"S45","title":"[음악줄넘기]초등학교 2학년 넘사벽 줄넘기 | 줄넘기 실력을 뽐내는 초등학생 | Jump Rope","yt":"6PvI3f7jZfE","dur":"01:06","views":4542,"date":"2026-08-22"},{"id":"V0083","c1":"C4","c2":"S45","title":"줄넘기시범공연","yt":"wWEsWFTJCnk","dur":"11:30","views":5513,"date":"2026-08-22"},{"id":"V0084","c1":"C4","c2":"S46","title":"(고화질) 초등 줄넘기 공인급수 10~1급 풀영상! (Jump rope)","yt":"HHmor6wmxMo","dur":"09:42","views":6484,"date":"2026-08-22"},{"id":"V0085","c1":"C5","c2":"S51","title":"★튼튼쌤의 율동체조교실 인기율동 특집★ㅣ핑크퐁 인기 율동동요와 함께 하는 신나는 댄스♬ㅣ곰 세마리, 멋쟁이 토마토, 악어 떼, 작은 주전자, 주먹 쥐고ㅣ핑크퐁! 인기동요","yt":"dw31Gdfj7oY","dur":"11:40","views":7455,"date":"2026-08-22"},{"id":"V0086","c1":"C5","c2":"S51","title":"체조 노래모음ㅣ인기동요모음ㅣ친구와 즐거운 노래와 댄스로 신나게 체조 율동을 즐겨보아요!ㅣ랄라라키즈","yt":"FiVBh8pv78Y","dur":"03:22","views":8426,"date":"2026-08-22"},{"id":"V0087","c1":"C5","c2":"S51","title":"높이높이 쭉쭉 ♪ | 신나는 율동 체조 | 응급처치 프린세스와 함께 쭉쭉 체조해요! | 율동동요 | 어린이 인기동요★지니키즈","yt":"OP8fuogWSlQ","dur":"00:58","views":9397,"date":"2026-08-22"},{"id":"V0088","c1":"C5","c2":"S51","title":"쭉쭉 체조 🎶 | 신나는 댄스타임 | 어린이 율동 | 인기율동 | 어린이 홈트 | 로티프렌즈 인기동요 | LOTTY FRIENDS","yt":"mfpamFUdivE","dur":"03:22","views":968,"date":"2026-08-22"},{"id":"V0089","c1":"C5","c2":"S52","title":"신나는 율동동요 댄스 모음 60분 ♪ | 시원하게 몸을 움직여요🤸‍♂️| 동물동요 l 방귀체조 | 어린이 인기동요 연속듣기 ★ 지니키즈","yt":"_EkTLdKEOy4","dur":"48:34","views":1939,"date":"2026-08-22"},{"id":"V0090","c1":"C5","c2":"S52","title":"뚝딱뚝딱 율동 동요! 💃 | 신나게 몸을 움직여요 | 어린이를 위한 운동 노래","yt":"DFT4-ro_iIM","dur":"15:49","views":2910,"date":"2026-08-22"},{"id":"V0091","c1":"C5","c2":"S52","title":"오늘도 튼튼하게💪🏻튼튼쌤과 체조해요! | 인기 체조 모음집 | 몽키 바나나, 아기상어 체조, 쑥쑥 키크기 체조 | 신나는 율동 체조 | 어린이 체조 | 핑크퐁! 인기동요","yt":"5Hll_yymS2w","dur":"1:30:16","views":3881,"date":"2026-08-22"},{"id":"V0092","c1":"C5","c2":"S53","title":"🕺 SODA POP - Saja Boys 간단춤 | 따라하기 쉬운 K-POP 안무 | 케데몬 | 흥딩스쿨","yt":"GKkixovHHro","dur":"01:41","views":4852,"date":"2026-08-22"},{"id":"V0093","c1":"C5","c2":"S53","title":"키즈 댄스 k-pop 안무 기초 배우기 | 캐리tv 히트송-‘럽럽(Love Love)’ 안무 기본기 배우기 part.2 | k-pop Kids dance class","yt":"YDFWIe-ibz8","dur":"05:48","views":5823,"date":"2026-08-22"},{"id":"V0094","c1":"C6","c2":"S61","title":"국기 퀴즈 | 국기 맞히기 195개 | 3초 안에 국기 맞히기 | 국기 100+ 도전 🌏 | flag quiz 2024","yt":"Ln9mCebyeNk","dur":"18:19","views":6794,"date":"2026-08-22"},{"id":"V0095","c1":"C6","c2":"S61","title":"세계여러나라 국기퀴즈 | 국기맞추기 게임 | 세계여러나라 국기 | 세계여러나라 놀이 | 세계여러나라 퀴즈 (어린이 / 유아 / 초등저학년)","yt":"f9PuBMgLtpA","dur":"03:43","views":7765,"date":"2026-08-22"},{"id":"V0096","c1":"C6","c2":"S61","title":"🚩최고 난이도 국기 보고  56개국 나라 이름 맞추기 8단계 퀴즈.","yt":"L73dXfVsLKc","dur":"09:28","views":8736,"date":"2026-08-22"},{"id":"V0097","c1":"C6","c2":"S61","title":"국기 맞히기 퀴즈, 국기 사진 보고 100개 나라 맞히기, 난이도 초중급","yt":"D8vF6CXRhgc","dur":"13:41","views":307,"date":"2026-08-22"},{"id":"V0098","c1":"C6","c2":"S62","title":"집중력 향상 놀이! \"안 숨은그림 찾기 1탄\"","yt":"nA9I1iv_E8w","dur":"06:46","views":1278,"date":"2026-08-22"},{"id":"V0099","c1":"C6","c2":"S62","title":"[다른그림찾기]💥90초 안에 다른점 3개 찾아주세요! 집중력 향상 두뇌 퀴즈 Find the difference 치매 예방 퀴즈 / 두뇌게임 [틀린그림찾기] 678","yt":"DKA9vzuKFio","dur":"09:26","views":2249,"date":"2026-08-22"},{"id":"V0100","c1":"C6","c2":"S62","title":"【다른그림찾기 | 치매예방】천재도 차이점 3개 중 한 곳은 못 찾습니다! 재밌고 건강한 기억 훈련 퀴즈 문제!【두뇌운동 | Find Difference | 틀린그림찾기】#1602","yt":"0FLsBYtNPkg","dur":"09:26","views":3220,"date":"2026-08-22"},{"id":"V0101","c1":"C6","c2":"S63","title":"넌센스 퀴즈! 최고 재미있는 넌센스모음. 빵빵터지는 웃긴 것만 모은 아재퀴즈! 두뇌 트레이닝! 초성퀴즈ㅣ퍼즐ㅣ그림퀴즈ㅣ넌센스ㅣ초등학생퀴즈ㅣ유머퀴즈","yt":"4FR8-GOwlWs","dur":"04:06","views":4191,"date":"2026-08-22"},{"id":"V0102","c1":"C6","c2":"S63","title":"재미있는 넌센스퀴즈 모음 1탄(15문제) #넌센스 #넌센스퀴즈 #아재개그 #유머 #퀴즈 #수수께끼 ","yt":"7gjp3gdZE2U","dur":"04:14","views":5162,"date":"2026-08-22"},{"id":"V0103","c1":"C6","c2":"S63","title":"[두뇌퀴즈] \"뇌가 똑똑해지는 그림 넌센스 퀴즈 \"|수수께끼|아재개그|","yt":"JJRoMT3SiEg","dur":"08:03","views":6133,"date":"2026-08-22"},{"id":"V0104","c1":"C6","c2":"S63","title":"[넌센스] \"뇌가 똑똑해지는 그림 넌센스 퀴즈 30\"|수수께끼|아재개그|","yt":"zRJj-JwMpcc","dur":"10:54","views":7104,"date":"2026-08-22"}],"users":[{"id":"teacher","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"테스트","org":"스마트점핑 본부","region":"울산광역시 북구","role":"관리자"},{"id":"test","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"교사","org":"옥동초등학교","region":"울산광역시 남구","role":"교사"},{"id":"teststu","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"학생","org":"강동초등학교 3학년 2반","region":"울산광역시 북구","role":"학생"}],"classes":[{"id":"CL001","owner":"teacher","ym":"2026-07","region":"울산광역시 북구","school":"강동초등학교","grade":1,"cls":3,"cap":8,"memo":"","sched":"1학기 기본과정"},{"id":"CL002","owner":"teacher","ym":"2026-08","region":"울산광역시 북구","school":"강동초등학교","grade":2,"cls":1,"cap":12,"memo":"","sched":"1학기 기본과정"},{"id":"CL003","owner":"teacher","ym":"2026-07","region":"울산광역시 북구","school":"강동초등학교","grade":3,"cls":2,"cap":15,"memo":"","sched":"리듬 점핑반"},{"id":"CL004","owner":"test","ym":"2026-08","region":"울산광역시 남구","school":"옥동초등학교","grade":4,"cls":1,"cap":20,"memo":"","sched":"체력왕 도전"},{"id":"CL005","owner":"test","ym":"2026-07","region":"부산광역시 해운대구","school":"해운대초등학교","grade":5,"cls":4,"cap":18,"memo":"","sched":"체력왕 도전"},{"id":"CL006","owner":"test","ym":"2026-08","region":"서울특별시 강남구","school":"대치초등학교","grade":6,"cls":2,"cap":22,"memo":"","sched":""}],"attendance":[{"classId":"CL001","name":"김민준","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"박지호","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"최수아","date":"2026-08-15","status":"결"},{"classId":"CL001","name":"정예준","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"강하윤","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"학생","date":"2026-08-15","status":"출"},{"classId":"CL001","name":"김민준","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"박지호","date":"2026-08-19","status":"결"},{"classId":"CL001","name":"최수아","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"정예준","date":"2026-08-19","status":"지"},{"classId":"CL001","name":"강하윤","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"학생","date":"2026-08-19","status":"출"},{"classId":"CL001","name":"김민준","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-08-22","status":"결"},{"classId":"CL001","name":"박지호","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"최수아","date":"2026-08-22","status":"지"},{"classId":"CL001","name":"정예준","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"강하윤","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-08-22","status":"출"},{"classId":"CL001","name":"학생","date":"2026-08-22","status":"결"}],"equipment":[{"owner":"teacher","name":"스마트점핑 로프 (표준형)","agency":"울산대리점","fresh":20,"used":5},{"owner":"teacher","name":"스마트점핑 매트","agency":"울산대리점","fresh":12,"used":3},{"owner":"test","name":"스마트점핑 로프 (학급용)","agency":"울산대리점","fresh":30,"used":2}],"schedules":[{"owner":"teacher","name":"1학기 기본과정","items":[{"no":1,"videoIds":["V0008","V0030","V0062","V0048"]},{"no":2,"videoIds":["V0009","V0031","V0066","V0049"]}]},{"owner":"teacher","name":"리듬 점핑반","items":[{"no":1,"videoIds":["V0012","V0078","V0092"]}]},{"owner":"test","name":"체력왕 도전","items":[{"no":1,"videoIds":["V0032","V0037","V0042","V0050"]},{"no":2,"videoIds":["V0054","V0045","V0098"]}]}],"textbooks":[{"no":1,"title":"스마트점핑 01권","cover":"","link":"","badge":"특호"},{"no":2,"title":"스마트점핑 02권","cover":"","link":"","badge":""},{"no":3,"title":"스마트점핑 03권","cover":"","link":"","badge":""},{"no":4,"title":"스마트점핑 04권","cover":"","link":"","badge":""},{"no":5,"title":"스마트점핑 05권","cover":"","link":"","badge":""},{"no":6,"title":"스마트점핑 06권","cover":"","link":"","badge":""},{"no":7,"title":"스마트점핑 07권","cover":"","link":"","badge":""},{"no":8,"title":"스마트점핑 08권","cover":"","link":"","badge":""},{"no":9,"title":"스마트점핑 09권","cover":"","link":"","badge":""},{"no":10,"title":"스마트점핑 10권","cover":"","link":"","badge":""},{"no":11,"title":"스마트점핑 11권","cover":"","link":"","badge":""},{"no":12,"title":"스마트점핑 12권","cover":"","link":"","badge":""}],"favorites":{"teacher":["V0008","V0016","V0030","V0062","V0085"]}};
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
@@ -1045,6 +1124,7 @@ button.st-tag:hover{ filter:brightness(.94); }
     set('schedules', SEED.schedules.slice());
     set('views', {});
     set('playlists', {});
+    set('favorites', SEED.favorites || {});
     set('profiles', {});
     // 로그인 세션 캐시도 비운다. 안 그러면 이전 시드의 이름·소속이 그대로 남는다.
     try { localStorage.removeItem('sj_user'); } catch (e) {}
@@ -1130,10 +1210,18 @@ button.st-tag:hover{ filter:brightness(.94); }
             dur: v.dur, views: (v.views || 0) + (views[v.id] || 0), date: v.date
           };
         }),
-        // 담은 영상은 계정별로 따로 보관한다
+        // 담은 영상·즐겨찾기는 계정별로 따로 보관한다
         playlist: (get('playlists', {}) || {})[userId] || [],
+        favorites: (get('favorites', {}) || {})[userId] || [],
         appTitle: SEED.appTitle
       };
+    },
+
+    api_saveFavorites: function (userId, ids) {
+      var all = get('favorites', {}) || {};
+      all[userId] = ids || [];
+      set('favorites', all);
+      return { ok: true, count: (ids || []).length };
     },
 
     api_savePlaylist: function (userId, ids) {
@@ -1310,6 +1398,95 @@ button.st-tag:hover{ filter:brightness(.94); }
     /* ── 교재 ── */
     api_textbooks: function () { return SEED.textbooks; },
 
+    /* ── 내 출결 (계정 이름과 출석부 학생명을 맞춘다) ── */
+    api_myAttendance: function (userId) {
+      var u = userOf(userId);
+      if (!u) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+      var p = profile(userId);
+      var myName = String(p.name || u.name).trim();
+
+      var classes = get('classes', []);
+      var byClass = {};
+      get('attendance', []).forEach(function (a) {
+        if (String(a.name).trim() !== myName) return;
+        var c = classes.filter(function (x) { return x.id === a.classId; })[0];
+        if (!byClass[a.classId]) {
+          byClass[a.classId] = {
+            classId: a.classId,
+            className: c ? (c.school + ' ' + c.grade + '-' + c.cls) : a.classId,
+            school: c ? c.school : '',
+            records: [], '출': 0, '결': 0, '지': 0, '조': 0, total: 0
+          };
+        }
+        byClass[a.classId].records.push({ date: a.date, status: a.status });
+        if (byClass[a.classId][a.status] !== undefined) byClass[a.classId][a.status]++;
+        byClass[a.classId].total++;
+      });
+
+      var list = Object.keys(byClass).map(function (k) {
+        byClass[k].records.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+        byClass[k].rate = byClass[k].total
+          ? Math.round(byClass[k]['출'] / byClass[k].total * 100) : 0;
+        return byClass[k];
+      });
+      return { ok: true, name: myName, classes: list };
+    },
+
+    /* ── 수업 리포트 ── */
+    api_classReport: function (classId, userId) {
+      var c = get('classes', []).filter(function (x) { return x.id === classId; })[0];
+      if (!c) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+      if (!isAdmin(userId) && c.owner !== userId) {
+        return { ok: false, msg: '조회 권한이 없습니다.' };
+      }
+
+      var cur = API.api_classCurriculum(classId, userId);
+      var att = get('attendance', []).filter(function (a) { return a.classId === classId; });
+
+      var dates = [];
+      att.forEach(function (a) { if (a.date && dates.indexOf(a.date) < 0) dates.push(a.date); });
+      dates.sort();
+
+      var names = [];
+      att.forEach(function (a) { if (names.indexOf(a.name) < 0) names.push(a.name); });
+      names.sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+
+      var grid = names.map(function (n) {
+        var row = { name: n, cells: [], '출': 0, '결': 0, '지': 0, '조': 0 };
+        dates.forEach(function (d) {
+          var rec = att.filter(function (a) { return a.name === n && a.date === d; })[0];
+          var st = rec ? rec.status : '';
+          row.cells.push(st);
+          if (row[st] !== undefined) row[st]++;
+        });
+        row.total = dates.length;
+        row.rate = dates.length ? Math.round(row['출'] / dates.length * 100) : 0;
+        return row;
+      });
+
+      var vTitle = {};
+      SEED.videos.forEach(function (v) { vTitle[v.id] = v.title; });
+      var curItems = (cur.items || []).map(function (it) {
+        return { no: it.no, videos: it.videoIds.map(function (id) { return vTitle[id] || id; }) };
+      });
+
+      var now = new Date();
+      var p = function (n) { return ('0' + n).slice(-2); };
+      return {
+        ok: true,
+        printedAt: now.getFullYear() + '-' + p(now.getMonth() + 1) + '-' + p(now.getDate()) +
+                   ' ' + p(now.getHours()) + ':' + p(now.getMinutes()),
+        cls: {
+          id: c.id, ym: c.ym, region: c.region, school: c.school,
+          grade: c.grade, cls: c.cls, cap: c.cap, owner: c.owner, memo: c.memo || ''
+        },
+        group: cur.group || '',
+        curriculum: curItems,
+        dates: dates,
+        grid: grid
+      };
+    },
+
     /* ── 회원관리 (관리자 전용) ── */
     api_members: function (userId) {
       if (!isAdmin(userId)) return { ok: false, msg: '관리자만 볼 수 있습니다.' };
@@ -1479,11 +1656,14 @@ function srv(fn) {
 }
 
 var S = {
-  user: null, categories: [], videos: [], cart: [],
+  user: null, categories: [], videos: [], cart: [], favs: [],
   c1: null, c2: null, q: '', page: 1, pageSize: 24,
   sort: 'default',
   classes: [], loaded: false
 };
+
+/** 즐겨찾기 전용 가상 대분류 ID */
+var FAV_ID = '__fav';
 
 /** 라이브러리 정렬 방식 */
 var SORTS = [
@@ -1521,6 +1701,30 @@ function toast(msg) {
 
 /* ═══════════ 로그인 ═══════════ */
 
+/** 로그인 필요 여부 — 게스트면 안내하고 로그인 창을 연다 */
+function needLogin(msg) {
+  if (S.user) return false;
+  toast(msg || '로그인이 필요합니다.');
+  openAuth(false);
+  return true;
+}
+
+function openAuth(signup) {
+  showSignup(!!signup);
+  $('#authTitle').textContent = signup ? '회원가입' : '로그인';
+  $('#authModal').hidden = false;
+  setTimeout(function () {
+    var f = signup ? $('#suId') : $('#loginId');
+    if (f) f.focus();
+  }, 60);
+}
+function closeAuth() { $('#authModal').hidden = true; }
+
+$('#authX').addEventListener('click', closeAuth);
+$('#authModal').addEventListener('click', function (e) { if (e.target === $('#authModal')) closeAuth(); });
+$('#btnLogin').addEventListener('click', function () { openAuth(false); });
+$('#btnSignup').addEventListener('click', function (e) { e.preventDefault(); openAuth(true); });
+
 $('#loginForm').addEventListener('submit', function (e) {
   e.preventDefault();
   var btn = $('#loginBtn'), msg = $('#loginMsg');
@@ -1528,14 +1732,21 @@ $('#loginForm').addEventListener('submit', function (e) {
 
   srv('api_login', $('#loginId').value, $('#loginPw').value)
     .then(function (r) {
-      if (!r.ok) {
-        msg.textContent = r.msg;
-        btn.disabled = false; btn.textContent = '로그인';
-        return;
-      }
+      btn.disabled = false; btn.textContent = '로그인';
+      if (!r.ok) { msg.textContent = r.msg; return; }
       S.user = r.user;
       try { localStorage.setItem('sj_user', JSON.stringify(r.user)); } catch (e) {}
-      startApp();
+      closeAuth();
+      applyAuthUI();
+      toast(r.user.name + '님, 반갑습니다.');
+      // 로그인한 계정의 담기·즐겨찾기를 다시 받아온다
+      return srv('api_bootstrap', S.user.id).then(function (d) {
+        S.cart = d.playlist || [];
+        S.favs = d.favorites || [];
+        updateFab();
+        renderGnb();
+        renderRoute();
+      });
     })
     .catch(function (err) {
       msg.textContent = '서버 오류: ' + err.message;
@@ -1594,35 +1805,49 @@ $('#signupForm').addEventListener('submit', function (e) {
     });
 });
 
-(function () {
-  try {
-    var saved = localStorage.getItem('sj_user');
-    if (saved) { S.user = JSON.parse(saved); startApp(); }
-  } catch (e) {}
-})();
 
 /* ═══════════ 권한 ═══════════ */
 
-/** 이 권한이 해당 메뉴를 쓸 수 있는가 (data-role 미지정이면 전원 허용) */
+/** 로그인 없이 볼 수 있는 화면 */
+var GUEST_NAV = ['library', 'textbook'];
+
+/** 이 권한이 해당 메뉴를 쓸 수 있는가 (data-role 미지정이면 로그인 사용자 전원 허용) */
 function canUse(el) {
+  var nav = el.getAttribute('data-nav') || '';
+  if (!S.user) return GUEST_NAV.indexOf(nav) >= 0;
   var need = el.getAttribute('data-role');
   if (!need) return true;
   return need.split(',').indexOf(S.user.role) >= 0;
 }
 
-/** 권한에 맞지 않는 메뉴를 감춘다 */
+/** 권한·로그인 상태에 맞지 않는 메뉴를 감춘다 */
 function applyRole() {
-  $$('.side-nav [data-role]').forEach(function (a) { a.hidden = !canUse(a); });
+  $$('.side-nav > a[data-nav], .sub-nav a').forEach(function (a) { a.hidden = !canUse(a); });
   // 마이페이지 하위가 전부 가려지면 상위도 의미가 없다
   var visibleSubs = $$('#subMypage a').filter(function (a) { return !a.hidden; });
   $('#navMypage').hidden = visibleSubs.length === 0;
+  if (visibleSubs.length === 0) $('#subMypage').classList.remove('open');
+}
+
+/** 로그인/게스트에 따라 사이드바 카드를 바꾼다 */
+function applyAuthUI() {
+  var on = !!S.user;
+  $('#guestCard').hidden = on;
+  $('#userCard').hidden = !on;
+  if (on) {
+    $('#userName').textContent = S.user.name || S.user.id;
+    $('#userRole').textContent = S.user.role || '교사';
+    $('#userRole').setAttribute('data-r', S.user.role || '교사');
+  }
+  applyRole();
 }
 
 /** 권한 없는 화면으로 직접 들어오면 홈으로 되돌린다 */
 function guardRoute(navKey) {
   var el = $('.side-nav [data-nav="' + navKey + '"]');
   if (el && !canUse(el)) {
-    toast(S.user.role + ' 계정은 이용할 수 없는 메뉴입니다.');
+    if (!S.user) { toast('로그인이 필요한 메뉴입니다.'); openAuth(false); }
+    else toast(S.user.role + ' 계정은 이용할 수 없는 메뉴입니다.');
     location.hash = '#/library';
     return false;
   }
@@ -1630,22 +1855,18 @@ function guardRoute(navKey) {
 }
 
 function startApp() {
-  $('#loginView').hidden = true;
-  $('#app').hidden = false;
-  $('#userName').textContent = S.user.name || S.user.id;
-  $('#userRole').textContent = S.user.role || '교사';
-  $('#userRole').setAttribute('data-r', S.user.role || '교사');
-  applyRole();
+  applyAuthUI();
   startClock();
 
   if (!location.hash) location.hash = '#/library';
   renderRoute();
 
-  srv('api_bootstrap', S.user.id)
+  srv('api_bootstrap', S.user ? S.user.id : '')
     .then(function (d) {
       S.categories = d.categories || [];
       S.videos = d.videos || [];
       S.cart = d.playlist || [];
+      S.favs = d.favorites || [];
       S.loaded = true;
       if (!S.c1 && S.categories.length) S.c1 = S.categories[0].id;
       renderGnb();
@@ -1680,7 +1901,6 @@ function startClock() {
 window.addEventListener('hashchange', renderRoute);
 
 function renderRoute() {
-  if (!S.user) return;
   var h = location.hash.replace('#/', '') || 'library';
   var parts = h.split('/'), key = parts[0], sub = parts[1] || '';
   var navKey = (key === 'mypage') ? (sub || 'info') : key;
@@ -1701,6 +1921,7 @@ function renderRoute() {
   if (key === 'library') return viewLibrary();
   if (key === 'classes') return viewClasses();
   if (key === 'members') return viewMembers();
+  if (key === 'myatt') return viewMyAttendance();
   if (key === 'textbook') return viewTextbook();
   if (key === 'mypage') {
     if (sub === 'equipment') return viewEquipment();
@@ -1738,11 +1959,14 @@ function countIn(c1, c2) {
 function renderGnb() {
   // 영상이 하나도 없는 대분류는 감춘다
   var shown = S.categories.filter(function (c) { return countIn(c.id) > 0; });
-  if (shown.length && !shown.some(function (c) { return c.id === S.c1; })) S.c1 = shown[0].id;
+  if (shown.length && S.c1 !== FAV_ID &&
+      !shown.some(function (c) { return c.id === S.c1; })) S.c1 = shown[0].id;
 
   $('#gnbNav').innerHTML = shown.map(function (c) {
     return '<a href="#/library" data-c1="' + esc(c.id) + '">' + esc(c.name) + '</a>';
-  }).join('');
+  }).join('') +
+    '<a href="#/library" class="gnb-fav" data-c1="' + FAV_ID + '">★ 즐겨찾기' +
+      '<span class="gnb-fav-cnt" id="favCnt">' + S.favs.length + '</span></a>';
 
   $$('#gnbNav a').forEach(function (a) {
     a.addEventListener('click', function () {
@@ -1763,11 +1987,13 @@ function viewLibrary() {
   if (!S.loaded) { $('#view').innerHTML = skeleton(); return; }
   markGnb();
 
+  var isFav = (S.c1 === FAV_ID);
   var cat = S.categories.filter(function (c) { return c.id === S.c1; })[0];
   // 영상이 있는 소분류만 노출
   var subs = (cat ? cat.subs : []).filter(function (s) { return countIn(S.c1, s.id) > 0; });
 
-  var chips = '<button class="chip' + (S.c2 === null ? ' on' : '') + '" data-c2="">' +
+  var chips = isFav ? '' :
+    '<button class="chip' + (S.c2 === null ? ' on' : '') + '" data-c2="">' +
       '전체<span class="chip-count">' + countIn(S.c1) + '</span></button>' +
     subs.map(function (s) {
       return '<button class="chip' + (S.c2 === s.id ? ' on' : '') + '" data-c2="' + esc(s.id) + '">' +
@@ -1814,6 +2040,7 @@ function filtered() {
   var q = S.q.toLowerCase();
   var list = S.videos.filter(function (v) {
     if (S.q) return v.title.toLowerCase().indexOf(q) >= 0;   // 검색은 전체 대상
+    if (S.c1 === FAV_ID) return S.favs.indexOf(v.id) >= 0;   // 즐겨찾기만
     if (S.c1 && v.c1 !== S.c1) return false;
     if (S.c2 && v.c2 !== S.c2) return false;
     return true;
@@ -1906,8 +2133,11 @@ function renderGrid() {
 
   $('#grid').innerHTML = slice.map(function (v) {
     var picked = S.cart.indexOf(v.id) >= 0;
+    var faved = S.favs.indexOf(v.id) >= 0;
     return '<article class="vcard' + (picked ? ' picked' : '') + '" data-id="' + esc(v.id) + '">' +
       '<label class="vpick" title="수업에 담기"><input type="checkbox" ' + (picked ? 'checked' : '') + '><i>✓</i></label>' +
+      '<button class="vfav' + (faved ? ' on' : '') + '" data-fav="' + esc(v.id) + '" ' +
+        'title="' + (faved ? '즐겨찾기 해제' : '즐겨찾기') + '" aria-label="즐겨찾기">★</button>' +
       '<div class="vthumb" data-play="' + esc(v.id) + '">' + thumbHtml(v) +
         '<div class="vthumb-play"><i>▶</i></div>' +
         '<span class="vthumb-views">조회 ' + nfmt(v.views) + '</span>' +
@@ -1924,6 +2154,7 @@ function renderGrid() {
 
   $$('#grid .vpick input').forEach(function (cb) {
     cb.addEventListener('change', function () {
+      if (needLogin('로그인하면 영상을 담을 수 있습니다.')) { cb.checked = false; return; }
       var card = cb.closest('.vcard');
       toggleCart(card.dataset.id, cb.checked);
       card.classList.toggle('picked', cb.checked);
@@ -1932,6 +2163,20 @@ function renderGrid() {
   });
   $$('#grid .vthumb').forEach(function (t) {
     t.addEventListener('click', function () { openPlayer([t.dataset.play]); });
+  });
+  $$('#grid .vfav').forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (needLogin('로그인하면 즐겨찾기를 쓸 수 있습니다.')) return;
+      toggleFav(b.dataset.fav);
+      // 즐겨찾기 화면에서 해제하면 목록에서 빠져야 한다
+      if (S.c1 === FAV_ID) renderGrid();
+      else {
+        var on = S.favs.indexOf(b.dataset.fav) >= 0;
+        b.classList.toggle('on', on);
+        b.title = on ? '즐겨찾기 해제' : '즐겨찾기';
+      }
+    });
   });
 
   renderPager(pages);
@@ -1976,6 +2221,7 @@ function toggleCart(id, on) {
 }
 
 function pickPage() {
+  if (needLogin('로그인하면 영상을 담을 수 있습니다.')) return;
   var added = 0;
   $$('#grid .vcard').forEach(function (card) {
     var cb = $('input[type=checkbox]', card);
@@ -1983,6 +2229,25 @@ function pickPage() {
   });
   bumpFab();
   toast(added ? added + '개를 담았습니다.' : '이미 모두 담겨 있습니다.');
+}
+
+/* ═══════════ 즐겨찾기 ═══════════ */
+
+function toggleFav(id) {
+  var i = S.favs.indexOf(id);
+  if (i < 0) { S.favs.push(id); toast('즐겨찾기에 담았습니다.'); }
+  else { S.favs.splice(i, 1); toast('즐겨찾기에서 뺐습니다.'); }
+  if ($('#favCnt')) $('#favCnt').textContent = S.favs.length;
+  saveFavDebounced();
+}
+
+var favTimer = null;
+function saveFavDebounced() {
+  if (!S.user) return;   // 게스트는 저장하지 않는다
+  clearTimeout(favTimer);
+  favTimer = setTimeout(function () {
+    srv('api_saveFavorites', S.user.id, S.favs).catch(function () {});
+  }, 800);
 }
 
 function updateFab() { $('#fabCount').textContent = S.cart.length; }
@@ -1993,14 +2258,19 @@ function bumpFab() {
 
 var saveTimer = null;
 function saveCartDebounced() {
+  if (!S.user) return;   // 게스트는 저장하지 않는다
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function () {
     srv('api_savePlaylist', S.user.id, S.cart).catch(function () {});
   }, 900);
 }
 
-$('#fabCart').addEventListener('click', openCartModal);
+$('#fabCart').addEventListener('click', function () {
+  if (needLogin('로그인하면 영상을 담을 수 있습니다.')) return;
+  openCartModal();
+});
 $('#btnStartClass').addEventListener('click', function () {
+  if (needLogin()) return;
   if (!S.cart.length) { toast('먼저 영상을 담아주세요.'); return; }
   openPlayer(S.cart.slice());
 });
@@ -2295,7 +2565,7 @@ function renderClasses() {
         '<th>번호</th><th>수업년월</th><th>지역</th><th>학교</th><th>학년</th><th>반</th><th>정원</th>' +
         '<th>커리큘럼</th>' +
         (adminView ? '<th>담당</th>' : '') +
-        '<th>수업</th><th>출석부</th><th>수정</th><th>삭제</th>' +
+        '<th>수업</th><th>출석부</th><th>리포트</th><th>수정</th><th>삭제</th>' +
       '</tr></thead><tbody>' +
       (pageList.length ? pageList.map(function (c, i) {
         return '<tr>' +
@@ -2308,10 +2578,11 @@ function renderClasses() {
           (adminView ? '<td><span class="owner-tag">' + esc(c.owner || '-') + '</span></td>' : '') +
           '<td><button class="ico-btn ico-play" data-run="' + esc(c.id) + '" title="오늘 수업 열기">▶</button></td>' +
           '<td><button class="ico-btn ico-att" data-att="' + esc(c.id) + '" title="출석부">📋</button></td>' +
+          '<td><button class="ico-btn ico-rep" data-rep="' + esc(c.id) + '" title="수업 리포트 (인쇄·PDF)">📄</button></td>' +
           '<td><button class="ico-btn ico-edit" data-edit="' + esc(c.id) + '" title="수정">✏️</button></td>' +
           '<td><button class="ico-btn ico-del" data-del="' + esc(c.id) + '" title="삭제">🗑</button></td>' +
         '</tr>';
-      }).join('') : '<tr><td colspan="' + (adminView ? 13 : 12) + '" style="padding:56px;color:#94a3b8">' +
+      }).join('') : '<tr><td colspan="' + (adminView ? 14 : 13) + '" style="padding:56px;color:#94a3b8">' +
         (S.classes.length ? '검색 결과가 없습니다.' : '등록된 수업이 없습니다.') + '</td></tr>') +
       '</tbody></table></div>' +
       '<div class="pager" id="clsPager"></div>' +
@@ -2373,6 +2644,9 @@ function renderClasses() {
   });
   $$('[data-run]').forEach(function (b) {
     b.addEventListener('click', function () { curriculumModal(b.dataset.run); });
+  });
+  $$('[data-rep]').forEach(function (b) {
+    b.addEventListener('click', function () { reportModal(b.dataset.rep); });
   });
 }
 
@@ -2622,6 +2896,142 @@ function attRow(name, status, i) {
 }
 function bindAttDel() {
   $$('[data-attdel]').forEach(function (b) { b.onclick = function () { b.closest('tr').remove(); }; });
+}
+
+/* ═══════════ 내 출결 (학생·학부모) ═══════════ */
+
+var ST_LABEL = { '출': '출석', '결': '결석', '지': '지각', '조': '조퇴' };
+
+function viewMyAttendance() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">내 출결</h1>' +
+    '<p class="page-desc">수업별 출결 기록과 출석률을 확인합니다.</p></div>' +
+    '<div id="myaWrap">' + skelPanel() + '</div>';
+
+  srv('api_myAttendance', S.user.id).then(function (r) {
+    if (!r.ok) { $('#myaWrap').innerHTML = '<div class="empty"><b>' + esc(r.msg) + '</b></div>'; return; }
+
+    if (!r.classes.length) {
+      $('#myaWrap').innerHTML =
+        '<div class="panel panel-pad" style="max-width:820px;margin:0 auto">' +
+        '<div class="empty"><span class="ico">🗓</span><b>출결 기록이 없습니다</b>' +
+        '<b style="font-size:13px;color:#64748b;font-weight:500">「' + esc(r.name) + '」</b> 이름으로 등록된 출결이 아직 없습니다.<br>' +
+        '선생님이 출석부에 이름을 등록하면 여기에 나타납니다.</div></div>';
+      return;
+    }
+
+    $('#myaWrap').innerHTML = '<div style="max-width:900px;margin:0 auto">' +
+      r.classes.map(function (c) {
+        var bar = c.rate >= 90 ? 'ok' : (c.rate >= 70 ? 'warn' : 'bad');
+        return '<div class="panel" style="margin-bottom:18px">' +
+          '<div class="mya-head">' +
+            '<div><div class="mya-cls">' + esc(c.className) + '</div>' +
+            '<div class="mya-sub">전체 ' + c.total + '회</div></div>' +
+            '<div class="mya-rate ' + bar + '"><b>' + c.rate + '%</b><span>출석률</span></div>' +
+          '</div>' +
+          '<div class="mya-stat">' +
+            ['출', '결', '지', '조'].map(function (k) {
+              return '<div class="mya-cell' + (k === '결' && c[k] ? ' bad' : '') + '">' +
+                '<b>' + c[k] + '</b><span>' + ST_LABEL[k] + '</span></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>날짜</th><th>출결</th></tr></thead><tbody>' +
+            c.records.map(function (x) {
+              return '<tr><td>' + esc(x.date) + '</td>' +
+                '<td><span class="st-chip st-' + (x.status === '출' ? 'ok' : (x.status === '결' ? 'bad' : 'mid')) + '">' +
+                esc(ST_LABEL[x.status] || x.status) + '</span></td></tr>';
+            }).join('') +
+          '</tbody></table></div>' +
+        '</div>';
+      }).join('') + '</div>';
+  }).catch(function (e) { $('#myaWrap').innerHTML = errBox(e); });
+}
+
+/* ═══════════ 수업 리포트 (인쇄 · PDF) ═══════════ */
+
+function reportModal(classId) {
+  modal('수업 리포트', '<div class="empty">리포트를 만드는 중...</div>', '');
+
+  srv('api_classReport', classId, S.user.id).then(function (r) {
+    if (!r.ok) { modal('수업 리포트', '<div class="empty"><b>' + esc(r.msg) + '</b></div>', ''); return; }
+
+    var html = buildReport(r);
+    modal('수업 리포트 · ' + r.cls.school + ' ' + r.cls.grade + '-' + r.cls.cls,
+      '<div class="report-preview">' + html + '</div>',
+      '<button class="btn btn-ghost" id="mCancel">닫기</button>' +
+      '<button class="btn btn-primary" id="repPrint">🖨 인쇄 / PDF 저장</button>');
+
+    $('#mCancel').addEventListener('click', closeModal);
+    $('#repPrint').addEventListener('click', function () {
+      var pa = $('#printArea');
+      pa.innerHTML = html;
+      pa.hidden = false;
+      document.body.classList.add('printing');
+      window.print();
+      // 인쇄 대화상자가 닫힌 뒤 정리
+      setTimeout(function () {
+        document.body.classList.remove('printing');
+        pa.hidden = true;
+        pa.innerHTML = '';
+      }, 800);
+    });
+  });
+}
+
+function buildReport(r) {
+  var c = r.cls;
+  var stCls = function (s) {
+    return s === '출' ? 'ok' : (s === '결' ? 'bad' : (s ? 'mid' : 'none'));
+  };
+
+  return '' +
+    '<div class="rep">' +
+      '<div class="rep-top">' +
+        '<div>' +
+          '<div class="rep-brand">미래형학교체육 · 스마트점핑</div>' +
+          '<h1 class="rep-title">수업 리포트</h1>' +
+        '</div>' +
+        '<div class="rep-when">출력 ' + esc(r.printedAt) + '</div>' +
+      '</div>' +
+
+      '<table class="rep-info"><tbody>' +
+        '<tr><th>학교</th><td>' + esc(c.school) + '</td><th>학년 / 반</th><td>' + esc(c.grade) + '학년 ' + esc(c.cls) + '반</td></tr>' +
+        '<tr><th>지역</th><td>' + esc(c.region) + '</td><th>수업년월</th><td>' + esc(c.ym) + '</td></tr>' +
+        '<tr><th>정원</th><td>' + esc(c.cap) + '명</td><th>담당</th><td>' + esc(c.owner) + '</td></tr>' +
+        '<tr><th>커리큘럼</th><td colspan="3">' + (esc(r.group) || '연결 안 됨') + '</td></tr>' +
+      '</tbody></table>' +
+
+      '<h2 class="rep-h2">1. 커리큘럼</h2>' +
+      (r.curriculum.length
+        ? '<table class="rep-tbl"><thead><tr><th style="width:70px">차시</th><th>영상 구성</th></tr></thead><tbody>' +
+          r.curriculum.map(function (it) {
+            return '<tr><td class="c">' + it.no + '차시</td><td>' +
+              it.videos.map(function (t, i) { return (i + 1) + '. ' + esc(t); }).join('<br>') +
+              '</td></tr>';
+          }).join('') + '</tbody></table>'
+        : '<p class="rep-none">연결된 커리큘럼이 없습니다.</p>') +
+
+      '<h2 class="rep-h2">2. 출결 현황 <span class="rep-sub">' + r.dates.length + '회차</span></h2>' +
+      (r.grid.length
+        ? '<table class="rep-tbl rep-att"><thead><tr><th>학생명</th>' +
+          r.dates.map(function (d) { return '<th class="c">' + esc(d.slice(5)) + '</th>'; }).join('') +
+          '<th class="c">출</th><th class="c">결</th><th class="c">지</th><th class="c">조</th><th class="c">출석률</th>' +
+          '</tr></thead><tbody>' +
+          r.grid.map(function (g) {
+            return '<tr><td>' + esc(g.name) + '</td>' +
+              g.cells.map(function (s) {
+                return '<td class="c st-' + stCls(s) + '">' + esc(s || '·') + '</td>';
+              }).join('') +
+              '<td class="c">' + g['출'] + '</td><td class="c' + (g['결'] ? ' bad' : '') + '">' + g['결'] + '</td>' +
+              '<td class="c">' + g['지'] + '</td><td class="c">' + g['조'] + '</td>' +
+              '<td class="c"><b>' + g.rate + '%</b></td></tr>';
+          }).join('') + '</tbody></table>'
+        : '<p class="rep-none">출결 기록이 없습니다.</p>') +
+
+      (c.memo ? '<h2 class="rep-h2">3. 메모</h2><p class="rep-memo">' + esc(c.memo) + '</p>' : '') +
+
+      '<div class="rep-foot">미래형학교체육 스마트점핑(Smart-Jumping) · ' + esc(c.school) + ' ' + esc(c.grade) + '-' + esc(c.cls) + '</div>' +
+    '</div>';
 }
 
 /* ═══════════ 회원관리 (관리자 전용) ═══════════ */
@@ -3041,6 +3451,17 @@ function errBox(e) {
   return '<div class="empty"><span class="ico">⚠️</span><b>불러오지 못했습니다</b>' +
     esc(e && e.message ? e.message : e) + '</div>';
 }
+
+/* ═══════════ 앱 시작 ═══════════
+   저장된 세션이 있으면 이어서, 없으면 게스트로 바로 콘텐츠를 띄운다.
+   ※ 위쪽 선언(GUEST_NAV 등)이 모두 끝난 뒤 실행돼야 하므로 파일 맨 끝에 둔다. */
+(function () {
+  try {
+    var saved = localStorage.getItem('sj_user');
+    if (saved) S.user = JSON.parse(saved);
+  } catch (e) {}
+  startApp();
+})();
 </script>
 
 </body>

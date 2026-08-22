@@ -39,6 +39,7 @@
     set('schedules', SEED.schedules.slice());
     set('views', {});
     set('playlists', {});
+    set('favorites', SEED.favorites || {});
     set('profiles', {});
     // 로그인 세션 캐시도 비운다. 안 그러면 이전 시드의 이름·소속이 그대로 남는다.
     try { localStorage.removeItem('sj_user'); } catch (e) {}
@@ -124,10 +125,18 @@
             dur: v.dur, views: (v.views || 0) + (views[v.id] || 0), date: v.date
           };
         }),
-        // 담은 영상은 계정별로 따로 보관한다
+        // 담은 영상·즐겨찾기는 계정별로 따로 보관한다
         playlist: (get('playlists', {}) || {})[userId] || [],
+        favorites: (get('favorites', {}) || {})[userId] || [],
         appTitle: SEED.appTitle
       };
+    },
+
+    api_saveFavorites: function (userId, ids) {
+      var all = get('favorites', {}) || {};
+      all[userId] = ids || [];
+      set('favorites', all);
+      return { ok: true, count: (ids || []).length };
     },
 
     api_savePlaylist: function (userId, ids) {
@@ -303,6 +312,95 @@
 
     /* ── 교재 ── */
     api_textbooks: function () { return SEED.textbooks; },
+
+    /* ── 내 출결 (계정 이름과 출석부 학생명을 맞춘다) ── */
+    api_myAttendance: function (userId) {
+      var u = userOf(userId);
+      if (!u) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+      var p = profile(userId);
+      var myName = String(p.name || u.name).trim();
+
+      var classes = get('classes', []);
+      var byClass = {};
+      get('attendance', []).forEach(function (a) {
+        if (String(a.name).trim() !== myName) return;
+        var c = classes.filter(function (x) { return x.id === a.classId; })[0];
+        if (!byClass[a.classId]) {
+          byClass[a.classId] = {
+            classId: a.classId,
+            className: c ? (c.school + ' ' + c.grade + '-' + c.cls) : a.classId,
+            school: c ? c.school : '',
+            records: [], '출': 0, '결': 0, '지': 0, '조': 0, total: 0
+          };
+        }
+        byClass[a.classId].records.push({ date: a.date, status: a.status });
+        if (byClass[a.classId][a.status] !== undefined) byClass[a.classId][a.status]++;
+        byClass[a.classId].total++;
+      });
+
+      var list = Object.keys(byClass).map(function (k) {
+        byClass[k].records.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+        byClass[k].rate = byClass[k].total
+          ? Math.round(byClass[k]['출'] / byClass[k].total * 100) : 0;
+        return byClass[k];
+      });
+      return { ok: true, name: myName, classes: list };
+    },
+
+    /* ── 수업 리포트 ── */
+    api_classReport: function (classId, userId) {
+      var c = get('classes', []).filter(function (x) { return x.id === classId; })[0];
+      if (!c) return { ok: false, msg: '수업을 찾을 수 없습니다.' };
+      if (!isAdmin(userId) && c.owner !== userId) {
+        return { ok: false, msg: '조회 권한이 없습니다.' };
+      }
+
+      var cur = API.api_classCurriculum(classId, userId);
+      var att = get('attendance', []).filter(function (a) { return a.classId === classId; });
+
+      var dates = [];
+      att.forEach(function (a) { if (a.date && dates.indexOf(a.date) < 0) dates.push(a.date); });
+      dates.sort();
+
+      var names = [];
+      att.forEach(function (a) { if (names.indexOf(a.name) < 0) names.push(a.name); });
+      names.sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+
+      var grid = names.map(function (n) {
+        var row = { name: n, cells: [], '출': 0, '결': 0, '지': 0, '조': 0 };
+        dates.forEach(function (d) {
+          var rec = att.filter(function (a) { return a.name === n && a.date === d; })[0];
+          var st = rec ? rec.status : '';
+          row.cells.push(st);
+          if (row[st] !== undefined) row[st]++;
+        });
+        row.total = dates.length;
+        row.rate = dates.length ? Math.round(row['출'] / dates.length * 100) : 0;
+        return row;
+      });
+
+      var vTitle = {};
+      SEED.videos.forEach(function (v) { vTitle[v.id] = v.title; });
+      var curItems = (cur.items || []).map(function (it) {
+        return { no: it.no, videos: it.videoIds.map(function (id) { return vTitle[id] || id; }) };
+      });
+
+      var now = new Date();
+      var p = function (n) { return ('0' + n).slice(-2); };
+      return {
+        ok: true,
+        printedAt: now.getFullYear() + '-' + p(now.getMonth() + 1) + '-' + p(now.getDate()) +
+                   ' ' + p(now.getHours()) + ':' + p(now.getMinutes()),
+        cls: {
+          id: c.id, ym: c.ym, region: c.region, school: c.school,
+          grade: c.grade, cls: c.cls, cap: c.cap, owner: c.owner, memo: c.memo || ''
+        },
+        group: cur.group || '',
+        curriculum: curItems,
+        dates: dates,
+        grid: grid
+      };
+    },
 
     /* ── 회원관리 (관리자 전용) ── */
     api_members: function (userId) {
