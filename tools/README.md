@@ -7,6 +7,7 @@
 | `npm test` | Apps Script 백엔드를 흉내 낸 환경에서 통합 테스트 125건 | **코드 고칠 때마다** |
 | `npm run build` | `apps-script/` 를 합쳐 루트 `index.html` (GitHub Pages용) 생성 | 프론트·데이터를 고친 뒤 **반드시** |
 | `npm run xlsx` | `스마트점핑_DB.xlsx` 재생성 (구글 시트 가져오기용) | 시드·스키마를 고친 뒤 |
+| `node tools/gen-chars.js` | `assets/char/*.webp` → `apps-script/chars.html` (base64 인라인 CSS) | 안내 캐릭터 이미지를 바꾼 뒤 |
 | `npm run serve` | `http://localhost:8790` 에 루트를 띄움 | 빌드 결과 눈으로 볼 때 |
 | `npm run seed` | 영상 목록을 다시 만들어 `01_초기설정.gs` 에 주입 | 영상을 추가·교체할 때 |
 | `npm run verify:yt` | 유튜브 ID 생존·임베드·재생시간 검증 | 새 영상 후보를 넣기 전 |
@@ -27,8 +28,24 @@
 | `verify-yt.js` / `verify-more.js` | 후보 유튜브 ID 를 oEmbed(생존) + `playableInEmbed`(임베드 허용) + `lengthSeconds`(재생시간) 로 전수 검증 |
 | `enrich-yt.js` | 검증 목록에 재생시간·임베드 여부를 채워 넣는다 |
 | `chk-thumb.js` | 썸네일(`maxresdefault`) 존재 여부 점검 |
-| `serve-root.js` | 로컬 정적 서버 (8790) |
+| `gen-chars.js` | `assets/char/*.webp` 를 CSS 클래스(`.ch-*` 전신 / `.chf-*` 얼굴)로 구워 `apps-script/chars.html` 을 만든다. 데모와 Apps Script 판이 같은 파일을 쓰므로 상대경로 대신 data URI 로 넣는다 |
+| `prep-char.js` | 원본 캐릭터 PNG(배경이 흰색, 알파 없음)를 테두리 flood fill 로 따내고 트림·리사이즈해서 `assets/char/*.webp` 로 굽는다. **`sharp` 가 필요하다** (`npm i -D sharp`). 이미지를 새로 받았을 때만 한 번 돌린다 |
+| `serve-root.js` | 로컬 정적 서버 (8790). MIME 타입과 **Range 요청**을 처리해서 히어로 영상이 GitHub Pages 와 똑같이 스트리밍된다 |
 | `data/yt-final.json`, `data/yt-more.json` | 검증을 통과한 유튜브 영상 메타 (제목·재생시간). **여기 없는 ID 는 시드에 못 들어간다** |
+
+---
+
+## 대표 콘텐츠 영상 다시 만들기
+
+`assets/hero/lesson.mp4` 는 원본을 ffmpeg 로 줄인 것입니다 (12.4MB → 5.0MB). 원본을 바꿨다면:
+
+```bash
+ffmpeg -i 원본.mp4 -c:v libx264 -crf 30 -preset slow -pix_fmt yuv420p -vf scale=1280:-2 -c:a aac -b:a 64k -ac 1 -movflags +faststart assets/hero/lesson.mp4
+```
+
+`+faststart` 가 있어야 앞부분만 받아도 재생이 시작됩니다.
+
+포스터는 대표 프레임 한 장을 960px WebP 로 뽑아 `assets/hero/poster.webp` 에 두고 `node tools/gen-chars.js` 를 돌립니다.
 
 ---
 

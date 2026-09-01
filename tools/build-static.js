@@ -77,6 +77,7 @@ const DATA = {
 
 /* 2) 프론트 조립 — replace 치환은 반드시 함수형 ($$ 보호) */
 const css = R(path.join(AS, 'css.html'));
+const chars = R(path.join(AS, 'chars.html'));
 const js = R(path.join(AS, 'js.html'));
 const localBackend = R(path.join(ROOT, 'web', 'local-backend.js'));
 
@@ -100,6 +101,7 @@ ${localBackend}
 
 let html = R(path.join(AS, 'index.html'))
   .replace("<?!= include('css'); ?>", () => css)
+  .replace("<?!= include('chars'); ?>", () => chars)
   .replace("<?!= include('js'); ?>", () => demoNote + js)
   .replace('<!DOCTYPE html>', () => '<!DOCTYPE html>' + banner);
 
@@ -126,7 +128,9 @@ const checks = [
   ['즐겨찾기 시드', Object.keys(DATA.favorites).length > 0 && DATA.favorites.teacher && DATA.favorites.teacher.length >= 3],
   ['학생 계정이 출석부에 있음', DATA.attendance.some(function (a) { return a.name === '학생'; })],
   ['로그인 게이트 없음(앱이 기본 노출)', /<div id="app" class="app">/.test(html)],
-  ['SVG 아이콘 사용', (html.match(/class="nav-ico" viewBox/g) || []).length >= 5]
+  ['SVG 아이콘 사용', (html.match(/class="nav-ico" viewBox/g) || []).length >= 5],
+  ['안내 캐릭터 · 히어로 포스터 인라인', (html.match(/data:image\/webp;base64,/g) || []).length === 13],
+  ['대표 콘텐츠 영상 연결', html.indexOf('assets/hero/lesson.mp4') > 0]
 ];
 let bad = 0;
 checks.forEach(([n, v]) => { console.log((v ? '  ✅ ' : '  ❌ ') + n); if (!v) bad++; });

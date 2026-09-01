@@ -167,7 +167,7 @@ $('#signupForm').addEventListener('submit', function (e) {
 /* ═══════════ 권한 ═══════════ */
 
 /** 로그인 없이 볼 수 있는 화면 */
-var GUEST_NAV = ['library', 'textbook'];
+var GUEST_NAV = ['library', 'guide', 'textbook'];
 
 /** 이 권한이 해당 메뉴를 쓸 수 있는가 (data-role 미지정이면 로그인 사용자 전원 허용) */
 function canUse(el) {
@@ -276,6 +276,7 @@ function renderRoute() {
 
   $('#fabCart').hidden = (key !== 'library');
 
+  if (key === 'guide') return viewGuide();
   if (key === 'library') return viewLibrary();
   if (key === 'classes') return viewClasses();
   if (key === 'members') return viewMembers();
@@ -360,6 +361,7 @@ function viewLibrary() {
     }).join('');
 
   $('#view').innerHTML =
+    mainHero() +
     '<div class="search-row"><div class="search-box">' +
       '<input type="text" id="q" placeholder="영상 제목으로 검색" value="' + esc(S.q) + '">' +
       '<button id="qBtn" aria-label="검색">🔍</button>' +
@@ -379,6 +381,7 @@ function viewLibrary() {
     '<div class="grid" id="grid"></div>' +
     '<div class="pager" id="pager"></div>';
 
+  bindMainHero();
   $$('.chip').forEach(function (b) {
     b.addEventListener('click', function () { S.c2 = b.dataset.c2 || null; S.page = 1; viewLibrary(); });
   });
@@ -850,6 +853,402 @@ function togglePlay() {
 }
 
 function syncToggle() { $('#plToggle').textContent = P.playing ? '⏸ 일시정지' : '▶ 재생'; }
+
+/* ═══════════ 안내 캐릭터 ═══════════
+   화면 안내는 전부 이 학생 한 명이 한다.
+   포즈 이미지는 apps-script/chars.html 에서 CSS 클래스 .ch-* / .chf-* 로 들어온다.
+   교체하려면 assets/char/*.webp 를 갈아 끼우고
+   node tools/gen-chars.js && npm run build 를 돌리면 된다. */
+
+var GUIDE_NAME = '점핑이';
+
+/** 전신 — 높이만 주면 폭은 aspect-ratio 로 따라온다 */
+function ch(pose, h, cls) {
+  return '<span class="ch ch-' + pose + (cls ? ' ' + cls : '') + '" style="height:' + h + 'px" ' +
+         'role="img" aria-label="' + esc(GUIDE_NAME) + '"></span>';
+}
+/** 얼굴 — 원형 아바타 */
+function chf(pose, s) {
+  return '<span class="chf chf-' + pose + '" style="width:' + s + 'px;height:' + s + 'px" ' +
+         'role="img" aria-label="' + esc(GUIDE_NAME) + '"></span>';
+}
+
+/* ═══════════ 사용법 · 가이드 ═══════════ */
+
+/** 말풍선 — 어느 화면 이야기인지 꼬리표를 달아 둔다 */
+var GUIDE_TIPS = [
+  { col:'l', cls:'bub-green', at:'영상 카드',   txt:'카드 왼쪽 위 <b>✓</b> 를 누르면 그 영상이 오늘 수업에 담겨요.' },
+  { col:'l', cls:'bub-blue',  at:'영상 카드',   txt:'자주 쓰는 영상은 <b>★</b> 로 찍어 두고 상단 <b>★ 즐겨찾기</b> 에서 모아 봐요.' },
+  { col:'l', cls:'bub-amber', at:'상단 메뉴',   txt:'가로줄은 <b>영역</b>, 그 아래 동그란 칩은 <b>세부 분류</b> 예요.' },
+  { col:'r', cls:'bub-navy',  at:'왼쪽 사이드바', txt:'<b>▶ 수업시작</b> 하나면 담은 순서대로 전체화면에서 이어서 재생돼요.' },
+  { col:'r', cls:'bub-teal',  at:'수업관리',    txt:'학급에 <b>커리큘럼</b>을 연결하면 표의 <b>▶</b> 로 차시를 바로 열 수 있어요.' },
+  { col:'r', cls:'bub-plum',  at:'출석부',      txt:'<b>날짜별로 회차</b>가 쌓이고, 새 날짜엔 최근 명단이 자동으로 이어져요.' }
+];
+
+/** 운영 4단계 */
+var GUIDE_STEPS = [
+  { pose:'five', t:'① 찾는다',
+    d:'상단 <b>영역</b> 을 고르고 칩으로 좁힌 뒤, 정렬을 <b>재생시간 짧은순</b> 으로 두면 한 차시에 맞는 영상이 먼저 떠요.',
+    hint:'검색은 분류와 상관없이 전체 104편을 훑어요' },
+  { pose:'fight', t:'② 담는다',
+    d:'카드의 <b>✓</b> 로 하나씩, <b>이 페이지 전체담기</b> 로 한 번에. 담은 개수는 오른쪽 아래 <b>🎬</b> 에 떠요.',
+    hint:'담은 목록은 계정마다 따로 저장돼요' },
+  { pose:'calm', t:'③ 순서를 짠다',
+    d:'준비운동 → 스마트점핑 → 비트 트레이닝 → 마무리. <b>담은 순서가 곧 수업 순서</b> 라, 담을 때부터 흐름대로 고르면 편해요.',
+    hint:'아래 튜토리얼이 이 순서를 그대로 따라가요' },
+  { pose:'good', t:'④ 튼다',
+    d:'<b>▶ 수업시작</b> 을 누르면 교실 화면에 전체화면으로 이어져요. 재생이 막힌 영상은 <b>5초 뒤 자동으로 다음</b> 으로 넘어가요.',
+    keys:['Space 재생', '← → 이동', 'Esc 종료'] }
+];
+
+/** 튜토리얼 4차시 — 실제 분류에 그대로 연결된다 */
+var TUT_STEPS = [
+  { key:'warm', no:'1', title:'몸풀기', pose:'fight', color:'#34c98a',
+    path:'준비운동 | 타바타 › 몸풀기 & 스트레칭',
+    say:'첫 순서는 <b>준비운동</b> 이에요. 3~5분짜리를 골라야 남은 시간이 넉넉해져요.',
+    pick:function (v) { return v.c2 === 'S31'; } },
+  { key:'main', no:'2', title:'스마트점핑', pose:'five', color:'#f5a524',
+    path:'스마트점핑 › 급수 친구들 1~3단계 · 쌩쌩이 · 음악줄넘기',
+    say:'오늘의 <b>본 운동</b> 이에요. 우리 반 급수에 맞는 단계를 골라 주시면 따라가기 쉬워요.',
+    pick:function (v) { return v.c1 === 'C4'; } },
+  { key:'beat', no:'3', title:'비트 트레이닝', pose:'point', color:'#4a89dc',
+    path:'비트 트레이닝 › 동요 율동 · 체조 메들리 · K-POP 키즈댄스',
+    say:'힘이 빠질 때쯤 <b>음악</b> 을 한 번 넣으면 집중이 다시 살아나요.',
+    pick:function (v) { return v.c1 === 'C5'; } },
+  { key:'cool', no:'4', title:'마무리 · 명상', pose:'calm', color:'#7c5cff',
+    path:'정리운동 · 쿨다운 / 명상',
+    say:'<b>정리운동과 명상</b> 으로 숨을 고르고 교실을 정리하면서 끝내요.',
+    pick:function (v) { return v.c2 === 'S35' || v.c1 === 'C1'; } }
+];
+
+var TUT = { sel:{}, off:{}, edit:null };
+
+/** 지금 펼쳐야 할 단계 — 아직 안 고른 첫 단계, 다 골랐으면 -1 */
+function tutActive() {
+  if (TUT.edit !== null && TUT.edit !== undefined) return TUT.edit;
+  for (var i = 0; i < TUT_STEPS.length; i++) if (!TUT.sel[TUT_STEPS[i].key]) return i;
+  return -1;
+}
+
+/** 한 단계에 보여줄 후보 4편 (조회수 순, "다른 영상 보기" 로 4편씩 회전) */
+function tutOptions(st) {
+  var pool = S.videos.filter(st.pick);
+  if (!pool.length) pool = S.videos.slice();
+  pool.sort(function (a, b) { return (b.views || 0) - (a.views || 0); });
+  var off = TUT.off[st.key] || 0, out = [];
+  for (var i = 0; i < Math.min(4, pool.length); i++) out.push(pool[(off + i) % pool.length]);
+  return { list: out, total: pool.length };
+}
+
+function fmtMin(sec) {
+  var m = Math.floor(sec / 60), s = sec % 60;
+  return m + '분' + (s ? ' ' + s + '초' : '');
+}
+
+function viewGuide() {
+  if (!S.loaded) { $('#view').innerHTML = skeleton(); return; }
+
+  function bubbles(col) {
+    return GUIDE_TIPS.filter(function (t) { return t.col === col; }).map(function (t) {
+      return '<div class="bub ' + t.cls + '">' +
+        '<span class="who">' + esc(t.at) + '</span>' + t.txt + '</div>';
+    }).join('');
+  }
+
+  var steps = GUIDE_STEPS.map(function (g, i) {
+    return '<article class="g-step">' +
+      '<span class="g-step-no">' + (i + 1) + '</span>' +
+      '<div class="g-step-top">' + ch(g.pose, 78) + '</div>' +
+      '<h4>' + esc(g.t) + '</h4><p>' + g.d + '</p>' +
+      (g.hint ? '<span class="g-hint">' + esc(g.hint) + '</span>' : '') +
+      (g.keys ? '<div class="g-keys">' + g.keys.map(function (k) {
+        return '<kbd>' + esc(k) + '</kbd>'; }).join('') + '</div>' : '') +
+    '</article>';
+  }).join('');
+
+  $('#view').innerHTML =
+    '<div class="guide">' +
+
+      '<section class="g-hero">' +
+        '<div class="g-hero-txt">' +
+          '<div class="g-eyebrow">GUIDE · 처음 오셨나요</div>' +
+          '<h1 class="g-h1">수업 준비, <em>3분이면</em> 끝납니다<span class="dot">.</span></h1>' +
+          '<p class="g-lead">영상을 고르고 담아 두면, 교실에서는 <b>재생 버튼 하나</b>로 한 차시가 굴러갑니다. ' +
+            '어디를 눌러야 하는지 화면마다 짚어 드릴게요.</p>' +
+          '<div class="g-hero-cta">' +
+            '<button class="btn btn-primary btn-pill" id="gGoTut">▶ 4차시 수업 만들어 보기</button>' +
+            '<a class="btn btn-ghost btn-pill" href="#/library">영상 둘러보기</a>' +
+          '</div>' +
+        '</div>' +
+        '<div class="g-hero-art">' +
+          '<div class="g-hello">안녕하세요, <b>' + esc(GUIDE_NAME) + '</b> 이에요!<br>제가 하나씩 알려 드릴게요.</div>' +
+          ch('hi', 320) +
+        '</div>' +
+      '</section>' +
+
+      '<section>' +
+        '<div class="g-sec-head">' +
+          '<span class="g-sec-tag">01 · HOW IT WORKS</span>' +
+          '<h2 class="g-sec-title">화면마다 <em>눌러야 할 곳</em>은 정해져 있어요</h2>' +
+          '<p class="g-sec-desc">여섯 가지만 알면 나머지는 따라옵니다.</p>' +
+        '</div>' +
+        '<div class="g-hub">' +
+          '<div class="g-hub-col l">' + bubbles('l') + '</div>' +
+          '<div class="g-hub-core">' +
+            '<div class="hub-ring">' + ch('point', 214) + '</div>' +
+            '<span class="hub-tag">SMART JUMPING</span>' +
+          '</div>' +
+          '<div class="g-hub-col r">' + bubbles('r') + '</div>' +
+        '</div>' +
+      '</section>' +
+
+      '<section>' +
+        '<div class="g-sec-head">' +
+          '<span class="g-sec-tag">02 · 운영 4단계</span>' +
+          '<h2 class="g-sec-title">찾고 · 담고 · <em>순서를 짜고</em> · 튼다</h2>' +
+          '<p class="g-sec-desc">이 네 걸음이 스마트점핑 운영의 전부입니다.</p>' +
+        '</div>' +
+        '<div class="g-steps">' + steps + '</div>' +
+      '</section>' +
+
+      '<section id="gTut">' +
+        '<div class="g-sec-head">' +
+          '<span class="g-sec-tag">03 · 튜토리얼</span>' +
+          '<h2 class="g-sec-title">직접 <em>한 차시</em>를 만들어 봐요</h2>' +
+          '<p class="g-sec-desc">아래 영상은 실제 라이브러리에 담긴 영상입니다. 고르면 그대로 수업이 됩니다.</p>' +
+        '</div>' +
+        '<div class="tut">' +
+          '<div class="tut-head">' +
+            '<div><h3>오늘의 수업 만들기</h3>' +
+              '<p>단계마다 한 편씩 고르면 4차시 흐름이 완성됩니다.</p></div>' +
+            '<div class="tut-rail" id="tutRail"></div>' +
+          '</div>' +
+          '<div class="tut-body" id="tutBody"></div>' +
+        '</div>' +
+      '</section>' +
+
+    '</div>';
+
+  $('#gGoTut').addEventListener('click', function () {
+    $('#gTut').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  renderTut();
+}
+
+function renderTut() {
+  var act = tutActive();
+
+  $('#tutRail').innerHTML = TUT_STEPS.map(function (st, i) {
+    var done = !!TUT.sel[st.key];
+    var cls = i === act ? 'on' : (done ? 'done' : '');
+    return '<span class="' + cls + '">' + (done && i !== act ? '✓ ' : '') +
+      st.no + '. ' + esc(st.title) + '</span>';
+  }).join('');
+
+  var html = TUT_STEPS.map(function (st, i) {
+    var sel = TUT.sel[st.key] ? vById(TUT.sel[st.key]) : null;
+    var head =
+      '<div class="tut-step-top">' +
+        '<span class="tut-no" style="background:' + st.color + '">' + st.no + '차시</span>' +
+        '<h4>' + esc(st.title) + '</h4>' +
+        '<span class="path">' + esc(st.path) + '</span>' +
+      '</div>';
+
+    /* 펼쳐진 단계 — 캐릭터 안내 + 실제 영상 후보 */
+    if (i === act) {
+      var o = tutOptions(st);
+      var opts = o.list.map(function (v) {
+        return '<button class="tut-opt' + (sel && sel.id === v.id ? ' on' : '') + '" ' +
+            'data-step="' + esc(st.key) + '" data-id="' + esc(v.id) + '">' +
+          '<span class="tut-thumb">' + thumbHtml(v) +
+            '<span class="tut-prev" data-play="' + esc(v.id) + '" role="button" title="미리보기">▶</span>' +
+            '<span class="tut-check">✓</span>' +
+            '<span class="tut-dur">' + esc(v.dur) + '</span>' +
+          '</span>' +
+          '<span class="tut-opt-t">' + esc(v.title) + '</span>' +
+        '</button>';
+      }).join('');
+
+      return '<div class="tut-step cur">' + head +
+        '<div class="tut-say">' + ch(st.pose, 118) +
+          '<div class="say"><span class="nm">' + esc(GUIDE_NAME) + '</span>' + st.say + '</div></div>' +
+        '<div class="tut-optbar">' +
+          '<span class="lbl">후보 ' + o.total + '편 중 4편 — 썸네일의 ▶ 로 미리 볼 수 있어요</span>' +
+          (o.total > 4 ? '<button class="btn btn-ghost btn-sm" data-roll="' + esc(st.key) + '">다른 영상 보기 ↻</button>' : '') +
+        '</div>' +
+        '<div class="tut-opts">' + opts + '</div>' +
+      '</div>';
+    }
+
+    /* 이미 고른 단계 — 접어서 보여주고 바꾸기만 남긴다 */
+    if (sel) {
+      return '<div class="tut-step">' + head +
+        '<div class="tut-picked">' +
+          '<img alt="" class="yt-thumb" data-yt="' + esc(sel.yt || '') + '" ' +
+            'src="https://i.ytimg.com/vi/' + esc(sel.yt) + '/maxresdefault.jpg">' +
+          '<span class="t"><b>' + esc(sel.title) + '</b>' +
+            '<span>' + esc(sel.dur) + ' · ' + esc(catName(sel.c1)) + ' › ' + esc(subName(sel.c2)) + '</span></span>' +
+          '<button class="btn btn-ghost btn-sm" data-play="' + esc(sel.id) + '">▶ 미리보기</button>' +
+          '<button class="btn btn-ghost btn-sm" data-edit="' + i + '">바꾸기</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    /* 아직 차례가 아닌 단계 */
+    return '<div class="tut-step lock">' + head +
+      '<div class="tut-lockmsg">🔒 앞 단계를 먼저 고르면 열려요.</div></div>';
+  }).join('');
+
+  /* 네 단계를 다 고르면 수업표가 나온다 */
+  if (act === -1) {
+    var picks = TUT_STEPS.map(function (st) { return vById(TUT.sel[st.key]); }).filter(Boolean);
+    var total = picks.reduce(function (a, v) { return a + durSec(v.dur); }, 0);
+
+    html += '<div class="tut-sum">' +
+      '<div class="tut-sum-head">' + ch('good', 108) +
+        '<div class="t"><h4>수업 한 차시가 완성됐어요</h4>' +
+        '<p>담은 순서 그대로 전체화면에서 이어 재생됩니다.</p></div></div>' +
+      '<div class="tut-sum-list">' +
+        picks.map(function (v, i) {
+          var st = TUT_STEPS[i];
+          return '<div class="tut-sum-row">' +
+            '<span class="no" style="background:' + st.color + '">' + st.no + '</span>' +
+            '<img alt="" class="yt-thumb" data-yt="' + esc(v.yt || '') + '" ' +
+              'src="https://i.ytimg.com/vi/' + esc(v.yt) + '/maxresdefault.jpg">' +
+            '<span class="tt">' + esc(v.title) + '</span>' +
+            '<span class="dd">' + esc(v.dur) + '</span>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+      '<div class="tut-sum-foot">' +
+        '<span class="tut-total">전체 <b>' + fmtMin(total) + '</b> · ' + picks.length + '편</span>' +
+        '<button class="btn btn-primary btn-pill" id="tutPlay">▶ 이 수업 바로 시작</button>' +
+        '<button class="btn btn-ghost btn-pill" id="tutCart">🎬 수업에 담기</button>' +
+        '<button class="btn btn-ghost btn-pill" id="tutReset">처음부터 다시</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  var body = $('#tutBody');
+  body.innerHTML = html;
+  bindThumbFallback(body);
+
+  /* 영상 선택 */
+  $$('.tut-opt', body).forEach(function (b) {
+    b.addEventListener('click', function () {
+      TUT.sel[b.dataset.step] = b.dataset.id;
+      TUT.edit = null;
+      renderTut();
+      var next = $('.tut-step.cur', $('#tutBody')) || $('.tut-sum', $('#tutBody'));
+      if (next) next.scrollIntoView({ behavior:'smooth', block:'center' });
+    });
+  });
+  /* 미리보기 — 기존 수업 플레이어를 그대로 쓴다 */
+  $$('[data-play]', body).forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      e.stopPropagation();
+      openPlayer([el.dataset.play]);
+    });
+  });
+  $$('[data-roll]', body).forEach(function (el) {
+    el.addEventListener('click', function () {
+      var k = el.dataset.roll;
+      TUT.off[k] = (TUT.off[k] || 0) + 4;
+      renderTut();
+    });
+  });
+  $$('[data-edit]', body).forEach(function (el) {
+    el.addEventListener('click', function () {
+      TUT.edit = Number(el.dataset.edit);
+      renderTut();
+      var cur = $('.tut-step.cur', $('#tutBody'));
+      if (cur) cur.scrollIntoView({ behavior:'smooth', block:'center' });
+    });
+  });
+
+  if ($('#tutPlay')) {
+    $('#tutPlay').addEventListener('click', function () {
+      openPlayer(TUT_STEPS.map(function (st) { return TUT.sel[st.key]; }));
+    });
+    $('#tutCart').addEventListener('click', function () {
+      if (needLogin('로그인하면 이 수업을 담아 둘 수 있습니다.')) return;
+      var added = 0;
+      TUT_STEPS.forEach(function (st) {
+        if (S.cart.indexOf(TUT.sel[st.key]) < 0) { toggleCart(TUT.sel[st.key], true); added++; }
+      });
+      toast(added ? added + '편을 담았습니다. 왼쪽 ▶ 수업시작으로 이어가세요.' : '이미 모두 담겨 있습니다.');
+    });
+    $('#tutReset').addEventListener('click', function () {
+      TUT.sel = {}; TUT.edit = null;
+      renderTut();
+      $('#gTut').scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  }
+}
+
+/* ── 메인 히어로 — 대표 콘텐츠 영상 ──
+   영상은 저장소 파일이라 상대경로로 부른다. (단일 index.html 에 넣기엔 5MB 라 크다)
+   못 불러오면 포스터 그림(.mh-poster, chars.html 에 인라인)이 그대로 자리를 지킨다. */
+var HERO_VIDEO = 'assets/hero/lesson.mp4';
+
+function mainHero() {
+  return '<section class="mh mh-poster" id="mainHero">' +
+    '<video id="mhVid" muted loop playsinline autoplay preload="metadata" aria-label="스마트 점핑 고급 6차시">' +
+      '<source src="' + HERO_VIDEO + '" type="video/mp4">' +
+    '</video>' +
+    '<div class="mh-in">' +
+      '<span class="mh-tag"><i></i>대표 콘텐츠</span>' +
+      '<h2>교실에서 바로 여는 학교체육</h2>' +
+      '<p><b>스마트 점핑 고급 6차시</b> — 16박 루틴 A · 135BPM.<br>' +
+        '영상을 담아 두면 교실에서는 재생 버튼 하나로 한 차시가 굴러갑니다.</p>' +
+      '<div class="mh-cta">' +
+        '<a class="btn btn-primary btn-pill" href="#/guide">사용법 · 튜토리얼</a>' +
+        '<button class="btn btn-ghost btn-pill" id="mhScroll">아래 영상 둘러보기</button>' +
+      '</div>' +
+    '</div>' +
+    ch('hi', 292, 'mh-char') +
+    '<button class="mh-sound" id="mhSound" title="소리 켜기" aria-label="소리 켜기">🔇</button>' +
+  '</section>';
+}
+
+function bindMainHero() {
+  var v = $('#mhVid');
+  if (!v) return;
+
+  /* 자동재생은 무음일 때만 허용된다. 탭이 숨겨져 있거나 정책에 막히면
+     포스터 그림이 그대로 보이고, 데이터가 준비되거나 사용자가 처음 움직일 때 다시 시도한다. */
+  function tryPlay() {
+    if (!document.body.contains(v)) return;
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  }
+  v.addEventListener('playing', function () { v.classList.add('on'); });
+  v.addEventListener('canplay', tryPlay);
+  v.addEventListener('loadeddata', tryPlay);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) tryPlay(); });
+  var once = function () {
+    tryPlay();
+    document.removeEventListener('pointerdown', once);
+    document.removeEventListener('keydown', once);
+  };
+  document.addEventListener('pointerdown', once);
+  document.addEventListener('keydown', once);
+  tryPlay();
+
+  $('#mhSound').addEventListener('click', function () {
+    var b = $('#mhSound');
+    v.muted = !v.muted;
+    if (v.paused) tryPlay();
+    b.textContent = v.muted ? '🔇' : '🔊';
+    b.title = b.ariaLabel = v.muted ? '소리 켜기' : '소리 끄기';
+  });
+
+  $('#mhScroll').addEventListener('click', function () {
+    var t = $('.search-row');
+    if (t) t.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+}
 
 /* ═══════════ 수업관리 ═══════════ */
 
