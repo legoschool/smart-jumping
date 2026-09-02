@@ -25,7 +25,8 @@ const users = A.readAll_(A.T.USERS).map(u => ({
 const DATA = {
   // 시드 내용이나 저장 구조가 바뀌면 값이 달라져야 방문자 브라우저가 다시 받는다
   // s6 = 콘텐츠 우선(게스트) + SVG 아이콘
-  ver: 'sj-s6-' + boot.videos.length + '-' + boot.categories.length + '-' +
+  // s7 = 출석 회차 날짜를 방문 시점 기준으로 밀어 넣음
+  ver: 'sj-s7-' + boot.videos.length + '-' + boot.categories.length + '-' +
        users.map(function (u) { return u.id + ':' + u.name + ':' + u.role; }).join('|'),
   appTitle: "미래형학교체육 '스마트점핑'(Smart-Jumping)",
   today: new Date().toISOString().slice(0, 10),

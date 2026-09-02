@@ -170,16 +170,23 @@ ok('회차마다 출결이 다름',
    JSON.stringify(a0.list.map(x => x.status)) !== JSON.stringify(older.list.map(x => x.status)),
    a0.list.map(x => x.status).join('') + '  vs  ' + older.list.map(x => x.status).join(''));
 
-A.api_saveAttendance('CL001', '2026-09-01', [
+// 시드 회차가 오늘 기준으로 생성되므로 새 회차도 오늘 이후로 잡는다 (날짜 고정 금지)
+const dPlus = function (n) {
+  const t = new Date(Date.now() + n * 86400000);
+  return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
+};
+const D_NEW = dPlus(1), D_FRESH = dPlus(30);
+
+A.api_saveAttendance('CL001', D_NEW, [
   { name: '홍길동', status: '출' }, { name: '성춘향', status: '지' }
 ]);
-ok('새 회차 저장', A.api_attendance('CL001', '2026-09-01').list.length === 2);
+ok('새 회차 저장', A.api_attendance('CL001', D_NEW).list.length === 2);
 ok('지난 회차 보존 (핵심)', A.api_attendance('CL001', a0.dates[0]).list.length === 9,
    '예전에는 여기서 덮어써져 사라졌다');
 ok('회차 4건으로 증가', A.api_attendance('CL001').dates.length === 4,
    A.api_attendance('CL001').dates.join(', '));
 
-const fresh = A.api_attendance('CL001', '2026-12-25');
+const fresh = A.api_attendance('CL001', D_FRESH);
 ok('새 날짜에 최근 명단 승계', fresh.isNew && fresh.list.length === 2 &&
    fresh.list.every(x => x.status === '출'), 'isNew=' + fresh.isNew + ' / ' + fresh.list.length + '명');
 
@@ -187,8 +194,8 @@ const sum = A.api_attendanceSummary('CL001');
 ok('누적 통계 산출', sum.length > 0 && sum.every(r => r.total > 0),
    sum.slice(0, 2).map(r => r.name + ' 출' + r['출'] + '/결' + r['결']).join(', '));
 
-A.api_deleteAttendanceDate('CL001', '2026-09-01');
-ok('회차 삭제', A.api_attendance('CL001').dates.indexOf('2026-09-01') < 0);
+A.api_deleteAttendanceDate('CL001', D_NEW);
+ok('회차 삭제', A.api_attendance('CL001').dates.indexOf(D_NEW) < 0);
 ok('다른 반 출석 영향 없음', A.api_attendance('CL002').list.length === 0);
 
 console.log('\n━━━ 8-b. 수업 ↔ 커리큘럼 연결 ━━━');

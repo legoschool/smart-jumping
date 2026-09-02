@@ -27,6 +27,30 @@
     return val;
   }
 
+  function todayStr() {
+    var t = new Date();
+    return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) +
+           '-' + ('0' + t.getDate()).slice(-2);
+  }
+
+  /* 출석 회차 날짜는 빌드 시점에 굳는다. 데모가 몇 달 뒤에 열려도
+     '최근 회차 = 오늘' 로 보이도록, 간격은 유지한 채 통째로 밀어 준다. */
+  function shiftAttendance(rows) {
+    var newest = rows.reduce(function (m, a) { return a.date > m ? a.date : m; }, '');
+    if (!newest) return rows.slice();
+    var tds = todayStr();
+    if (tds <= newest) return rows.slice();
+    var gap = Math.round((Date.parse(tds) - Date.parse(newest)) / 86400000);
+    return rows.map(function (a) {
+      var d = new Date(Date.parse(a.date) + gap * 86400000);
+      return {
+        classId: a.classId, name: a.name, status: a.status,
+        date: d.getUTCFullYear() + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2) +
+              '-' + ('0' + d.getUTCDate()).slice(-2)
+      };
+    });
+  }
+
   /* 최초 진입 시 시드 주입 (시드 버전이 바뀌면 다시 주입)
      구글 시트와 동일하게 소유자(owner) 를 함께 저장한다.
      이게 없으면 교사가 담은 영상이 학생 계정에도 그대로 보인다. */
@@ -34,7 +58,7 @@
     set('ver', SEED.ver);
     // 시드에 소유자(owner)가 행마다 들어 있으므로 그대로 복사한다
     set('classes', SEED.classes.slice());
-    set('attendance', SEED.attendance.slice());
+    set('attendance', shiftAttendance(SEED.attendance));
     set('equipment', SEED.equipment.slice());
     set('schedules', SEED.schedules.slice());
     set('views', {});
@@ -224,7 +248,7 @@
       rows.forEach(function (r) { if (r.date && dates.indexOf(r.date) < 0) dates.push(r.date); });
       dates.sort().reverse();
 
-      var target = (date || '').slice(0, 10) || dates[0] || SEED.today;
+      var target = (date || '').slice(0, 10) || dates[0] || todayStr();
       var list = rows.filter(function (r) { return r.date === target; });
 
       var isNew = false;
@@ -249,7 +273,7 @@
 
     /** 해당 (수업, 날짜) 조합만 교체 — 지난 회차는 그대로 둔다 */
     api_saveAttendance: function (classId, date, list) {
-      var d = (date || '').slice(0, 10) || SEED.today;
+      var d = (date || '').slice(0, 10) || todayStr();
       var keep = get('attendance', []).filter(function (a) {
         return !(a.classId === classId && a.date === d);
       });
@@ -535,6 +559,9 @@
     });
     return runner;
   }
+
+  /* 프론트가 '지금 데모다' 를 알아야 하는 자리가 몇 군데 있다 (예: 교재 뷰어) */
+  window.SJ_DEMO = true;
 
   window.google = {
     script: {

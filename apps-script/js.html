@@ -436,11 +436,19 @@ function gradOf(id) {
   return PH_GRAD[n % PH_GRAD.length];
 }
 
+/* maxresdefault 가 없는 영상 목록 — `node tools/chk-thumb.js` 가 채운다.
+   여기 있는 영상은 처음부터 hqdefault 를 요청해서 404 를 만들지 않는다. */
+var NO_MAXRES = {'4FR8-GOwlWs':1, '4deNtH6p2U0':1, '7gjp3gdZE2U':1, '8H44pw20-74':1, 'DnUmpP-_Chk':1, 'L73dXfVsLKc':1, 'P6RU0NUgu8E':1, 'gBsXje_teyg':1, 'l9chx0Z7qBw':1, 'pZnefFq4aDk':1, 'zPGci2cL6j4':1};
+
+function thumbUrl(yt) {
+  return 'https://i.ytimg.com/vi/' + yt + (NO_MAXRES[yt] ? '/hqdefault.jpg' : '/maxresdefault.jpg');
+}
+
 function thumbHtml(v) {
   if (v.yt) {
     // 고해상도부터 시도하고, 없으면 아래에서 hqdefault 로 자동 대체
     return '<img class="yt-thumb" data-yt="' + esc(v.yt) + '" alt="" loading="lazy" ' +
-      'src="https://i.ytimg.com/vi/' + esc(v.yt) + '/maxresdefault.jpg">';
+      'src="' + esc(thumbUrl(v.yt)) + '">';
   }
   var g = gradOf(v.id);
   return '<div class="vthumb-ph" style="background:linear-gradient(145deg,' + g[0] + ',' + g[1] + ')">' +
@@ -1086,7 +1094,7 @@ function renderTut() {
       return '<div class="tut-step">' + head +
         '<div class="tut-picked">' +
           '<img alt="" class="yt-thumb" data-yt="' + esc(sel.yt || '') + '" ' +
-            'src="https://i.ytimg.com/vi/' + esc(sel.yt) + '/maxresdefault.jpg">' +
+            'src="' + esc(thumbUrl(sel.yt)) + '">' +
           '<span class="t"><b>' + esc(sel.title) + '</b>' +
             '<span>' + esc(sel.dur) + ' · ' + esc(catName(sel.c1)) + ' › ' + esc(subName(sel.c2)) + '</span></span>' +
           '<button class="btn btn-ghost btn-sm" data-play="' + esc(sel.id) + '">▶ 미리보기</button>' +
@@ -1115,7 +1123,7 @@ function renderTut() {
           return '<div class="tut-sum-row">' +
             '<span class="no" style="background:' + st.color + '">' + st.no + '</span>' +
             '<img alt="" class="yt-thumb" data-yt="' + esc(v.yt || '') + '" ' +
-              'src="https://i.ytimg.com/vi/' + esc(v.yt) + '/maxresdefault.jpg">' +
+              'src="' + esc(thumbUrl(v.yt)) + '">' +
             '<span class="tt">' + esc(v.title) + '</span>' +
             '<span class="dd">' + esc(v.dur) + '</span>' +
           '</div>';
@@ -2179,8 +2187,14 @@ function drawBooks(books) {
 
   $$('.book').forEach(function (el) {
     el.addEventListener('click', function () {
-      if (el.dataset.link) window.open(el.dataset.link, '_blank');
-      else toast('뷰어 링크가 아직 등록되지 않았습니다. (시트 textbooks 탭의 뷰어링크 열)');
+      if (el.dataset.link) { window.open(el.dataset.link, '_blank'); return; }
+      var name = el.querySelector('.book-name').textContent;
+      modal(name, window.SJ_DEMO
+        ? '<div class="empty"><span class="ico">📖</span><b>데모에는 교재 원문이 없습니다</b>' +
+          '온라인교재는 실제 운영판에서 각 권의 뷰어로 연결됩니다.<br>' +
+          '검색 · 뱃지 · 그리드까지는 여기서 그대로 확인할 수 있습니다.</div>'
+        : '<div class="empty"><span class="ico">📖</span><b>뷰어 링크가 아직 없습니다</b>' +
+          '시트 <b>textbooks</b> 탭의 <b>뷰어링크</b> 열을 채우면 클릭할 때 그 주소가 열립니다.</div>');
     });
   });
 }
