@@ -1,0 +1,817 @@
+<title>스마트점핑 운영 가이드북</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  /* 종이 문서를 그대로 옮긴 화면이라 밝은 쪽으로 고정한다 */
+  color-scheme: light;
+  --ink:#16233c; --slate:#4e5b73; --mute:#8494ad;
+  --rule:#ccd8ea; --hair:#e8edf5; --paper:#ffffff; --wash:#f2f6fc;
+  --indigo:#4f46e5; --sky:#2b8fd6; --red:#d9342b;
+  --mint:#1a8f60; --amber:#c47a0b; --plum:#6d4fe0;
+  --surround:#e4eaf3;
+  --disp:"Gothic A1","Noto Sans KR","Malgun Gothic",sans-serif;
+  --body:"Noto Sans KR","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --surround:#151b26; } }
+:root[data-theme="dark"]{ --surround:#151b26; }
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0; background:var(--surround); color:var(--ink);
+  font-family:var(--body); font-size:15px; line-height:1.75;
+  word-break:keep-all; -webkit-font-smoothing:antialiased;
+}
+.wrap{ max-width:1180px; margin:0 auto; background:var(--paper); min-height:100vh;
+  box-shadow:0 0 60px -20px rgba(20,35,70,.3); }
+
+/* ── 표지 ── */
+.cover{ padding:60px 56px 46px; background:
+    radial-gradient(120% 130% at 88% 6%, #dfeeff 0%, rgba(223,238,255,0) 60%),
+    radial-gradient(110% 130% at 2% 96%, #e3fbef 0%, rgba(227,251,239,0) 55%),
+    linear-gradient(135deg,#f5f8ff 0%,#eaf2fe 100%);
+  border-bottom:3px solid var(--ink);
+  display:grid; grid-template-columns:1fr auto; gap:32px; align-items:end; }
+.cover .eyebrow{ font-family:var(--disp); font-weight:800; font-size:12px;
+  letter-spacing:.22em; color:var(--sky); }
+.cover h1{ font-family:var(--disp); font-weight:900; font-size:46px; line-height:1.1;
+  letter-spacing:-.04em; margin:14px 0 0; }
+.cover h1 em{ font-style:normal; color:var(--indigo); }
+.cover .lead{ margin:16px 0 0; font-size:16px; color:var(--slate); max-width:52ch; }
+.cover .meta{ margin:22px 0 0; display:flex; gap:10px; flex-wrap:wrap; }
+.cover .meta span{ background:#fff; border:1px solid var(--rule); border-radius:999px;
+  padding:5px 14px; font-size:12.5px; font-weight:700; color:var(--slate); }
+.cover img{ display:block; height:210px; width:auto;
+  filter:drop-shadow(0 16px 22px rgba(30,50,110,.18)); }
+
+/* ── 본문 레이아웃 ── */
+.doc{ display:grid; grid-template-columns:216px 1fr; gap:0; align-items:start; }
+.toc{ position:sticky; top:0; align-self:start; max-height:100vh; overflow:auto;
+  padding:34px 18px 40px 30px; border-right:1px solid var(--hair); }
+.toc h2{ font-family:var(--disp); font-size:11px; letter-spacing:.16em; color:var(--mute);
+  margin:0 0 14px; font-weight:800; }
+.toc a{ display:block; color:var(--slate); text-decoration:none; font-size:13px;
+  padding:5px 0; border-left:2px solid transparent; padding-left:10px; margin-left:-10px; }
+.toc a:hover{ color:var(--indigo); border-left-color:var(--indigo); }
+.toc a.top{ font-weight:700; color:var(--ink); margin-top:12px; }
+.toc a.top:first-of-type{ margin-top:0; }
+main{ padding:34px 46px 70px; min-width:0; }
+
+/* ── 섹션 ── */
+section{ scroll-margin-top:20px; }
+h2.sec{ font-family:var(--disp); font-weight:900; font-size:27px; letter-spacing:-.035em;
+  margin:52px 0 6px; padding-top:26px; border-top:2.5px solid var(--ink); display:flex;
+  align-items:baseline; gap:12px; }
+h2.sec:first-child{ margin-top:0; padding-top:0; border-top:0; }
+h2.sec .no{ font-size:15px; color:var(--indigo); font-weight:800; }
+.sec-lead{ color:var(--slate); margin:0 0 26px; font-size:15px; }
+h3{ font-family:var(--disp); font-weight:800; font-size:18px; letter-spacing:-.03em;
+  margin:34px 0 10px; }
+h4{ font-family:var(--disp); font-weight:800; font-size:15px; margin:22px 0 8px; color:var(--ink); }
+p{ margin:0 0 12px; color:var(--slate); }
+p b, li b{ color:var(--ink); font-weight:700; }
+a{ color:var(--indigo); }
+
+/* UI 조각 표기 */
+.ui{ display:inline-block; padding:1px 7px; border-radius:5px; background:var(--wash);
+  border:1px solid var(--rule); font-size:13px; font-weight:700; color:var(--ink);
+  white-space:nowrap; }
+kbd{ font-family:var(--disp); font-weight:800; font-size:12.5px; color:var(--ink);
+  background:#fff; border:1px solid var(--rule); border-bottom-width:2px; border-radius:5px;
+  padding:2px 8px; }
+
+/* 스크린샷 + 콜아웃 */
+figure{ margin:22px 0 26px; }
+.shot{ position:relative; border:1px solid var(--rule); border-radius:12px; overflow:hidden;
+  background:var(--wash); line-height:0; }
+.shot img{ width:100%; height:auto; display:block; }
+.shot.narrow{ max-width:380px; }
+.shot.mid{ max-width:620px; }
+.cal{ position:absolute; transform:translate(-50%,-50%); z-index:2;
+  width:24px; height:24px; border-radius:50%; background:var(--red); color:#fff;
+  font-family:var(--disp); font-weight:900; font-size:13px; line-height:24px; text-align:center;
+  box-shadow:0 0 0 3px rgba(255,255,255,.92), 0 3px 8px rgba(0,0,0,.35); }
+figcaption{ font-size:13px; color:var(--mute); margin-top:9px; line-height:1.6; }
+ol.legend{ margin:12px 0 0; padding:0; list-style:none; counter-reset:c;
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:6px 20px; }
+ol.legend li{ counter-increment:c; position:relative; padding-left:28px; font-size:13.5px;
+  color:var(--slate); line-height:1.6; }
+ol.legend li::before{ content:counter(c); position:absolute; left:0; top:3px;
+  width:19px; height:19px; border-radius:50%; background:var(--red); color:#fff;
+  font-family:var(--disp); font-weight:900; font-size:11px; line-height:19px; text-align:center; }
+ol.legend li b{ color:var(--ink); }
+
+/* 단계 목록 */
+ol.steps{ margin:14px 0 18px; padding:0; list-style:none; counter-reset:s; }
+ol.steps > li{ counter-increment:s; position:relative; padding:0 0 14px 40px; }
+ol.steps > li::before{ content:counter(s); position:absolute; left:0; top:1px;
+  width:25px; height:25px; border-radius:50%; background:var(--indigo); color:#fff;
+  font-family:var(--disp); font-weight:900; font-size:13px; line-height:25px; text-align:center; }
+ol.steps > li::after{ content:""; position:absolute; left:12px; top:29px; bottom:2px; width:1.5px;
+  background:var(--hair); }
+ol.steps > li:last-child::after{ display:none; }
+ol.steps b{ color:var(--ink); }
+
+ul.plain{ margin:10px 0 14px; padding:0; list-style:none; }
+ul.plain li{ position:relative; padding-left:16px; margin-bottom:7px; color:var(--slate); }
+ul.plain li::before{ content:"·"; position:absolute; left:4px; color:var(--mute); font-weight:700; }
+
+/* 표 */
+table{ width:100%; border-collapse:collapse; margin:14px 0 20px; font-size:13.5px; }
+th,td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--hair); vertical-align:top; }
+thead th{ font-family:var(--disp); font-weight:800; font-size:12px; color:var(--mute);
+  letter-spacing:.06em; border-bottom:1.5px solid var(--rule); }
+tbody td:first-child{ font-weight:700; color:var(--ink); white-space:nowrap; }
+td code, p code, li code{ font-family:var(--disp); font-size:12.5px; background:var(--wash);
+  border:1px solid var(--rule); border-radius:4px; padding:1px 6px; color:var(--ink); }
+
+/* 알림 상자 */
+.note{ border-left:3px solid var(--indigo); background:var(--wash); border-radius:0 10px 10px 0;
+  padding:14px 18px; margin:18px 0; font-size:14px; }
+.note b{ color:var(--ink); }
+.note.warn{ border-left-color:var(--red); background:#fdf1ef; }
+.note.tip{ border-left-color:var(--mint); background:#eefaf3; }
+.note .lbl{ display:block; font-family:var(--disp); font-weight:800; font-size:11.5px;
+  letter-spacing:.1em; color:var(--indigo); margin-bottom:5px; }
+.note.warn .lbl{ color:var(--red); }
+.note.tip .lbl{ color:var(--mint); }
+
+/* 역할 배지 */
+.role{ display:inline-block; padding:2px 9px; border-radius:999px; font-size:11.5px;
+  font-weight:800; font-family:var(--disp); vertical-align:2px; }
+.role.t{ background:#e8f1ff; color:#2f68b5; }
+.role.a{ background:#fef3c7; color:#b45309; }
+.role.s{ background:#dcfce7; color:#15803d; }
+.role.g{ background:#eef2f7; color:#64748b; }
+
+.two{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.three{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+.three figcaption{ text-align:center; }
+
+footer.end{ border-top:2.5px solid var(--ink); margin-top:56px; padding:26px 0 0;
+  display:flex; align-items:center; gap:14px; font-size:13.5px; color:var(--slate); }
+footer.end img{ width:44px; height:44px; border-radius:50%; object-fit:cover;
+  box-shadow:0 0 0 1.5px var(--rule); }
+footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-size:12.5px;
+  color:var(--mute); }
+
+@media (max-width:900px){
+  .doc{ grid-template-columns:1fr; }
+  .toc{ position:static; max-height:none; border-right:0; border-bottom:1px solid var(--hair); }
+  main{ padding:26px 22px 50px; }
+  .cover{ grid-template-columns:1fr; padding:38px 24px 30px; }
+  .cover img{ height:150px; }
+  .two,.three{ grid-template-columns:1fr; }
+}
+@media print{
+  body{ background:#fff; }
+  .wrap{ box-shadow:none; max-width:none; }
+  .doc{ display:block; }
+  .cover{ break-after:page; }
+  /* 차례는 숨기지 않고 한 쪽으로 앉힌다 — 종이로 볼 때 오히려 더 필요하다 */
+  .toc{ position:static; max-height:none; overflow:visible; border-right:0;
+        padding:0; columns:2; column-gap:34px; break-after:page; }
+  .toc h2{ font-size:13px; margin:0 0 16px; column-span:all;
+           border-bottom:2px solid var(--ink); padding-bottom:8px; }
+  .toc a{ font-size:12.5px; padding:3.5px 0; color:var(--ink);
+          break-inside:avoid; margin-left:0; padding-left:0; border-left:0; }
+  .toc a.top{ margin-top:10px; }
+  main{ padding:0; }
+  /* 인쇄 폭이 900px 반응형 구간에 걸리므로 여기서 되돌린다 */
+  .cover{ grid-template-columns:1fr auto; align-items:end; padding:52px 10mm 40px; }
+  .cover img{ height:225px; }
+  .two{ grid-template-columns:1fr 1fr; }
+  .three{ grid-template-columns:repeat(3,1fr); }
+  /* --pw 는 빌드가 그림의 실제 비율로 계산해 넣는다 (높이 상한 120mm) */
+  /* .shot.narrow/.mid 가 명시도로 앞서므로 셋 다 적어 준다 */
+  .shot{ max-width:var(--pw,100%); margin-left:auto; margin-right:auto; }
+  .shot.narrow{ max-width:var(--pw,380px); }
+  .shot.mid{ max-width:var(--pw,620px); }
+  /* 나란히 놓은 그림은 칸 너비가 이미 높이를 잡아 준다 */
+  .two .shot, .two .shot.narrow{ max-width:100%; }
+  .three .shot, .three .shot.narrow{ max-width:100%; }
+  figure{ margin:13px 0 16px; }
+  h2.sec{ break-before:page; }
+  figure, table, .note, ol.steps, .cal-list li{ break-inside:avoid; }
+  figcaption{ break-before:avoid; }
+  h3, h4{ break-after:avoid; }
+  a{ color:inherit; }
+  @page{ size:A4; margin:15mm 13mm; }
+}
+</style>
+
+<div class="wrap">
+
+<header class="cover">
+  <div>
+    <div class="eyebrow">미래형학교체육 · SMART-JUMPING</div>
+    <h1>스마트점핑<br><em>운영 가이드북</em></h1>
+    <p class="lead">가입부터 수업 진행, 학급 관리, 자료 추가까지. 화면을 그대로 캡처해
+      어디를 눌러야 하는지 짚었습니다. 처음 쓰는 선생님은 1~4장만 보셔도 수업이 됩니다.</p>
+    <div class="meta">
+      <span>영상 104편</span><span>6영역 23분류</span><span>교재 12권</span><span>9개 장</span>
+    </div>
+  </div>
+  <img src="__IMG_CHAR__" alt="안내 캐릭터 점핑이">
+</header>
+
+<div class="doc">
+  <nav class="toc">
+    <h2>차례</h2>
+    <a class="top" href="#s1">1. 시작하기</a>
+    <a href="#s1-1">첫 화면</a>
+    <a href="#s1-2">회원가입</a>
+    <a href="#s1-3">로그인</a>
+    <a href="#s1-4">권한 네 가지</a>
+    <a class="top" href="#s2">2. 화면 구성</a>
+    <a href="#s2-1">전체 골격</a>
+    <a href="#s2-2">왼쪽 사이드바</a>
+    <a href="#s2-3">위 가로줄</a>
+    <a href="#s2-4">영상 카드</a>
+    <a class="top" href="#s3">3. 영상 찾고 담기</a>
+    <a href="#s3-1">찾기</a>
+    <a href="#s3-2">담기</a>
+    <a href="#s3-3">즐겨찾기</a>
+    <a class="top" href="#s4">4. 수업하기</a>
+    <a class="top" href="#s5">5. 학급 운영</a>
+    <a href="#s5-1">수업 등록</a>
+    <a href="#s5-2">커리큘럼</a>
+    <a href="#s5-3">출석부</a>
+    <a href="#s5-4">수업 리포트</a>
+    <a class="top" href="#s6">6. 마이페이지</a>
+    <a class="top" href="#s7">7. 관리자</a>
+    <a class="top" href="#s8">8. 자료 추가·관리</a>
+    <a href="#s8-1">두 가지 판</a>
+    <a href="#s8-2">영상 추가</a>
+    <a href="#s8-3">분류·교재</a>
+    <a href="#s8-4">캐시 비우기</a>
+    <a href="#s8-5">대표 영상·캐릭터</a>
+    <a class="top" href="#s9">9. 문제 해결</a>
+    <a class="top" href="#s10">부록</a>
+  </nav>
+
+  <main>
+
+  <!-- ═══════ 1 ═══════ -->
+  <section id="s1">
+    <h2 class="sec"><span class="no">01</span> 시작하기</h2>
+    <p class="sec-lead">스마트점핑은 <b>로그인 없이도 영상을 보고 틀 수 있습니다.</b>
+      담기·수업관리처럼 내 것으로 저장되는 기능부터 로그인이 필요합니다.</p>
+
+    <h3 id="s1-1">첫 화면</h3>
+    <p>주소를 열면 로그인 창이 아니라 <b>영상 목록</b>이 먼저 나옵니다. 맨 위에는 대표 콘텐츠
+      영상이 소리 없이 자동 재생됩니다.</p>
+    <figure>
+      <div class="shot">
+        <img src="__IMG_01__" alt="첫 화면">
+        <span class="cal" style="left:8.5%;top:6.9%">1</span>
+        <span class="cal" style="left:20.3%;top:3.3%">2</span>
+        <span class="cal" style="left:58.5%;top:50.5%">3</span>
+        <span class="cal" style="left:45.9%;top:57.1%">4</span>
+        <span class="cal" style="left:28.2%;top:77%">5</span>
+      </div>
+      <ol class="legend">
+        <li><b>로고와 로그인 카드</b> — 로그인 전에는 로그인·회원가입 버튼이 보입니다</li>
+        <li><b>영역 가로줄</b> — 명상 · 시간타이머 · 준비운동 등 6영역</li>
+        <li><b>검색창</b> — 분류와 상관없이 104편 전체에서 찾습니다</li>
+        <li><b>세부 분류 칩</b> — 고른 영역 안에서 더 좁힙니다</li>
+        <li><b>영상 카드</b> — 그림을 누르면 그 영상만 바로 재생됩니다</li>
+      </ol>
+    </figure>
+    <div class="note tip"><span class="lbl">TIP</span>
+      대표 영상 오른쪽 아래 <span class="ui">🔇</span> 를 누르면 소리가 켜집니다.
+      교실 화면에 띄워 두기 좋습니다.</div>
+
+    <h3 id="s1-2">회원가입</h3>
+    <p>사이드바의 <span class="ui">회원가입</span> 을 누르면 창이 열립니다.
+      아이디 규칙과 중복은 입력하는 동안 바로 확인됩니다.</p>
+    <figure>
+      <div class="shot mid"><img src="__IMG_04__" alt="회원가입 창"></div>
+      <figcaption>가입 시 이름·소속·지역을 함께 받습니다. 소속과 지역은 나중에 마이페이지에서 고칠 수 있습니다.</figcaption>
+    </figure>
+    <div class="note"><span class="lbl">가입하면 생기는 것</span>
+      담은 영상, 즐겨찾기, 수업, 교구, 프로그램 스케줄이 <b>계정마다 따로</b> 저장됩니다.
+      새로 가입한 계정의 기본 권한은 <span class="role s">학생</span> 입니다.
+      교사 권한이 필요하면 관리자가 <b>회원관리</b>에서 올려 줍니다.</div>
+
+    <h3 id="s1-3">로그인</h3>
+    <figure>
+      <div class="shot mid"><img src="__IMG_03__" alt="로그인 창"></div>
+      <figcaption>비밀번호는 SHA-256 해시로 저장됩니다. 교내용 수준이며 은행급 보안은 아닙니다.</figcaption>
+    </figure>
+    <p>담기·즐겨찾기·수업관리처럼 로그인이 필요한 곳을 누르면 이 창이 자동으로 뜹니다.
+      로그인하면 하던 자리로 돌아갑니다.</p>
+
+    <h3 id="s1-4">권한 네 가지</h3>
+    <p>권한에 따라 <b>왼쪽 메뉴 자체가 달라집니다.</b> 주소를 직접 쳐서 들어가도 막힙니다.</p>
+    <div class="three">
+      <figure>
+        <div class="shot"><img src="__IMG_33__" alt="학생 사이드바"></div>
+        <figcaption><span class="role s">학생</span> 스마트점핑 · 사용법 · 내 출결 · 마이페이지 · 온라인교재</figcaption>
+      </figure>
+      <figure>
+        <div class="shot"><img src="__IMG_10__" alt="교사 사이드바"></div>
+        <figcaption><span class="role t">교사</span> 여기에 <b>수업관리</b>가 더해집니다</figcaption>
+      </figure>
+      <figure>
+        <div class="shot"><img src="__IMG_30__" alt="관리자 사이드바"></div>
+        <figcaption><span class="role a">관리자</span> 여기에 <b>회원관리</b>까지 더해집니다</figcaption>
+      </figure>
+    </div>
+    <table>
+      <thead><tr><th>기능</th><th>게스트</th><th>학생</th><th>교사</th><th>관리자</th></tr></thead>
+      <tbody>
+        <tr><td>영상 보기·재생</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+        <tr><td>온라인교재</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+        <tr><td>담기 · 즐겨찾기 · 수업시작</td><td>–</td><td>○</td><td>○</td><td>○</td></tr>
+        <tr><td>내 출결</td><td>–</td><td>○</td><td>○</td><td>○</td></tr>
+        <tr><td>수업관리 · 출석부 · 리포트</td><td>–</td><td>–</td><td>○</td><td>○</td></tr>
+        <tr><td>교구보유 · 프로그램스케줄</td><td>–</td><td>–</td><td>○</td><td>○</td></tr>
+        <tr><td>회원관리</td><td>–</td><td>–</td><td>–</td><td>○</td></tr>
+        <tr><td>남의 수업 조회</td><td>–</td><td>–</td><td>–</td><td>○</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════ 2 ═══════ -->
+  <section id="s2">
+    <h2 class="sec"><span class="no">02</span> 화면 구성</h2>
+    <p class="sec-lead">어느 화면에 있든 골격은 같습니다. 왼쪽은 <b>내 정보와 메뉴</b>,
+      위쪽은 <b>영상 영역</b>, 가운데가 <b>본문</b>, 오른쪽 아래가 <b>담은 영상</b>입니다.</p>
+
+    <h3 id="s2-1">전체 골격</h3>
+    <figure>
+      <div class="shot">
+        <img src="__IMG_11__" alt="로그인 후 라이브러리 전체">
+        <span class="cal" style="left:8.5%;top:6.9%">1</span>
+        <span class="cal" style="left:8.5%;top:24.1%">2</span>
+        <span class="cal" style="left:8.5%;top:36.9%">3</span>
+        <span class="cal" style="left:43.8%;top:3.3%">4</span>
+        <span class="cal" style="left:64.9%;top:3.3%">5</span>
+        <span class="cal" style="left:92.5%;top:3.3%">6</span>
+        <span class="cal" style="left:58.5%;top:50.5%">7</span>
+        <span class="cal" style="left:84.7%;top:63.2%">8</span>
+        <span class="cal" style="left:93.9%;top:63.2%">9</span>
+        <span class="cal" style="left:92.8%;top:94.1%">10</span>
+      </div>
+      <ol class="legend">
+        <li><b>로고</b> — 누르면 검색어·필터가 풀리고 처음 화면으로</li>
+        <li><b>▶ 수업시작</b> — 담은 영상을 전체화면으로 이어 재생</li>
+        <li><b>메뉴</b> — 권한에 따라 항목이 달라집니다</li>
+        <li><b>영역 가로줄</b> — 6영역</li>
+        <li><b>★ 즐겨찾기</b> — 옆 숫자는 찍어 둔 개수</li>
+        <li><b>시계</b> — 수업 시간 확인용</li>
+        <li><b>검색창</b> — 분류 무시하고 전체 검색</li>
+        <li><b>정렬</b> — 기본 / 조회수 / 재생시간 / 제목</li>
+        <li><b>이 페이지 전체담기</b> — 보이는 카드를 한 번에</li>
+        <li><b>🎬 영상담기</b> — 담은 개수. 누르면 목록이 열립니다</li>
+      </ol>
+    </figure>
+
+    <h3 id="s2-2">왼쪽 사이드바</h3>
+    <figure>
+      <div class="shot narrow">
+        <img src="__IMG_10__" alt="교사 사이드바">
+        <span class="cal" style="left:50%;top:6.9%">1</span>
+        <span class="cal" style="left:50%;top:16.3%">2</span>
+        <span class="cal" style="left:50%;top:19.5%">3</span>
+        <span class="cal" style="left:50%;top:24.1%">4</span>
+        <span class="cal" style="left:50%;top:28.6%">5</span>
+        <span class="cal" style="left:50%;top:36.9%">6</span>
+        <span class="cal" style="left:50%;top:47.5%">7</span>
+        <span class="cal" style="left:50%;top:58.1%">8</span>
+      </div>
+      <ol class="legend">
+        <li>로고 — 홈으로</li>
+        <li>내 이름</li>
+        <li>권한 배지 — 색으로 구분됩니다</li>
+        <li><b>▶ 수업시작</b></li>
+        <li>로그아웃</li>
+        <li>스마트점핑 — 영상 목록</li>
+        <li>수업관리 <span class="role t">교사</span><span class="role a">관리자</span></li>
+        <li>마이페이지 — 누르면 하위 메뉴가 펼쳐집니다</li>
+      </ol>
+    </figure>
+
+    <h3 id="s2-3">위 가로줄</h3>
+    <figure>
+      <div class="shot">
+        <img src="__IMG_12__" alt="상단 영역 메뉴">
+        <span class="cal" style="left:4%;top:49%">1</span>
+        <span class="cal" style="left:57.7%;top:49%">2</span>
+        <span class="cal" style="left:91%;top:49%">3</span>
+      </div>
+      <ol class="legend">
+        <li><b>영역</b> — 밑줄이 그어진 것이 지금 보고 있는 영역</li>
+        <li><b>★ 즐겨찾기</b> — 옆 숫자가 찍어 둔 영상 수</li>
+        <li><b>시계</b></li>
+      </ol>
+    </figure>
+    <figure>
+      <div class="shot mid"><img src="__IMG_13__" alt="세부 분류 칩"></div>
+      <figcaption>영역을 고르면 그 아래에 세부 분류 칩이 나옵니다. 칩 옆 작은 숫자는 그 분류의 영상 수,
+        <b>N</b> 은 새로 생긴 분류입니다. <b>영상이 하나도 없는 분류는 아예 나타나지 않습니다.</b></figcaption>
+    </figure>
+
+    <h3 id="s2-4">영상 카드</h3>
+    <figure>
+      <div class="shot narrow">
+        <img src="__IMG_15__" alt="영상 카드 확대">
+        <span class="cal" style="left:8.5%;top:8.4%">1</span>
+        <span class="cal" style="left:91.2%;top:8.7%">2</span>
+        <span class="cal" style="left:50%;top:28%">3</span>
+        <span class="cal" style="left:13.8%;top:49%">4</span>
+        <span class="cal" style="left:88.7%;top:48.9%">5</span>
+        <span class="cal" style="left:50%;top:90.9%">6</span>
+      </div>
+      <ol class="legend">
+        <li><b>✓ 담기</b> — 누르면 오늘 수업에 담깁니다</li>
+        <li><b>★ 즐겨찾기</b></li>
+        <li><b>그림</b> — 누르면 그 영상만 바로 재생 (담지 않아도 됩니다)</li>
+        <li>조회수</li>
+        <li>재생시간</li>
+        <li>영역 › 세부 분류</li>
+      </ol>
+    </figure>
+  </section>
+
+  <!-- ═══════ 3 ═══════ -->
+  <section id="s3">
+    <h2 class="sec"><span class="no">03</span> 영상 찾고 담기</h2>
+    <p class="sec-lead">수업 전에 담아 두는 것이 이 사이트를 쓰는 핵심입니다.
+      <b>담은 순서가 그대로 수업 순서</b>가 됩니다.</p>
+
+    <h3 id="s3-1">찾기</h3>
+    <ol class="steps">
+      <li>위 가로줄에서 <b>영역</b>을 고릅니다.</li>
+      <li>그 아래 동그란 칩으로 <b>세부 분류</b>를 좁힙니다.</li>
+      <li>정렬을 <span class="ui">재생시간 짧은순</span> 으로 두면 한 차시에 맞는 짧은 영상이 앞으로 옵니다.</li>
+      <li>제목을 안다면 <b>검색창</b>에 칩니다. 검색은 분류를 가리지 않고 104편 전체를 봅니다.</li>
+    </ol>
+    <figure>
+      <div class="shot mid"><img src="__IMG_14B__" alt="정렬과 전체담기"></div>
+      <figcaption>정렬은 <b>기본순 · 조회수 많은순 · 재생시간 짧은순 · 재생시간 긴순 · 제목순</b> 다섯 가지입니다.</figcaption>
+    </figure>
+
+    <h3 id="s3-2">담기</h3>
+    <figure>
+      <div class="shot"><img src="__IMG_16__" alt="영상을 담은 상태"></div>
+      <figcaption>담긴 카드는 테두리가 파랗게 바뀌고 <b>✓</b> 가 채워집니다.
+        오른쪽 아래 <b>🎬 영상담기</b> 의 숫자도 함께 올라갑니다.</figcaption>
+    </figure>
+    <p>여러 편을 한 번에 담으려면 목록 오른쪽 위 <span class="ui">이 페이지 전체담기</span> 를 누릅니다.
+      지금 보이는 카드가 모두 담깁니다.</p>
+    <figure>
+      <div class="shot"><img src="__IMG_18__" alt="담은 영상 목록"></div>
+      <figcaption><b>🎬 영상담기</b> 를 누르면 담은 목록이 열립니다. 여기서 순서를 확인하고
+        필요 없는 것을 빼거나, 바로 수업을 시작할 수 있습니다.</figcaption>
+    </figure>
+    <div class="note tip"><span class="lbl">순서 요령</span>
+      준비운동 → 스마트점핑 → 비트 트레이닝 → 마무리·명상 순으로 담으면 나중에 손댈 일이 없습니다.</div>
+
+    <h3 id="s3-3">즐겨찾기</h3>
+    <p>자주 쓰는 영상은 카드의 <b>★</b> 를 눌러 둡니다. 위 가로줄의
+      <span class="ui">★ 즐겨찾기</span> 에서 모아 볼 수 있습니다. 담기와 달리
+      <b>즐겨찾기는 수업에 들어가지 않습니다</b> — 나중에 빨리 찾기 위한 표시입니다.</p>
+    <figure>
+      <div class="shot"><img src="__IMG_20__" alt="즐겨찾기 목록"></div>
+    </figure>
+  </section>
+
+  <!-- ═══════ 4 ═══════ -->
+  <section id="s4">
+    <h2 class="sec"><span class="no">04</span> 수업하기</h2>
+    <p class="sec-lead">담아 뒀다면 교실에서 할 일은 버튼 하나입니다.</p>
+    <ol class="steps">
+      <li>왼쪽 <span class="ui">▶ 수업시작</span> 을 누릅니다.</li>
+      <li>교실 화면이 <b>전체화면</b>으로 바뀌고 담은 순서대로 이어서 재생됩니다.</li>
+      <li>끝나면 <kbd>Esc</kbd> 로 빠져나옵니다.</li>
+    </ol>
+    <figure>
+      <div class="shot"><img src="__IMG_19__" alt="수업 플레이어"></div>
+      <figcaption>오른쪽에 재생목록이 있어 지금 몇 번째인지 보입니다.
+        <b>반복</b> 을 켜면 마지막 영상 뒤에 처음으로 돌아갑니다.</figcaption>
+    </figure>
+    <h4>단축키</h4>
+    <table>
+      <thead><tr><th>키</th><th>하는 일</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>Space</kbd></td><td>재생 / 일시정지</td></tr>
+        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>이전 / 다음 영상</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>수업 종료</td></tr>
+      </tbody>
+    </table>
+    <div class="note warn"><span class="lbl">재생이 막힌 영상</span>
+      유튜브가 외부 재생을 막아 둔 영상을 만나면 안내를 띄우고
+      <b>5초 뒤 알아서 다음 편으로 넘어갑니다.</b> 수업이 멈추지 않습니다.</div>
+  </section>
+
+  <!-- ═══════ 5 ═══════ -->
+  <section id="s5">
+    <h2 class="sec"><span class="no">05</span> 학급 운영 <span class="role t">교사</span><span class="role a">관리자</span></h2>
+    <p class="sec-lead">학급을 등록해 두면 커리큘럼을 붙이고, 날짜별로 출석을 쌓고,
+      리포트로 뽑을 수 있습니다.</p>
+
+    <h3 id="s5-1">수업 등록</h3>
+    <figure>
+      <div class="shot">
+        <img src="__IMG_21__" alt="수업관리 목록">
+        <span class="cal" style="left:25.2%;top:26.2%">1</span>
+        <span class="cal" style="left:80.6%;top:26.2%">2</span>
+        <span class="cal" style="left:94.3%;top:34.2%">3</span>
+        <span class="cal" style="left:67.9%;top:45.8%">4</span>
+        <span class="cal" style="left:74.8%;top:45.8%">5</span>
+        <span class="cal" style="left:80%;top:45.8%">6</span>
+        <span class="cal" style="left:85.2%;top:45.8%">7</span>
+        <span class="cal" style="left:90.4%;top:45.8%">8</span>
+      </div>
+      <ol class="legend">
+        <li>기간 — 년 · 월로 좁힙니다</li>
+        <li>검색 — 학교명+지역 / 학교명 / 지역 중에 골라 검색</li>
+        <li><b>＋ 등록</b></li>
+        <li><b>커리큘럼</b> — 연결된 스케줄 그룹 이름. 없으면 <b>미연결</b></li>
+        <li><b>▶ 수업</b> — 차시를 골라 바로 시작</li>
+        <li><b>📋 출석부</b></li>
+        <li><b>📄 리포트</b></li>
+        <li><b>✏️ 수정</b> · <b>🗑 삭제</b></li>
+      </ol>
+    </figure>
+    <figure>
+      <div class="shot mid"><img src="__IMG_22__" alt="수업 등록 창"></div>
+      <figcaption>수업년월·지역·학교·학년·반·정원을 넣습니다.
+        <b>스케줄그룹</b>을 고르면 그 학급에 커리큘럼이 연결됩니다.</figcaption>
+    </figure>
+    <div class="note"><span class="lbl">권한 차이</span>
+      <span class="role t">교사</span>는 자기가 만든 수업만 보입니다.
+      <span class="role a">관리자</span>는 전체 교사의 수업을 보고, 표에 <b>담당</b> 열이 더 나옵니다.
+      남의 수업을 고치거나 지우는 것은 거부됩니다.</div>
+
+    <h3 id="s5-2">커리큘럼 만들고 연결하기</h3>
+    <p>커리큘럼은 <b>마이페이지 › 프로그램스케줄</b>에서 만듭니다.
+      그룹을 만들고 차시마다 영상을 넣어 두는 방식입니다.</p>
+    <ol class="steps">
+      <li><b>마이페이지 › 프로그램스케줄</b>에서 그룹을 만듭니다 (예: 1학기 기본과정).</li>
+      <li>차시를 추가하고 각 차시에 넣을 영상을 고릅니다.</li>
+      <li><b>수업관리</b>에서 학급을 수정해 <b>스케줄그룹</b>으로 그 그룹을 지정합니다.</li>
+      <li>표의 <b>▶</b> 를 누르면 차시 목록이 뜨고, 고른 차시가 바로 재생됩니다.</li>
+    </ol>
+    <figure>
+      <div class="shot"><img src="__IMG_27__" alt="프로그램 스케줄"></div>
+      <figcaption>차시별로 영상 ID가 묶여 있습니다. 한 그룹을 여러 학급에 연결할 수 있습니다.</figcaption>
+    </figure>
+
+    <h3 id="s5-3">출석부</h3>
+    <figure>
+      <div class="shot mid"><img src="__IMG_23__" alt="출석부"></div>
+      <figcaption>날짜를 고르고 학생별로 출·결·지각을 표시합니다.</figcaption>
+    </figure>
+    <ul class="plain">
+      <li><b>날짜마다 회차가 쌓입니다.</b> 지난 회차는 그대로 남습니다.</li>
+      <li>새 날짜를 열면 <b>최근 명단이 자동으로 이어집니다.</b> 이름을 다시 칠 필요가 없습니다.</li>
+      <li><b>모두 출석</b> 으로 한 번에 찍고 결석만 고치는 것이 빠릅니다.</li>
+      <li>누적 출석률은 알아서 계산됩니다.</li>
+    </ul>
+
+    <h3 id="s5-4">수업 리포트</h3>
+    <figure>
+      <div class="shot"><img src="__IMG_24__" alt="수업 리포트"></div>
+      <figcaption>학급 정보 + 커리큘럼 차시 + 회차별 출결표가 한 장에 묶입니다.
+        <b>🖨 인쇄 / PDF 저장</b> 을 누르면 그대로 인쇄되거나 PDF로 저장됩니다.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ═══════ 6 ═══════ -->
+  <section id="s6">
+    <h2 class="sec"><span class="no">06</span> 마이페이지</h2>
+    <p class="sec-lead">왼쪽 <b>마이페이지</b>를 누르면 하위 메뉴가 펼쳐집니다.
+      항목은 권한에 따라 다릅니다.</p>
+    <div class="two">
+      <figure>
+        <div class="shot"><img src="__IMG_25__" alt="정보수정"></div>
+        <figcaption><b>정보수정</b> — 이름·소속·지역과 비밀번호를 바꿉니다. 아이디는 못 바꿉니다.</figcaption>
+      </figure>
+      <figure>
+        <div class="shot"><img src="__IMG_26__" alt="교구보유현황"></div>
+        <figcaption><b>교구보유현황</b> <span class="role t">교사</span> — 교구명·대리점·새제품/중고 수량을 적어 둡니다.</figcaption>
+      </figure>
+      <figure>
+        <div class="shot"><img src="__IMG_27B__" alt="프로그램스케줄"></div>
+        <figcaption><b>프로그램스케줄</b> <span class="role t">교사</span> — 커리큘럼 그룹과 차시를 관리합니다.</figcaption>
+      </figure>
+      <figure>
+        <div class="shot"><img src="__IMG_28__" alt="회원탈퇴"></div>
+        <figcaption><b>회원탈퇴</b> — 사유를 고르고 비밀번호로 확인합니다.</figcaption>
+      </figure>
+    </div>
+    <h3>온라인교재</h3>
+    <figure>
+      <div class="shot"><img src="__IMG_29__" alt="온라인교재"></div>
+      <figcaption>교재 12권. 표지를 누르면 뷰어로 넘어갑니다. 로그인 없이도 볼 수 있습니다.</figcaption>
+    </figure>
+    <h3>내 출결</h3>
+    <figure>
+      <div class="shot"><img src="__IMG_34__" alt="내 출결"></div>
+      <figcaption><span class="role s">학생</span> 본인의 출결과 누적 출석률만 보입니다. 남의 기록은 조회되지 않습니다.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ═══════ 7 ═══════ -->
+  <section id="s7">
+    <h2 class="sec"><span class="no">07</span> 관리자 <span class="role a">관리자</span></h2>
+    <p class="sec-lead">회원관리는 관리자에게만 보입니다.</p>
+    <figure>
+      <div class="shot"><img src="__IMG_31__" alt="회원관리"></div>
+      <figcaption>회원마다 보유한 수업·교구·스케줄 수가 함께 집계됩니다.</figcaption>
+    </figure>
+    <table>
+      <thead><tr><th>할 수 있는 것</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>권한 변경</td><td>학생 ↔ 교사 ↔ 관리자. 새로 가입한 사람을 교사로 올릴 때 씁니다</td></tr>
+        <tr><td>계정 정지 · 복구</td><td>정지된 계정은 로그인 자체가 막힙니다</td></tr>
+        <tr><td>비밀번호 초기화</td><td>비밀번호를 잊은 회원을 되살릴 때</td></tr>
+      </tbody>
+    </table>
+    <div class="note warn"><span class="lbl">막아 둔 것</span>
+      <b>마지막 남은 관리자를 강등하는 것은 거부됩니다.</b> 아무도 관리할 수 없게 되는 상황을 막기 위해서입니다.</div>
+    <figure>
+      <div class="shot"><img src="__IMG_32__" alt="관리자가 보는 수업관리"></div>
+      <figcaption>관리자의 수업관리에는 <b>담당</b> 열이 있어 어느 교사의 수업인지 보입니다.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ═══════ 8 ═══════ -->
+  <section id="s8">
+    <h2 class="sec"><span class="no">08</span> 자료 추가·관리</h2>
+    <p class="sec-lead">이 장은 사이트를 운영하는 분을 위한 것입니다.</p>
+
+    <div class="note warn"><span class="lbl">먼저 알아 둘 것</span>
+      <b>사이트 안에는 영상·교재를 올리는 화면이 없습니다.</b>
+      자료는 전부 <b>구글 시트</b>에서 관리하고, 사이트는 그 시트를 읽어 옵니다.
+      영상 파일을 서버에 올리는 것이 아니라 <b>유튜브 영상을 임베드로 불러오는 방식</b>입니다.</div>
+
+    <h3 id="s8-1">두 가지 판의 차이</h3>
+    <table>
+      <thead><tr><th></th><th>데모 (GitHub Pages)</th><th>구글 시트 연동판 (Apps Script)</th></tr></thead>
+      <tbody>
+        <tr><td>자료 저장소</td><td>브라우저 안 (localStorage)</td><td>구글 시트 10개 탭</td></tr>
+        <tr><td>영상 추가</td><td><b>불가</b> — 104편으로 고정</td><td>시트에 행 추가</td></tr>
+        <tr><td>데이터 공유</td><td>브라우저 1대</td><td>계정 전체</td></tr>
+        <tr><td>쓰임</td><td>기능을 보여 주는 용도</td><td>실제 운영</td></tr>
+      </tbody>
+    </table>
+    <p>아래 내용은 모두 <b>구글 시트 연동판</b> 이야기입니다.</p>
+
+    <h3 id="s8-2">영상 추가</h3>
+    <ol class="steps">
+      <li>구글 시트의 <code>videos</code> 탭을 엽니다.</li>
+      <li>맨 아래에 행을 하나 추가합니다.</li>
+      <li><code>youtube_id</code> 칸에 <b>유튜브 주소의 ID 부분만</b> 넣습니다.</li>
+      <li>Apps Script 에서 <code>캐시비우기()</code> 를 실행합니다 (아래 8-4 참고).</li>
+    </ol>
+    <table>
+      <thead><tr><th>주소</th><th>넣을 값</th></tr></thead>
+      <tbody>
+        <tr><td><code>youtube.com/watch?v=AbCdEfGh123</code></td><td><code>AbCdEfGh123</code></td></tr>
+        <tr><td><code>youtu.be/AbCdEfGh123</code></td><td><code>AbCdEfGh123</code></td></tr>
+      </tbody>
+    </table>
+    <h4>videos 탭의 열</h4>
+    <table>
+      <thead><tr><th>열</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>영상ID</td><td>V0001 처럼 겹치지 않는 값</td></tr>
+        <tr><td>대분류ID · 소분류ID</td><td><code>categories</code> 탭에 있는 ID (예: C4 / S41)</td></tr>
+        <tr><td>제목</td><td>목록에 나오는 이름</td></tr>
+        <tr><td>youtube_id</td><td>위에서 뽑은 ID</td></tr>
+        <tr><td>재생시간</td><td><code>04:30</code> 형식</td></tr>
+        <tr><td>조회수 · 등록일</td><td>정렬에 쓰입니다</td></tr>
+        <tr><td>노출여부</td><td>비우거나 N 으로 두면 목록에서 감춥니다</td></tr>
+      </tbody>
+    </table>
+    <div class="note warn"><span class="lbl">넣기 전에 확인</span>
+      유튜브가 <b>외부 재생을 막아 둔 영상</b>은 사이트에서 재생되지 않습니다.
+      영상 페이지에서 <b>공유 › 퍼가기</b> 가 되는지 먼저 확인하세요.
+      재생시간도 실제 값과 맞춰야 수업 시간 계산이 어긋나지 않습니다.</div>
+
+    <h3 id="s8-3">분류와 교재 추가</h3>
+    <p><b>분류</b>는 <code>categories</code> 탭에서 관리합니다. 여기를 고치면 상단 메뉴와 칩이 그대로 따라옵니다.</p>
+    <table>
+      <thead><tr><th>열</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>대분류ID · 대분류명 · 대분류순서</td><td>위 가로줄에 나오는 영역</td></tr>
+        <tr><td>소분류ID · 소분류명 · 소분류순서</td><td>그 아래 동그란 칩</td></tr>
+        <tr><td>N뱃지</td><td><code>N</code> 을 넣으면 새 분류 표시가 붙습니다</td></tr>
+      </tbody>
+    </table>
+    <div class="note tip"><span class="lbl">TIP</span>
+      <b>영상이 0건인 분류는 화면에 아예 나오지 않습니다.</b>
+      그래서 분류를 미리 다 적어 두고 영상을 차차 채워도 화면이 깨지지 않습니다.</div>
+    <p><b>교재</b>는 <code>textbooks</code> 탭입니다.</p>
+    <table>
+      <thead><tr><th>열</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>권차</td><td>1, 2, 3 … 정렬 기준</td></tr>
+        <tr><td>제목</td><td>표지 아래 이름</td></tr>
+        <tr><td>표지URL</td><td>표지 이미지 주소</td></tr>
+        <tr><td>뷰어링크</td><td>눌렀을 때 열릴 주소</td></tr>
+        <tr><td>뱃지</td><td>특호 같은 표시</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="s8-4">고친 뒤에는 캐시 비우기</h3>
+    <div class="note warn"><span class="lbl">이 단계를 빠뜨리면 안 바뀝니다</span>
+      영상과 분류는 속도를 위해 <b>6시간 동안 서버에 캐시</b>됩니다.
+      시트를 고친 뒤 바로 반영하려면 Apps Script 편집기에서
+      <code>캐시비우기()</code> 함수를 한 번 실행하세요.</div>
+    <ol class="steps">
+      <li>구글 시트에서 <b>확장 프로그램 › Apps Script</b> 를 엽니다.</li>
+      <li>함수 목록에서 <code>캐시비우기</code> 를 고릅니다.</li>
+      <li><b>실행</b> 을 누릅니다.</li>
+      <li>사이트를 새로고침하면 반영됩니다.</li>
+    </ol>
+
+    <h3 id="s8-5">대표 영상과 안내 캐릭터 바꾸기</h3>
+    <p>첫 화면 대표 영상과 점핑이 그림은 시트가 아니라 <b>저장소 파일</b>입니다.</p>
+    <table>
+      <thead><tr><th>바꿀 것</th><th>파일</th><th>그 다음</th></tr></thead>
+      <tbody>
+        <tr><td>대표 영상</td><td><code>assets/hero/lesson.mp4</code></td><td>포스터도 <code>assets/hero/poster.webp</code> 로 교체</td></tr>
+        <tr><td>안내 캐릭터</td><td><code>assets/char/*.webp</code></td><td><code>node tools/gen-chars.js</code></td></tr>
+      </tbody>
+    </table>
+    <p>둘 다 바꾼 뒤에는 <code>npm run build</code> 로 <code>index.html</code> 을 다시 만들어야 합니다.
+      <b><code>index.html</code> 을 직접 고치면 다음 빌드에 사라집니다.</b></p>
+  </section>
+
+  <!-- ═══════ 9 ═══════ -->
+  <section id="s9">
+    <h2 class="sec"><span class="no">09</span> 문제 해결</h2>
+    <table>
+      <thead><tr><th>증상</th><th>원인과 해결</th></tr></thead>
+      <tbody>
+        <tr><td>영상이 안 나옵니다</td><td>유튜브가 외부 재생을 막은 영상입니다. 안내가 뜨고 5초 뒤 다음 편으로 넘어갑니다. 계속 걸리면 <code>videos</code> 탭에서 그 행의 노출여부를 꺼 두세요</td></tr>
+        <tr><td>담아 둔 게 안 보입니다</td><td>계정마다 따로 저장됩니다. 담을 때 쓰던 계정으로 다시 로그인하세요</td></tr>
+        <tr><td>시트를 고쳤는데 그대로입니다</td><td>6시간 캐시입니다. <code>캐시비우기()</code> 를 실행하세요</td></tr>
+        <tr><td>수업관리가 안 보입니다</td><td>학생 권한입니다. 관리자가 회원관리에서 교사로 올려 주어야 합니다</td></tr>
+        <tr><td>데모에서 만든 게 사라졌습니다</td><td>데모는 서버가 없어 그 브라우저에만 남습니다. 다른 기기·다른 브라우저에서는 보이지 않습니다</td></tr>
+        <tr><td>화면이 느립니다</td><td>Apps Script 왕복은 0.5~2초입니다. 서버 6시간 + 브라우저 캐시가 걸려 있어 두 번째부터 빨라집니다</td></tr>
+        <tr><td>데모를 처음 상태로 되돌리고 싶습니다</td><td>브라우저 콘솔에서 <code>sjReset()</code> 을 실행하세요</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════ 부록 ═══════ -->
+  <section id="s10">
+    <h2 class="sec"><span class="no">부록</span> 빠른 참조</h2>
+
+    <h3>체험 계정</h3>
+    <table>
+      <thead><tr><th>아이디</th><th>비밀번호</th><th>권한</th><th>보이는 것</th></tr></thead>
+      <tbody>
+        <tr><td>teacher</td><td>1234</td><td><span class="role a">관리자</span></td><td>전체 메뉴 + 모든 교사의 수업</td></tr>
+        <tr><td>test</td><td>1234</td><td><span class="role t">교사</span></td><td>전체 메뉴 + 자기 수업만</td></tr>
+        <tr><td>teststu</td><td>1234</td><td><span class="role s">학생</span></td><td>영상 · 교재 · 내 출결 · 마이페이지</td></tr>
+      </tbody>
+    </table>
+
+    <h3>영역별 영상</h3>
+    <table>
+      <thead><tr><th>영역</th><th>편</th><th>분류</th><th>한 편 평균</th></tr></thead>
+      <tbody>
+        <tr><td>명상</td><td>11</td><td>3</td><td>6.3분</td></tr>
+        <tr><td>시간타이머</td><td>18</td><td>2</td><td>8.5분</td></tr>
+        <tr><td>준비운동 | 타바타</td><td>32</td><td>6</td><td>8.4분</td></tr>
+        <tr><td>스마트점핑</td><td>23</td><td>6</td><td>4.4분</td></tr>
+        <tr><td>비트 트레이닝</td><td>9</td><td>3</td><td>20.2분</td></tr>
+        <tr><td>Killing Time Zone</td><td>11</td><td>3</td><td>8.9분</td></tr>
+      </tbody>
+    </table>
+
+    <h3>구글 시트 10개 탭</h3>
+    <table>
+      <thead><tr><th>탭</th><th>열</th></tr></thead>
+      <tbody>
+        <tr><td>categories</td><td>대분류ID, 대분류명, 대분류순서, 소분류ID, 소분류명, 소분류순서, N뱃지</td></tr>
+        <tr><td>videos</td><td>영상ID, 대분류ID, 소분류ID, 제목, youtube_id, 재생시간, 조회수, 등록일, 노출여부</td></tr>
+        <tr><td>users</td><td>아이디, 비번해시, 이름, 소속, 지역, 권한, 가입일, 상태</td></tr>
+        <tr><td>classes</td><td>수업ID, 소유자, 수업년월, 지역, 학교, 학년, 반, 정원, 메모, 스케줄그룹</td></tr>
+        <tr><td>attendance</td><td>수업ID, 학생명, 날짜, 출결</td></tr>
+        <tr><td>equipment</td><td>소유자, 교구명, 대리점명, 새제품수량, 중고제품수량, 수정일</td></tr>
+        <tr><td>schedules</td><td>소유자, 그룹명, 차시, 영상ID목록</td></tr>
+        <tr><td>textbooks</td><td>권차, 제목, 표지URL, 뷰어링크, 뱃지</td></tr>
+        <tr><td>playlists</td><td>소유자, 담은영상ID목록, 수정일</td></tr>
+        <tr><td>favorites</td><td>소유자, 즐겨찾기영상ID목록, 수정일</td></tr>
+      </tbody>
+    </table>
+
+    <footer class="end">
+      <img src="__IMG_FACE__" alt="점핑이">
+      <span>여기까지입니다. 막히는 곳이 있으면 이 문서의 장 번호로 알려 주세요.</span>
+      <span class="u">legoschool.github.io/smart-jumping</span>
+    </footer>
+  </section>
+
+  </main>
+</div>
+</div>

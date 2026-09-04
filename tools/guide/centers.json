@@ -1,0 +1,279 @@
+{
+  "guestFirst": {
+    "brand": {
+      "cx": 8.5,
+      "cy": 6.9,
+      "visible": true
+    },
+    "loginBtn": {
+      "cx": 8.5,
+      "cy": 23.1,
+      "visible": true
+    },
+    "gnbFirst": {
+      "cx": 20.3,
+      "cy": 3.3,
+      "visible": true
+    },
+    "gnbNav": {
+      "cx": 43.8,
+      "cy": 3.3,
+      "visible": true
+    },
+    "searchInput": {
+      "cx": 58.5,
+      "cy": 50.5,
+      "visible": true
+    },
+    "firstChip": {
+      "cx": 45.9,
+      "cy": 57.1,
+      "visible": true
+    },
+    "lastChip": {
+      "cx": 69.1,
+      "cy": 57.1,
+      "visible": true
+    },
+    "firstCard": {
+      "cx": 28.2,
+      "cy": 83.7,
+      "visible": true
+    },
+    "firstCardThumb": {
+      "cx": 28.2,
+      "cy": 77,
+      "visible": true
+    },
+    "heroTitle": {
+      "cx": 34.3,
+      "cy": 22.9,
+      "visible": true
+    },
+    "soundBtn": {
+      "cx": 95.7,
+      "cy": 41.3,
+      "visible": true
+    }
+  },
+  "teacherLibrary": {
+    "brand": {
+      "cx": 8.5,
+      "cy": 6.9,
+      "visible": true
+    },
+    "startBtn": {
+      "cx": 8.5,
+      "cy": 24.1,
+      "visible": true
+    },
+    "navLibrary": {
+      "cx": 8.5,
+      "cy": 36.9,
+      "visible": true
+    },
+    "gnbNav": {
+      "cx": 43.8,
+      "cy": 3.3,
+      "visible": true
+    },
+    "gnbFav": {
+      "cx": 64.9,
+      "cy": 3.3,
+      "visible": true
+    },
+    "clock": {
+      "cx": 92.5,
+      "cy": 3.3,
+      "visible": true
+    },
+    "searchInput": {
+      "cx": 58.5,
+      "cy": 50.5,
+      "visible": true
+    },
+    "firstChip": {
+      "cx": 45.9,
+      "cy": 57.1,
+      "visible": true
+    },
+    "sortSel": {
+      "cx": 84.7,
+      "cy": 63.2,
+      "visible": true
+    },
+    "pickAll": {
+      "cx": 93.9,
+      "cy": 63.2,
+      "visible": true
+    },
+    "firstCard": {
+      "cx": 28.2,
+      "cy": 83.7,
+      "visible": true
+    },
+    "fab": {
+      "cx": 92.8,
+      "cy": 94.1,
+      "visible": true
+    }
+  },
+  "sidebar": {
+    "brand": {
+      "cx": 50,
+      "cy": 6.9,
+      "visible": true
+    },
+    "name": {
+      "cx": 50,
+      "cy": 16.3,
+      "visible": true
+    },
+    "role": {
+      "cx": 50,
+      "cy": 19.5,
+      "visible": true
+    },
+    "start": {
+      "cx": 50,
+      "cy": 24.1,
+      "visible": true
+    },
+    "logout": {
+      "cx": 50,
+      "cy": 28.6,
+      "visible": true
+    },
+    "navLibrary": {
+      "cx": 50,
+      "cy": 36.9,
+      "visible": true
+    },
+    "navGuide": {
+      "cx": 50,
+      "cy": 42.2,
+      "visible": true
+    },
+    "navClasses": {
+      "cx": 50,
+      "cy": 47.5,
+      "visible": true
+    },
+    "navMyatt": {
+      "cx": 50,
+      "cy": 52.8,
+      "visible": true
+    },
+    "navMypage": {
+      "cx": 50,
+      "cy": 58.1,
+      "visible": true
+    },
+    "navTextbook": {
+      "cx": 50,
+      "cy": 63.4,
+      "visible": true
+    }
+  },
+  "card": {
+    "pick": {
+      "cx": 8.5,
+      "cy": 8.4,
+      "visible": true
+    },
+    "fav": {
+      "cx": 91.1,
+      "cy": 8.7,
+      "visible": true
+    },
+    "thumb": {
+      "cx": 50,
+      "cy": 27.9,
+      "visible": true
+    },
+    "views": {
+      "cx": 13.8,
+      "cy": 49,
+      "visible": true
+    },
+    "dur": {
+      "cx": 88.7,
+      "cy": 48.9,
+      "visible": true
+    },
+    "title": {
+      "cx": 50,
+      "cy": 72.7,
+      "visible": true
+    },
+    "pathLine": {
+      "cx": 50,
+      "cy": 90.9,
+      "visible": true
+    }
+  },
+  "gnb": {
+    "first": {
+      "cx": 4,
+      "cy": 49.2,
+      "visible": true
+    },
+    "fav": {
+      "cx": 57.7,
+      "cy": 49.2,
+      "visible": true
+    },
+    "favCnt": {
+      "cx": 60.7,
+      "cy": 49.2,
+      "visible": true
+    },
+    "clock": {
+      "cx": 91,
+      "cy": 49.2,
+      "visible": true
+    }
+  },
+  "classes": {
+    "period": {
+      "cx": 25.2,
+      "cy": 26.2,
+      "visible": true
+    },
+    "search": {
+      "cx": 80.5,
+      "cy": 26.2,
+      "visible": true
+    },
+    "addBtn": {
+      "cx": 94.3,
+      "cy": 34.2,
+      "visible": true
+    },
+    "schedTag": {
+      "cx": 67.8,
+      "cy": 45.8,
+      "visible": true
+    },
+    "btnPlay": {
+      "cx": 74.8,
+      "cy": 45.8,
+      "visible": true
+    },
+    "btnAtt": {
+      "cx": 80,
+      "cy": 45.8,
+      "visible": true
+    },
+    "btnRep": {
+      "cx": 85.2,
+      "cy": 45.8,
+      "visible": true
+    },
+    "btnEdit": {
+      "cx": 90.4,
+      "cy": 45.8,
+      "visible": true
+    }
+  }
+}

@@ -10,7 +10,8 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
   '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
-  '.mp4': 'video/mp4', '.webm': 'video/webm'
+  '.mp4': 'video/mp4', '.webm': 'video/webm',
+  '.pdf': 'application/pdf'
 };
 
 http.createServer((q, s) => {

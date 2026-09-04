@@ -9,3 +9,10 @@ tools/data/seed-block.txt
 # 캐릭터·영상 원본 (가공본이 assets/ 에 들어 있어 저장소에는 올리지 않는다)
 여자 아이 캐릭터/
 KakaoTalk_*.mp4
+
+# 가이드북 중간 산출물 (원본 PNG 는 크고, 최적화한 WebP 만 저장소에 둔다)
+tools/guide/raw/
+tools/guide/pages/
+
+# 로컬에서 미리 볼 때 잠깐 쓰는 파일
+_guide.*
