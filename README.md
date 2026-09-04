@@ -2,7 +2,7 @@
 
 교실에서 바로 쓰는 학교체육 수업 영상 플랫폼. 수업 전에 영상을 담아두고, 교실에서는 재생 버튼 하나로 한 차시를 진행합니다.
 
-**▶ 운영판(구글 시트 연동) : <https://script.google.com/macros/s/AKfycbwGHGSzahD0LVFvQy7GendbOyiNfrhtiAqRTLis4gWPdW_7jPyfrTE8Oa_D-yXIEGjO3g/exec>**
+**▶ 운영판(구글 시트 연동) : <https://script.google.com/macros/s/AKfycbwFHfh34t-z_HersriMAfhpUTkMPttG69j3yinfQAvsIHhFZ-Dxd4wV2csPUQZV35bHXA/exec>**
 **▶ 데모 사이트 : https://legoschool.github.io/smart-jumping/**
 
 운영판은 구글 시트를 읽어 돕니다. 영상을 추가하면 여기에 반영됩니다.
@@ -127,6 +127,11 @@ https://docs.google.com/spreadsheets/d/  ← 여기부터  →  /edit
 > `chars` 는 안내 캐릭터 이미지를 base64 로 구워 둔 자동 생성 파일입니다 (`node tools/gen-chars.js`).
 
 **배포 → 새 배포 → 웹 앱** / 실행 계정 **나** / 액세스 **링크가 있는 모든 사용자**
+
+> **영상 등록을 쓰려면 권한을 한 번 더 승인해야 합니다.** 유튜브에서 제목·재생시간을 읽어 오는 데
+> 외부 요청(`UrlFetchApp`) 권한이 필요합니다. 편집기에서 함수 `권한확인` 을 골라 실행하고
+> 권한 검토 → 고급 → 이동 → 허용까지 누른 뒤, 배포를 새 버전으로 갱신하세요.
+> 승인하지 않으면 등록 화면의 **불러오기** 가 계속 실패합니다.
 
 > 웹앱이 **소유자 계정으로** 시트를 읽습니다. 그래서 **시트 자체를 공유하지 않아도 사이트는 돕니다.**
 > `users` 탭에 회원 정보가, `attendance` 탭에 학생 이름이 들어가니 시트 공유는 담당자에게만 두세요.

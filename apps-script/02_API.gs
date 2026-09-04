@@ -819,7 +819,8 @@ function api_ytLookup(userId, input) {
     }
     title = String(JSON.parse(o.getContentText()).title || '');
   } catch (e) {
-    return { ok: false, msg: '유튜브에 연결하지 못했습니다. 잠시 뒤 다시 시도하세요.' };
+    /* 권한이 없으면 여기서 걸린다. 편집기에서 권한확인() 을 한 번 실행하면 풀린다 */
+    return { ok: false, msg: '유튜브에 연결하지 못했습니다. ' + e };
   }
 
   /* 재생시간과 퍼가기 여부는 watch 페이지에서 읽는다. 실패해도 등록은 막지 않는다 */
@@ -964,6 +965,33 @@ function api_deleteVideo(userId, videoId) {
 /* ═══════════════════════════════════════════
    관리
    ═══════════════════════════════════════════ */
+
+/**
+ * 외부 요청(UrlFetchApp) 권한을 한 번 승인받기 위한 함수.
+ *
+ * 영상 등록은 유튜브에서 제목과 재생시간을 읽어 온다. 이 기능을 처음 올린 뒤에는
+ * 편집기에서 이 함수를 한 번 실행해 권한 창을 승인해야 한다. 승인하지 않으면
+ * 웹앱에서 '불러오기' 가 계속 실패한다.
+ *
+ * 실행 → 권한 검토 → 계정 선택 → 고급 → 이동 → 허용
+ */
+function 권한확인() {
+  try {
+    const r = UrlFetchApp.fetch(
+      'https://www.youtube.com/oembed?format=json&url=' +
+      encodeURIComponent('https://www.youtube.com/watch?v=2x4ECODdULE'),
+      { muteHttpExceptions: true });
+    if (r.getResponseCode() === 200) {
+      Logger.log('외부 요청 권한 정상. 유튜브 응답을 받았습니다.\n'
+        + JSON.parse(r.getContentText()).title);
+    } else {
+      Logger.log('유튜브가 ' + r.getResponseCode() + ' 로 답했습니다. 잠시 뒤 다시 실행해 보세요.');
+    }
+  } catch (e) {
+    Logger.log('아직 권한이 없습니다: ' + e
+      + '\n권한 검토 창이 뜨면 허용하고 다시 실행하세요.');
+  }
+}
 
 /** 시트를 직접 수정한 뒤 즉시 반영하고 싶을 때 실행 */
 function 캐시비우기() {
