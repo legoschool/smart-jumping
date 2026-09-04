@@ -11,7 +11,7 @@ const DST = path.join(ROOT, '안내자료', '스마트점핑 운영 가이드북
 
 let s = fs.readFileSync(path.join(HERE, 'template.html'), 'utf8');
 
-/* 6장에서 프로그램스케줄 그림이 5-2 와 겹친다 — 그림 대신 참조로 바꾼다 */
+/* 7장에서 프로그램스케줄 그림이 6-2 와 겹친다 — 그림 대신 참조로 바꾼다 */
 const dupFig =
 `      <figure>
         <div class="shot"><img src="__IMG_27B__" alt="프로그램스케줄"></div>
@@ -23,11 +23,11 @@ const replFig =
           <span style="font-size:13.5px;color:var(--slate);text-align:center">
             <b style="color:var(--ink)">프로그램스케줄</b> <span class="role t">교사</span><br>
             커리큘럼 그룹과 차시를 관리합니다.<br>
-            <a href="#s5-2">→ 5-2 커리큘럼 만들고 연결하기</a>
+            <a href="#s6-2">→ 6-2 커리큘럼 만들고 연결하기</a>
           </span>
         </div>
       </figure>`;
-if (s.includes(dupFig)) { s = s.replace(dupFig, replFig); console.log('· 6장 중복 그림 → 참조로 교체'); }
+if (s.includes(dupFig)) { s = s.replace(dupFig, replFig); console.log('· 7장 중복 그림 → 참조로 교체'); }
 else console.error('⚠ 중복 그림 블록을 못 찾음 — 확인 필요');
 
 const uri = (file) => {
@@ -79,6 +79,14 @@ function stampWidth(html, key) {
 const map = {
   __IMG_CHAR__: path.join(CHAR, 'hi.webp'),
   __IMG_FACE__: path.join(CHAR, 'good-face.webp'),
+  __IMG_VFORM__: '35-video-form', __IMG_VLIST__: '36-video-list',
+  __IMG_VADMIN__: '37-video-admin',
+  __IMG_SHEET_V__: 'sheet-videos', __IMG_SHEET_C__: 'sheet-categories',
+  __IMG_YT1__: 'yt-1-account-menu', __IMG_YT2__: 'yt-2-create-menu',
+  __IMG_YT3__: 'yt-3-upload-modal', __IMG_YT4__: 'yt-4-file-pick',
+  __IMG_YT5__: 'yt-5-details', __IMG_YT6__: 'yt-6-audience',
+  __IMG_YT7__: 'yt-7-review', __IMG_YT8__: 'yt-8-visibility',
+  __IMG_YT9__: 'yt-9-copy-link',
   __IMG_01__: '01-first-screen', __IMG_03__: '03-login-modal', __IMG_04__: '04-signup-modal',
   __IMG_10__: '10-sidebar-teacher', __IMG_11__: '11-library-teacher',
   __IMG_12__: '12-gnb', __IMG_13__: '13-chips', __IMG_14B__: '14b-sort',

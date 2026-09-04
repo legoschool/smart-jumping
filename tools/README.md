@@ -16,6 +16,9 @@
 | `npm run guide` | 운영 가이드북 HTML + A4 PDF 재생성 | 가이드북 글을 고친 뒤 |
 | `npm run guide:shots` | 사이트를 캡처해 가이드북 그림을 다시 굽는다 | **화면이 바뀐 뒤** |
 | `npm run guide:measure` | 콜아웃이 가리킬 요소 좌표 재측정 | 화면 배치가 바뀐 뒤 |
+| `npm run guide:mask` | 1장 유튜브 캡처의 계정 정보를 가린다 | 업로드 화면을 새로 받은 뒤 |
+| `npm run guide:sheet -- "시트주소"` | 구글 시트 화면을 찍는다 | 시트 구조가 바뀐 뒤 |
+| `npm run guide:live -- "웹앱주소"` | 운영판에서만 나오는 화면을 찍는다 | 웹앱을 다시 배포한 뒤 |
 
 ---
 
@@ -35,7 +38,7 @@
 | `gen-chars.js` | `assets/char/*.webp` 를 CSS 클래스(`.ch-*` 전신 / `.chf-*` 얼굴)로 구워 `apps-script/chars.html` 을 만든다. 데모와 Apps Script 판이 같은 파일을 쓰므로 상대경로 대신 data URI 로 넣는다 |
 | `prep-char.js` | 원본 캐릭터 PNG(배경이 흰색, 알파 없음)를 테두리 flood fill 로 따내고 트림·리사이즈해서 `assets/char/*.webp` 로 굽는다. **`sharp` 가 필요하다** (`npm i -D sharp`). 이미지를 새로 받았을 때만 한 번 돌린다 |
 | `serve-root.js` | 로컬 정적 서버 (8790). MIME 타입과 **Range 요청**을 처리해서 히어로 영상이 GitHub Pages 와 똑같이 스트리밍된다 |
-| `guide/` | 운영 가이드북(A4 30쪽) 제작 일습 — 캡처·좌표 측정·빌드·PDF. 자세한 건 [guide/README.md](guide/README.md) |
+| `guide/` | 운영 가이드북(A4 38쪽) 제작 일습 — 캡처·좌표 측정·빌드·PDF. 자세한 건 [guide/README.md](guide/README.md) |
 | `data/yt-final.json`, `data/yt-more.json` | 검증을 통과한 유튜브 영상 메타 (제목·재생시간). **여기 없는 ID 는 시드에 못 들어간다** |
 
 ---

@@ -81,6 +81,15 @@ kbd{ font-family:var(--disp); font-weight:800; font-size:12.5px; color:var(--ink
   background:#fff; border:1px solid var(--rule); border-bottom-width:2px; border-radius:5px;
   padding:2px 8px; }
 
+/* 1장 흐름 띠 */
+.flow{ display:flex; flex-wrap:wrap; align-items:center; gap:7px 6px; margin:20px 0 22px; }
+.flow b{ padding:7px 11px; border-radius:8px; background:var(--wash); border:1px solid var(--rule);
+  font-family:var(--disp); font-weight:800; font-size:12.5px; color:var(--ink); }
+.flow i{ font-style:normal; color:var(--mute); font-weight:800; }
+.src{ font-size:12.5px; color:var(--mute); margin:-6px 0 14px; }
+.u2{ font-family:var(--disp); font-weight:700; font-size:12px; color:var(--indigo);
+  word-break:break-all; line-height:1.9; }
+
 /* 스크린샷 + 콜아웃 */
 figure{ margin:22px 0 26px; }
 .shot{ position:relative; border:1px solid var(--rule); border-radius:12px; overflow:hidden;
@@ -207,10 +216,11 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
   <div>
     <div class="eyebrow">미래형학교체육 · SMART-JUMPING</div>
     <h1>스마트점핑<br><em>운영 가이드북</em></h1>
-    <p class="lead">가입부터 수업 진행, 학급 관리, 자료 추가까지. 화면을 그대로 캡처해
-      어디를 눌러야 하는지 짚었습니다. 처음 쓰는 선생님은 1~4장만 보셔도 수업이 됩니다.</p>
+    <p class="lead">영상을 유튜브에 올리는 일부터 가입, 수업 진행, 학급 관리, 자료 추가까지.
+      화면을 그대로 캡처해 어디를 눌러야 하는지 짚었습니다. 이미 올라간 영상으로 수업만 하실
+      선생님은 2~5장만 보셔도 됩니다.</p>
     <div class="meta">
-      <span>영상 104편</span><span>6영역 23분류</span><span>교재 12권</span><span>9개 장</span>
+      <span>영상 104편</span><span>6영역 23분류</span><span>교재 12권</span><span>10개 장</span>
     </div>
   </div>
   <img src="__IMG_CHAR__" alt="안내 캐릭터 점핑이">
@@ -219,47 +229,299 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
 <div class="doc">
   <nav class="toc">
     <h2>차례</h2>
-    <a class="top" href="#s1">1. 시작하기</a>
-    <a href="#s1-1">첫 화면</a>
-    <a href="#s1-2">회원가입</a>
-    <a href="#s1-3">로그인</a>
-    <a href="#s1-4">권한 네 가지</a>
-    <a class="top" href="#s2">2. 화면 구성</a>
-    <a href="#s2-1">전체 골격</a>
-    <a href="#s2-2">왼쪽 사이드바</a>
-    <a href="#s2-3">위 가로줄</a>
-    <a href="#s2-4">영상 카드</a>
-    <a class="top" href="#s3">3. 영상 찾고 담기</a>
-    <a href="#s3-1">찾기</a>
-    <a href="#s3-2">담기</a>
-    <a href="#s3-3">즐겨찾기</a>
-    <a class="top" href="#s4">4. 수업하기</a>
-    <a class="top" href="#s5">5. 학급 운영</a>
-    <a href="#s5-1">수업 등록</a>
-    <a href="#s5-2">커리큘럼</a>
-    <a href="#s5-3">출석부</a>
-    <a href="#s5-4">수업 리포트</a>
-    <a class="top" href="#s6">6. 마이페이지</a>
-    <a class="top" href="#s7">7. 관리자</a>
-    <a class="top" href="#s8">8. 자료 추가·관리</a>
-    <a href="#s8-1">두 가지 판</a>
-    <a href="#s8-2">영상 추가</a>
-    <a href="#s8-3">분류·교재</a>
-    <a href="#s8-4">캐시 비우기</a>
-    <a href="#s8-5">대표 영상·캐릭터</a>
-    <a class="top" href="#s9">9. 문제 해결</a>
-    <a class="top" href="#s10">부록</a>
+    <a class="top" href="#s1">1. 영상 올리기</a>
+    <a href="#s1-1">구글 계정 로그인</a>
+    <a href="#s1-2">업로드 창 열기</a>
+    <a href="#s1-3">제목 · 시청자층</a>
+    <a href="#s1-4">공개 범위</a>
+    <a href="#s1-5">영상 ID 꺼내기</a>
+    <a href="#s1-6">사이트에 등록</a>
+    <a href="#s1-7">고치고 지우기</a>
+    <a class="top" href="#s2">2. 시작하기</a>
+    <a href="#s2-1">첫 화면</a>
+    <a href="#s2-2">회원가입</a>
+    <a href="#s2-3">로그인</a>
+    <a href="#s2-4">권한 네 가지</a>
+    <a class="top" href="#s3">3. 화면 구성</a>
+    <a href="#s3-1">전체 골격</a>
+    <a href="#s3-2">왼쪽 사이드바</a>
+    <a href="#s3-3">위 가로줄</a>
+    <a href="#s3-4">영상 카드</a>
+    <a class="top" href="#s4">4. 영상 찾고 담기</a>
+    <a href="#s4-1">찾기</a>
+    <a href="#s4-2">담기</a>
+    <a href="#s4-3">즐겨찾기</a>
+    <a class="top" href="#s5">5. 수업하기</a>
+    <a class="top" href="#s6">6. 학급 운영</a>
+    <a href="#s6-1">수업 등록</a>
+    <a href="#s6-2">커리큘럼</a>
+    <a href="#s6-3">출석부</a>
+    <a href="#s6-4">수업 리포트</a>
+    <a class="top" href="#s7">7. 마이페이지</a>
+    <a class="top" href="#s8">8. 관리자</a>
+    <a class="top" href="#s9">9. 자료 추가·관리</a>
+    <a href="#s9-1">두 가지 판</a>
+    <a href="#s9-2">영상 추가</a>
+    <a href="#s9-3">분류·교재</a>
+    <a href="#s9-4">캐시 비우기</a>
+    <a href="#s9-5">대표 영상·캐릭터</a>
+    <a class="top" href="#s10">10. 문제 해결</a>
+    <a class="top" href="#s11">부록</a>
   </nav>
 
   <main>
 
   <!-- ═══════ 1 ═══════ -->
   <section id="s1">
-    <h2 class="sec"><span class="no">01</span> 시작하기</h2>
+    <h2 class="sec"><span class="no">01</span> 영상 올리기 <span class="role t">교사</span></h2>
+    <p class="sec-lead">스마트점핑에는 영상 파일을 올리는 화면이 없습니다. 선생님이 찍은 수업 영상은
+      유튜브에 먼저 올리고, 사이트에는 <b>그 영상의 주소만</b> 등록하여 사용합니다.
+      유튜브에 한 번도 올려 본 적이 없다는 것을 전제로 썼습니다.</p>
+
+    <div class="flow">
+      <b>구글 로그인</b><i>›</i><b>만들기 › 동영상 업로드</b><i>›</i><b>파일 고르기</b><i>›</i>
+      <b>제목 · 시청자층</b><i>›</i><b>공개 범위</b><i>›</i><b>링크 복사</b><i>›</i>
+      <b>사이트에서 등록</b>
+    </div>
+    <div class="note"><span class="lbl">사이트 주소</span>
+      <b>운영판</b> (영상을 추가하면 반영되는 쪽)<br>
+      <span class="u2">https://script.google.com/macros/s/AKfycbwGHGSzahD0LVFvQy7GendbOyiNfrhtiAqRTLis4gWPdW_7jPyfrTE8Oa_D-yXIEGjO3g/exec</span><br>
+      <b>체험판</b> (영상 104편으로 고정. 기능을 둘러볼 때)<br>
+      <span class="u2">legoschool.github.io/smart-jumping</span></div>
+
+    <div class="note"><span class="lbl">운영 절차</span>
+      앞의 여섯은 유튜브에서, 마지막 하나는 스마트점핑 사이트에서 합니다.
+      영상 파일은 스마트점핑 서버로 오지 않습니다. 사이트는 유튜브에 있는 영상을 불러다 틀 뿐입니다.
+      <b>구글 시트를 직접 여는 것은 관리자 몫입니다.</b></div>
+
+    <h3 id="s1-1">구글 계정으로 로그인하기</h3>
+    <p>유튜브는 구글 계정으로 씁니다. 보기만 할 때는 계정이 없어도 되지만
+      <b>올리려면 채널이 있어야 합니다.</b> 오른쪽 위 프로필 그림을 누르면 계정 메뉴가 열리고,
+      여기서 <span class="ui">YouTube 스튜디오</span> 로 들어갑니다.</p>
+    <figure>
+      <div class="shot">
+        <img src="__IMG_YT1__" alt="유튜브 계정 메뉴">
+        <span class="cal" style="left:95.5%;top:14.4%">1</span>
+        <span class="cal" style="left:77.5%;top:32.5%">2</span>
+        <span class="cal" style="left:77.5%;top:43.8%">3</span>
+      </div>
+      <ol class="legend">
+        <li><b>프로필 그림</b> 오른쪽 맨 위입니다. 누르면 이 메뉴가 열립니다</li>
+        <li><b>계정 전환</b> 학교 계정과 개인 계정을 함께 쓰신다면 올리기 전에 여기서 맞춥니다</li>
+        <li><b>YouTube 스튜디오</b> 영상을 올리고 고치는 일은 모두 이 안에서 합니다</li>
+      </ol>
+    </figure>
+    <div class="note"><span class="lbl">계정을 새로 만든다면</span>
+      담당 선생님 개인 계정에 올리면 전출이나 업무 교체 때 영상이 함께 따라갑니다.
+      학교나 사업단 이름으로 <b>브랜드 계정</b> 채널을 만들면 소유자와 관리자를 여러 명 둘 수 있어
+      담당자가 바뀌어도 영상이 남습니다. 유튜브 › 설정 › <b>채널 추가 또는 관리</b> 에서 만듭니다.</div>
+    <div class="note warn"><span class="lbl">학생 계정으로는 올리지 않습니다</span>
+      보호자 감독이 걸린 계정에서는 채널을 만들 수 없거나 업로드가 막힙니다.
+      만 13~17세 계정은 올린 영상의 공개 범위가 <b>비공개</b> 로 시작하는데,
+      비공개 영상은 스마트점핑에서 재생되지 않습니다.</div>
+
+    <h3 id="s1-2">동영상 업로드 창 열기</h3>
+    <p>스튜디오나 내 채널 화면 오른쪽 위에 <span class="ui">＋ 만들기</span> 가 있습니다.
+      눌러서 <span class="ui">동영상 업로드</span> 를 고릅니다.</p>
+    <figure>
+      <div class="shot">
+        <img src="__IMG_YT2__" alt="만들기 메뉴">
+        <span class="cal" style="left:86.5%;top:14.4%">1</span>
+        <span class="cal" style="left:86.6%;top:21%">2</span>
+        <span class="cal" style="left:5.7%;top:83%">3</span>
+      </div>
+      <ol class="legend">
+        <li><b>＋ 만들기</b> 스튜디오와 내 채널 화면 오른쪽 위에 있습니다</li>
+        <li><b>동영상 업로드</b> 수업 영상은 이것입니다. 라이브 스트리밍은 실시간 방송용입니다</li>
+        <li><b>내 채널</b> 지금까지 올린 영상이 여기 쌓입니다</li>
+      </ol>
+    </figure>
+    <figure>
+      <div class="two">
+        <div class="shot"><img src="__IMG_YT3__" alt="동영상 업로드 창"></div>
+        <div class="shot"><img src="__IMG_YT4__" alt="파일 고르기"></div>
+      </div>
+      <figcaption>창 가운데로 파일을 끌어다 놓아도 되고 <b>파일 선택</b> 을 눌러 골라도 됩니다.
+        한 번에 15개까지 올라갑니다. 파일을 고르는 순간 업로드가 시작되고,
+        올라가는 동안 제목과 설명을 적을 수 있습니다.</figcaption>
+    </figure>
+    <div class="note warn"><span class="lbl">15분이 넘는 영상이라면</span>
+      기본 상태에서는 <b>15분까지만</b> 올라갑니다. 그보다 긴 영상은
+      <code>youtube.com/verify</code> 에서 전화번호로 계정 인증을 한 번 해 두어야 합니다.
+      한 차시를 통으로 찍은 영상은 대개 여기에 걸립니다.</div>
+
+    <h3 id="s1-3">제목을 적고 시청자층을 고르기</h3>
+    <p>업로드 창은 <b>세부정보 › 수익 창출 › 동영상 요소 › 검토 › 공개 상태</b> 다섯 단계로 넘어갑니다.
+      첫 화면인 세부정보에서 제목과 설명을 적습니다.</p>
+    <figure>
+      <div class="shot mid">
+        <img src="__IMG_YT5__" alt="세부정보 화면">
+        <span class="cal" style="left:12.8%;top:9%">1</span>
+        <span class="cal" style="left:33.3%;top:26.2%">2</span>
+        <span class="cal" style="left:62.8%;top:44.4%">3</span>
+        <span class="cal" style="left:4.8%;top:95.1%">4</span>
+        <span class="cal" style="left:89.5%;top:95.1%">5</span>
+      </div>
+      <ol class="legend">
+        <li><b>다섯 단계</b> 세부정보에서 공개 상태까지 순서대로 넘어갑니다</li>
+        <li><b>제목</b> 사이트 목록에 그대로 나오는 이름입니다</li>
+        <li><b>동영상 링크</b> 시트에 넣을 주소입니다. 옆의 복사 단추를 누릅니다</li>
+        <li><b>처리 상태</b> 다 차야 고화질로 재생됩니다. 올라가는 중에도 다음 단계로 갑니다</li>
+        <li><b>다음</b> 눌러서 마지막 공개 상태까지 갑니다</li>
+      </ol>
+    </figure>
+    <h4>제목은 사이트 목록에 그대로 나옵니다</h4>
+    <p>사이트에서는 제목이 카드 아래 한 줄로 보입니다. 길면 잘립니다.
+      영역과 차시를 앞에 두면 시트에서 찾기도 쉽습니다.</p>
+    <table>
+      <thead><tr><th>이렇게</th><th>이유</th></tr></thead>
+      <tbody>
+        <tr><td><code>준비운동 3차시 어깨 풀기</code></td><td>영역과 차시가 앞에 있어 목록에서 바로 구분됩니다</td></tr>
+        <tr><td><code>스마트점핑 2단 뛰기 기초</code></td><td>분류명과 같은 말을 쓰면 시트 분류ID를 고를 때 헷갈리지 않습니다</td></tr>
+        <tr><td><code>2026-03-05 체육관 촬영본 최종</code></td><td>날짜와 파일 사정은 제목에 넣지 않습니다. 학생이 보는 이름입니다</td></tr>
+      </tbody>
+    </table>
+    <p>세부정보를 내리면 <b>시청자층</b> 을 묻습니다. 모든 크리에이터가 아동 온라인 개인정보 보호법에 따라
+      아동용 여부를 직접 지정해야 하는 항목이라 건너뛸 수 없습니다.</p>
+    <figure>
+      <div class="shot mid"><img src="__IMG_YT6__" alt="시청자층 아동용 여부"></div>
+      <figcaption>아동용으로 설정하면 댓글과 알림 같은 기능이 꺼집니다. 학교 수업 영상이 아동용에
+        해당하는지는 유튜브가 정해 주지 않습니다. 판단이 서지 않으면
+        <b>내 콘텐츠가 '아동용'인지 판단하는 방법</b> 도움말을 먼저 보세요.</figcaption>
+    </figure>
+
+    <h3 id="s1-4">검토를 지나 공개 범위 고르기</h3>
+    <p>검토 단계에서 저작권과 광고 적합성을 자동으로 훑습니다. 배경음악을 넣었다면 여기서 걸립니다.</p>
+    <figure>
+      <div class="shot mid"><img src="__IMG_YT7__" alt="검토 단계"></div>
+      <figcaption>발견된 문제가 없으면 초록 표시가 붙습니다. 이 검사는 확정이 아니어서
+        게시한 뒤에 문제가 잡힐 수도 있습니다.</figcaption>
+    </figure>
+    <p>마지막이 공개 상태입니다. 스마트점핑에 실을 수업 영상은 <b>일부 공개</b> 를 권합니다.</p>
+    <figure>
+      <div class="shot mid"><img src="__IMG_YT8__" alt="공개 상태 고르기"></div>
+      <figcaption>일부 공개는 링크를 아는 사람만 봅니다. 검색과 추천에 뜨지 않으면서
+        사이트에서는 정상으로 재생됩니다.</figcaption>
+    </figure>
+    <table>
+      <thead><tr><th></th><th>비공개</th><th>일부 공개</th><th>공개</th></tr></thead>
+      <tbody>
+        <tr><td>링크로 공유</td><td>아니요</td><td><b>예</b></td><td>예</td></tr>
+        <tr><td>검색 · 추천에 표시</td><td>아니요</td><td><b>아니요</b></td><td>예</td></tr>
+        <tr><td>채널에 게시</td><td>아니요</td><td>아니요</td><td>예</td></tr>
+        <tr><td>스마트점핑에서 재생</td><td>안 됩니다</td><td><b>됩니다</b></td><td>됩니다</td></tr>
+      </tbody>
+    </table>
+    <p class="src">앞의 세 줄은 유튜브 고객센터 「동영상 공개 범위 설정 변경」의 비교표를 옮긴 것입니다.</p>
+    <div class="note warn"><span class="lbl">비공개는 쓰지 않습니다</span>
+      비공개 영상은 <b>내가 초대한 계정만</b> 볼 수 있습니다. 올린 선생님 화면에서는 잘 나오는데
+      다른 선생님 교실에서는 검은 화면이 뜨는 사고가 여기서 생깁니다.
+      학생 얼굴 때문에 걱정된다면 비공개가 아니라 <b>일부 공개</b> 입니다.</div>
+    <div class="note warn"><span class="lbl">창을 먼저 닫으면 비공개로 저장됩니다</span>
+      공개 상태를 고르기 전에 업로드 창을 닫으면 그 영상은 스튜디오 <b>콘텐츠</b> 목록에
+      비공개로 남습니다. 목록에서 다시 열어 공개 범위를 바꾼 뒤에 시트에 넣으세요.</div>
+
+    <h3 id="s1-5">주소에서 영상 ID 꺼내기</h3>
+    <p>시트에 넣는 값은 주소 전체가 아니라 <b>영상 ID 11자</b> 입니다.
+      스튜디오 <b>콘텐츠</b> 목록에서 영상 위에 마우스를 올리고 점 세 개를 누르면
+      <span class="ui">공유 가능한 링크 복사</span> 가 있습니다.</p>
+    <figure>
+      <div class="shot">
+        <img src="__IMG_YT9__" alt="공유 가능한 링크 복사">
+        <span class="cal" style="left:2.2%;top:36.8%">1</span>
+        <span class="cal" style="left:66%;top:22.2%">2</span>
+        <span class="cal" style="left:22.9%;top:67.1%">3</span>
+      </div>
+      <ol class="legend">
+        <li><b>콘텐츠</b> 올린 영상 목록입니다</li>
+        <li><b>공개 상태</b> 열 비공개로 남아 있는 영상을 여기서 골라냅니다</li>
+        <li><b>공유 가능한 링크 복사</b> 영상 위에 마우스를 올리고 점 세 개를 누르면 나옵니다</li>
+      </ol>
+      <figcaption>업로드할 때 세부정보 오른쪽에 보이던 그 주소입니다. 올린 지 오래된 영상은
+        여기서 다시 꺼냅니다.</figcaption>
+    </figure>
+    <table>
+      <thead><tr><th>복사한 주소</th><th>시트에 넣을 값</th></tr></thead>
+      <tbody>
+        <tr><td><code>youtu.be/<b>AbCdEfGh123</b></code></td><td><code>AbCdEfGh123</code></td></tr>
+        <tr><td><code>youtube.com/watch?v=<b>AbCdEfGh123</b></code></td><td><code>AbCdEfGh123</code></td></tr>
+        <tr><td><code>youtube.com/watch?v=<b>AbCdEfGh123</b>&amp;t=30s</code></td><td><code>AbCdEfGh123</code> (<code>&amp;</code> 부터 버립니다)</td></tr>
+      </tbody>
+    </table>
+    <div class="note tip"><span class="lbl">TIP</span>
+      ID 는 대소문자를 가립니다. <code>abcd</code> 와 <code>ABCD</code> 는 다른 영상입니다.
+      손으로 옮겨 적지 말고 복사해서 붙여 넣으세요.</div>
+
+    <h3 id="s1-6">사이트에 등록하기</h3>
+    <p>복사한 주소를 사이트에 붙여 넣으면 끝입니다. <b>구글 시트를 열 일이 없습니다.</b>
+      등록하는 순간 라이브러리에 올라가 다른 선생님도 담아 씁니다.</p>
+    <ol class="steps">
+      <li>사이트에 <b>로그인</b> 합니다. 교사 권한부터 등록할 수 있습니다.</li>
+      <li>왼쪽 <span class="ui">영상등록</span> 을 누릅니다.</li>
+      <li>복사한 주소를 칸에 붙여 넣고 <span class="ui">불러오기</span> 를 누릅니다.
+        제목과 재생시간이 유튜브에서 딸려 옵니다.</li>
+      <li><b>영역</b> 과 <b>세부 분류</b> 를 고릅니다. 이 값으로 라이브러리 위 가로줄과 칩에 자리를 잡습니다.</li>
+      <li>제목을 다듬고 <span class="ui">등록</span> 을 누릅니다.</li>
+    </ol>
+    <figure>
+      <div class="shot">
+        <img src="__IMG_VFORM__" alt="영상 등록 화면">
+        <span class="cal" style="left:47%;top:14%">1</span>
+        <span class="cal" style="left:89.5%;top:14%">2</span>
+        <span class="cal" style="left:59%;top:40%">3</span>
+        <span class="cal" style="left:44.5%;top:59%">4</span>
+        <span class="cal" style="left:84%;top:59%">5</span>
+        <span class="cal" style="left:90.5%;top:79%">6</span>
+      </div>
+      <ol class="legend">
+        <li><b>주소 칸</b> <code>youtu.be/…</code> 든 <code>watch?v=…</code> 든 그대로 붙여 넣습니다</li>
+        <li><b>불러오기</b> 유튜브에서 제목·재생시간·미리보기 그림을 가져옵니다</li>
+        <li><b>제목</b> 라이브러리 카드에 그대로 나옵니다. 여기서 고칩니다</li>
+        <li><b>영역 · 세부 분류</b> 두 칸을 모두 골라야 등록됩니다</li>
+        <li><b>재생시간</b> 운영판에서는 자동으로 채워집니다. 수업 시간 계산에 쓰입니다</li>
+        <li><b>등록</b> 누르는 즉시 라이브러리에 올라갑니다</li>
+      </ol>
+      <figcaption>체험판에서 찍은 화면입니다. 체험판은 브라우저가 유튜브 재생시간을 읽지 못해
+        아래에 직접 적으라는 안내가 붙습니다. 운영판에서는 서버가 읽어 채우므로 그 줄이 없습니다.</figcaption>
+    </figure>
+    <div class="note tip"><span class="lbl">TIP</span>
+      주소를 잘못 넣으면 <b>불러오기</b> 에서 걸러집니다. 비공개 영상이나 지워진 영상은
+      「유튜브에서 찾지 못했습니다」가 뜨고, 이미 올라와 있는 영상은 어느 번호로 등록돼 있는지 알려 줍니다.</div>
+
+    <h3 id="s1-7">등록한 영상 고치고 지우기</h3>
+    <p>같은 화면 아래에 <b>내가 등록한 영상</b> 이 쌓입니다. 제목이나 분류를 잘못 넣었으면 여기서 고칩니다.</p>
+    <figure>
+      <div class="shot"><img src="__IMG_VLIST__" alt="내가 등록한 영상 목록"></div>
+      <figcaption>줄 오른쪽 세 단추입니다. <b>수정</b> 은 제목·분류·재생시간을,
+        <b>숨기기</b> 는 목록에서 잠시 내리는 것을, <b>삭제</b> 는 아주 지우는 것을 뜻합니다.</figcaption>
+    </figure>
+    <table>
+      <thead><tr><th>단추</th><th>하는 일</th><th>되돌리기</th></tr></thead>
+      <tbody>
+        <tr><td>수정</td><td>제목 · 영역 · 세부 분류 · 재생시간을 고칩니다</td><td>다시 고치면 됩니다</td></tr>
+        <tr><td>숨기기</td><td>라이브러리에서 내립니다. 이 목록에는 흐리게 남습니다</td><td><b>보이기</b> 로 되돌립니다</td></tr>
+        <tr><td>삭제</td><td>목록에서 지웁니다. 담은 영상·즐겨찾기·커리큘럼의 자취도 함께 사라집니다</td><td><b>되돌릴 수 없습니다</b></td></tr>
+      </tbody>
+    </table>
+    <div class="note"><span class="lbl">유튜브 원본은 그대로입니다</span>
+      사이트에서 지워도 유튜브에 올린 영상은 남습니다. 사이트 목록에서만 빠집니다.
+      영상 자체를 없애려면 유튜브 스튜디오에서 따로 지워야 합니다.</div>
+    <div class="note warn"><span class="lbl">고칠 수 있는 범위</span>
+      교사는 <b>자기가 등록한 영상만</b> 고치고 지웁니다. 남이 올린 영상을 손대려면
+      관리자에게 요청하세요. 관리자는 전체 영상을 다룹니다(<a href="#s9-2">9-2</a>).</div>
+    <div class="note warn"><span class="lbl">등록한 다음 한 번 확인</span>
+      로그아웃 상태의 창(시크릿 창)에서 사이트를 열어 그 영상이 재생되는지 보세요.
+      내 계정으로는 보이는데 남에게는 검은 화면이 뜨는 경우를 여기서 잡습니다.
+      재생이 안 되면 공개 범위가 비공개이거나, 유튜브가 외부 재생을 막아 둔 영상입니다.</div>
+  </section>
+
+  <!-- ═══════ 2 ═══════ -->
+  <section id="s2">
+    <h2 class="sec"><span class="no">02</span> 시작하기</h2>
     <p class="sec-lead">스마트점핑은 <b>로그인 없이도 영상을 보고 틀 수 있습니다.</b>
       담기·수업관리처럼 내 것으로 저장되는 기능부터 로그인이 필요합니다.</p>
 
-    <h3 id="s1-1">첫 화면</h3>
+    <h3 id="s2-1">첫 화면</h3>
     <p>주소를 열면 로그인 창이 아니라 <b>영상 목록</b>이 먼저 나옵니다. 맨 위에는 대표 콘텐츠
       영상이 소리 없이 자동 재생됩니다.</p>
     <figure>
@@ -283,7 +545,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       대표 영상 오른쪽 아래 <span class="ui">🔇</span> 를 누르면 소리가 켜집니다.
       교실 화면에 띄워 두기 좋습니다.</div>
 
-    <h3 id="s1-2">회원가입</h3>
+    <h3 id="s2-2">회원가입</h3>
     <p>사이드바의 <span class="ui">회원가입</span> 을 누르면 창이 열립니다.
       아이디 규칙과 중복은 입력하는 동안 바로 확인됩니다.</p>
     <figure>
@@ -295,7 +557,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       새로 가입한 계정의 기본 권한은 <span class="role s">학생</span> 입니다.
       교사 권한이 필요하면 관리자가 <b>회원관리</b>에서 올려 줍니다.</div>
 
-    <h3 id="s1-3">로그인</h3>
+    <h3 id="s2-3">로그인</h3>
     <figure>
       <div class="shot mid"><img src="__IMG_03__" alt="로그인 창"></div>
       <figcaption>비밀번호는 SHA-256 해시로 저장됩니다. 교내용 수준이며 은행급 보안은 아닙니다.</figcaption>
@@ -303,7 +565,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <p>담기·즐겨찾기·수업관리처럼 로그인이 필요한 곳을 누르면 이 창이 자동으로 뜹니다.
       로그인하면 하던 자리로 돌아갑니다.</p>
 
-    <h3 id="s1-4">권한 네 가지</h3>
+    <h3 id="s2-4">권한 네 가지</h3>
     <p>권한에 따라 <b>왼쪽 메뉴 자체가 달라집니다.</b> 주소를 직접 쳐서 들어가도 막힙니다.</p>
     <div class="three">
       <figure>
@@ -334,13 +596,13 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     </table>
   </section>
 
-  <!-- ═══════ 2 ═══════ -->
-  <section id="s2">
-    <h2 class="sec"><span class="no">02</span> 화면 구성</h2>
+  <!-- ═══════ 3 ═══════ -->
+  <section id="s3">
+    <h2 class="sec"><span class="no">03</span> 화면 구성</h2>
     <p class="sec-lead">어느 화면에 있든 골격은 같습니다. 왼쪽은 <b>내 정보와 메뉴</b>,
       위쪽은 <b>영상 영역</b>, 가운데가 <b>본문</b>, 오른쪽 아래가 <b>담은 영상</b>입니다.</p>
 
-    <h3 id="s2-1">전체 골격</h3>
+    <h3 id="s3-1">전체 골격</h3>
     <figure>
       <div class="shot">
         <img src="__IMG_11__" alt="로그인 후 라이브러리 전체">
@@ -369,7 +631,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       </ol>
     </figure>
 
-    <h3 id="s2-2">왼쪽 사이드바</h3>
+    <h3 id="s3-2">왼쪽 사이드바</h3>
     <figure>
       <div class="shot narrow">
         <img src="__IMG_10__" alt="교사 사이드바">
@@ -380,7 +642,8 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <span class="cal" style="left:50%;top:28.6%">5</span>
         <span class="cal" style="left:50%;top:36.9%">6</span>
         <span class="cal" style="left:50%;top:47.5%">7</span>
-        <span class="cal" style="left:50%;top:58.1%">8</span>
+        <span class="cal" style="left:50%;top:52.8%">8</span>
+        <span class="cal" style="left:50%;top:63.4%">9</span>
       </div>
       <ol class="legend">
         <li>로고 — 홈으로</li>
@@ -390,11 +653,12 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <li>로그아웃</li>
         <li>스마트점핑 — 영상 목록</li>
         <li>수업관리 <span class="role t">교사</span><span class="role a">관리자</span></li>
+        <li>영상등록 <span class="role t">교사</span><span class="role a">관리자</span> 유튜브 주소로 영상을 올립니다</li>
         <li>마이페이지 — 누르면 하위 메뉴가 펼쳐집니다</li>
       </ol>
     </figure>
 
-    <h3 id="s2-3">위 가로줄</h3>
+    <h3 id="s3-3">위 가로줄</h3>
     <figure>
       <div class="shot">
         <img src="__IMG_12__" alt="상단 영역 메뉴">
@@ -414,7 +678,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <b>N</b> 은 새로 생긴 분류입니다. <b>영상이 하나도 없는 분류는 아예 나타나지 않습니다.</b></figcaption>
     </figure>
 
-    <h3 id="s2-4">영상 카드</h3>
+    <h3 id="s3-4">영상 카드</h3>
     <figure>
       <div class="shot narrow">
         <img src="__IMG_15__" alt="영상 카드 확대">
@@ -436,13 +700,13 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     </figure>
   </section>
 
-  <!-- ═══════ 3 ═══════ -->
-  <section id="s3">
-    <h2 class="sec"><span class="no">03</span> 영상 찾고 담기</h2>
+  <!-- ═══════ 4 ═══════ -->
+  <section id="s4">
+    <h2 class="sec"><span class="no">04</span> 영상 찾고 담기</h2>
     <p class="sec-lead">수업 전에 담아 두는 것이 이 사이트를 쓰는 핵심입니다.
       <b>담은 순서가 그대로 수업 순서</b>가 됩니다.</p>
 
-    <h3 id="s3-1">찾기</h3>
+    <h3 id="s4-1">찾기</h3>
     <ol class="steps">
       <li>위 가로줄에서 <b>영역</b>을 고릅니다.</li>
       <li>그 아래 동그란 칩으로 <b>세부 분류</b>를 좁힙니다.</li>
@@ -454,7 +718,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <figcaption>정렬은 <b>기본순 · 조회수 많은순 · 재생시간 짧은순 · 재생시간 긴순 · 제목순</b> 다섯 가지입니다.</figcaption>
     </figure>
 
-    <h3 id="s3-2">담기</h3>
+    <h3 id="s4-2">담기</h3>
     <figure>
       <div class="shot"><img src="__IMG_16__" alt="영상을 담은 상태"></div>
       <figcaption>담긴 카드는 테두리가 파랗게 바뀌고 <b>✓</b> 가 채워집니다.
@@ -470,7 +734,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <div class="note tip"><span class="lbl">순서 요령</span>
       준비운동 → 스마트점핑 → 비트 트레이닝 → 마무리·명상 순으로 담으면 나중에 손댈 일이 없습니다.</div>
 
-    <h3 id="s3-3">즐겨찾기</h3>
+    <h3 id="s4-3">즐겨찾기</h3>
     <p>자주 쓰는 영상은 카드의 <b>★</b> 를 눌러 둡니다. 위 가로줄의
       <span class="ui">★ 즐겨찾기</span> 에서 모아 볼 수 있습니다. 담기와 달리
       <b>즐겨찾기는 수업에 들어가지 않습니다</b> — 나중에 빨리 찾기 위한 표시입니다.</p>
@@ -479,9 +743,9 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     </figure>
   </section>
 
-  <!-- ═══════ 4 ═══════ -->
-  <section id="s4">
-    <h2 class="sec"><span class="no">04</span> 수업하기</h2>
+  <!-- ═══════ 5 ═══════ -->
+  <section id="s5">
+    <h2 class="sec"><span class="no">05</span> 수업하기</h2>
     <p class="sec-lead">담아 뒀다면 교실에서 할 일은 버튼 하나입니다.</p>
     <ol class="steps">
       <li>왼쪽 <span class="ui">▶ 수업시작</span> 을 누릅니다.</li>
@@ -507,13 +771,13 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <b>5초 뒤 알아서 다음 편으로 넘어갑니다.</b> 수업이 멈추지 않습니다.</div>
   </section>
 
-  <!-- ═══════ 5 ═══════ -->
-  <section id="s5">
-    <h2 class="sec"><span class="no">05</span> 학급 운영 <span class="role t">교사</span><span class="role a">관리자</span></h2>
+  <!-- ═══════ 6 ═══════ -->
+  <section id="s6">
+    <h2 class="sec"><span class="no">06</span> 학급 운영 <span class="role t">교사</span><span class="role a">관리자</span></h2>
     <p class="sec-lead">학급을 등록해 두면 커리큘럼을 붙이고, 날짜별로 출석을 쌓고,
       리포트로 뽑을 수 있습니다.</p>
 
-    <h3 id="s5-1">수업 등록</h3>
+    <h3 id="s6-1">수업 등록</h3>
     <figure>
       <div class="shot">
         <img src="__IMG_21__" alt="수업관리 목록">
@@ -547,7 +811,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <span class="role a">관리자</span>는 전체 교사의 수업을 보고, 표에 <b>담당</b> 열이 더 나옵니다.
       남의 수업을 고치거나 지우는 것은 거부됩니다.</div>
 
-    <h3 id="s5-2">커리큘럼 만들고 연결하기</h3>
+    <h3 id="s6-2">커리큘럼 만들고 연결하기</h3>
     <p>커리큘럼은 <b>마이페이지 › 프로그램스케줄</b>에서 만듭니다.
       그룹을 만들고 차시마다 영상을 넣어 두는 방식입니다.</p>
     <ol class="steps">
@@ -561,7 +825,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <figcaption>차시별로 영상 ID가 묶여 있습니다. 한 그룹을 여러 학급에 연결할 수 있습니다.</figcaption>
     </figure>
 
-    <h3 id="s5-3">출석부</h3>
+    <h3 id="s6-3">출석부</h3>
     <figure>
       <div class="shot mid"><img src="__IMG_23__" alt="출석부"></div>
       <figcaption>날짜를 고르고 학생별로 출·결·지각을 표시합니다.</figcaption>
@@ -573,7 +837,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <li>누적 출석률은 알아서 계산됩니다.</li>
     </ul>
 
-    <h3 id="s5-4">수업 리포트</h3>
+    <h3 id="s6-4">수업 리포트</h3>
     <figure>
       <div class="shot"><img src="__IMG_24__" alt="수업 리포트"></div>
       <figcaption>학급 정보 + 커리큘럼 차시 + 회차별 출결표가 한 장에 묶입니다.
@@ -581,9 +845,9 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     </figure>
   </section>
 
-  <!-- ═══════ 6 ═══════ -->
-  <section id="s6">
-    <h2 class="sec"><span class="no">06</span> 마이페이지</h2>
+  <!-- ═══════ 7 ═══════ -->
+  <section id="s7">
+    <h2 class="sec"><span class="no">07</span> 마이페이지</h2>
     <p class="sec-lead">왼쪽 <b>마이페이지</b>를 누르면 하위 메뉴가 펼쳐집니다.
       항목은 권한에 따라 다릅니다.</p>
     <div class="two">
@@ -616,9 +880,9 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     </figure>
   </section>
 
-  <!-- ═══════ 7 ═══════ -->
-  <section id="s7">
-    <h2 class="sec"><span class="no">07</span> 관리자 <span class="role a">관리자</span></h2>
+  <!-- ═══════ 8 ═══════ -->
+  <section id="s8">
+    <h2 class="sec"><span class="no">08</span> 관리자 <span class="role a">관리자</span></h2>
     <p class="sec-lead">회원관리는 관리자에게만 보입니다.</p>
     <figure>
       <div class="shot"><img src="__IMG_31__" alt="회원관리"></div>
@@ -640,9 +904,9 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     </figure>
   </section>
 
-  <!-- ═══════ 8 ═══════ -->
-  <section id="s8">
-    <h2 class="sec"><span class="no">08</span> 자료 추가·관리</h2>
+  <!-- ═══════ 9 ═══════ -->
+  <section id="s9">
+    <h2 class="sec"><span class="no">09</span> 자료 추가·관리</h2>
     <p class="sec-lead">이 장은 사이트를 운영하는 분을 위한 것입니다.</p>
 
     <div class="note warn"><span class="lbl">먼저 알아 둘 것</span>
@@ -650,7 +914,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       자료는 전부 <b>구글 시트</b>에서 관리하고, 사이트는 그 시트를 읽어 옵니다.
       영상 파일을 서버에 올리는 것이 아니라 <b>유튜브 영상을 임베드로 불러오는 방식</b>입니다.</div>
 
-    <h3 id="s8-1">두 가지 판의 차이</h3>
+    <h3 id="s9-1">두 가지 판의 차이</h3>
     <table>
       <thead><tr><th></th><th>데모 (GitHub Pages)</th><th>구글 시트 연동판 (Apps Script)</th></tr></thead>
       <tbody>
@@ -662,12 +926,53 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     </table>
     <p>아래 내용은 모두 <b>구글 시트 연동판</b> 이야기입니다.</p>
 
-    <h3 id="s8-2">영상 추가</h3>
+    <h3 id="s9-1b">사이트에서 전체 영상 관리 <span class="role a">관리자</span></h3>
+    <p>왼쪽 <span class="ui">영상등록</span> 은 관리자에게 다르게 보입니다.
+      교사는 자기가 올린 영상만 보지만, <b>관리자는 전체 영상을 봅니다.</b> 숨긴 영상까지 나옵니다.</p>
+    <figure>
+      <div class="shot"><img src="__IMG_VADMIN__" alt="관리자가 보는 영상 목록"></div>
+      <figcaption><b>등록자</b> 열이 하나 더 있습니다. 처음부터 들어 있던 영상은 등록자가 비어 있고(—),
+        선생님이 올린 영상에는 아이디가 찍힙니다.</figcaption>
+    </figure>
+    <table>
+      <thead><tr><th></th><th>교사</th><th>관리자</th></tr></thead>
+      <tbody>
+        <tr><td>영상 등록</td><td>됩니다</td><td>됩니다</td></tr>
+        <tr><td>목록에 보이는 것</td><td>자기가 올린 것</td><td><b>전체</b></td></tr>
+        <tr><td>수정 · 숨기기 · 삭제</td><td>자기가 올린 것만</td><td><b>전체</b></td></tr>
+        <tr><td>등록자 확인</td><td>안 보입니다</td><td>보입니다</td></tr>
+      </tbody>
+    </table>
+    <div class="note tip"><span class="lbl">숨기기부터 써 보세요</span>
+      분류가 어긋났거나 학교 사정으로 잠시 내려야 할 영상은 <b>숨기기</b> 로 충분합니다.
+      삭제는 담은 영상과 커리큘럼에 걸린 자취까지 지우고 되돌릴 수 없습니다.</div>
+
+    <figure>
+      <div class="shot">
+        <img src="__IMG_SHEET_V__" alt="구글 시트 videos 탭">
+        <span class="cal" style="left:28.5%;top:2%">1</span>
+        <span class="cal" style="left:67.1%;top:17.1%">2</span>
+        <span class="cal" style="left:81.3%;top:17.1%">3</span>
+        <span class="cal" style="left:20%;top:96.8%">4</span>
+      </div>
+      <ol class="legend">
+        <li><b>확장 프로그램</b> 여기서 Apps Script 를 열어 캐시비우기를 실행합니다</li>
+        <li><b>youtube_id</b> 주소에서 꺼낸 11자를 이 칸에 넣습니다</li>
+        <li><b>재생시간</b> <code>04:30</code> 형식입니다. 수업 시간 계산에 쓰입니다</li>
+        <li><b>탭 열 개</b> 자료마다 탭이 따로 있습니다. 영상은 <code>videos</code> 입니다</li>
+      </ol>
+      <figcaption>보기 권한으로 연 화면이라 오른쪽 위에 로그인 단추가 있습니다.
+        편집 권한으로 열면 그 자리에 계정 사진이 나옵니다.</figcaption>
+    </figure>
+    <h3 id="s9-2">시트에서 영상 추가</h3>
+    <div class="note"><span class="lbl">보통은 시트를 열지 않습니다</span>
+      영상 한두 편은 사이트 <span class="ui">영상등록</span> 화면이 빠릅니다(<a href="#s1-6">1-6</a>).
+      아래는 <b>수십 편을 한꺼번에 넣거나</b>, 등록자·조회수 같은 값을 직접 손볼 때 씁니다.</div>
     <ol class="steps">
       <li>구글 시트의 <code>videos</code> 탭을 엽니다.</li>
       <li>맨 아래에 행을 하나 추가합니다.</li>
       <li><code>youtube_id</code> 칸에 <b>유튜브 주소의 ID 부분만</b> 넣습니다.</li>
-      <li>Apps Script 에서 <code>캐시비우기()</code> 를 실행합니다 (아래 8-4 참고).</li>
+      <li>Apps Script 에서 <code>캐시비우기()</code> 를 실행합니다 (아래 9-4 참고).</li>
     </ol>
     <table>
       <thead><tr><th>주소</th><th>넣을 값</th></tr></thead>
@@ -686,7 +991,8 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <tr><td>youtube_id</td><td>위에서 뽑은 ID</td></tr>
         <tr><td>재생시간</td><td><code>04:30</code> 형식</td></tr>
         <tr><td>조회수 · 등록일</td><td>정렬에 쓰입니다</td></tr>
-        <tr><td>노출여부</td><td>비우거나 N 으로 두면 목록에서 감춥니다</td></tr>
+        <tr><td>노출여부</td><td>비우거나 N 으로 두면 목록에서 감춥니다. 사이트의 <b>숨기기</b> 가 이 칸을 바꿉니다</td></tr>
+        <tr><td>등록자</td><td>사이트에서 등록한 선생님의 아이디. 비어 있으면 처음부터 있던 영상입니다</td></tr>
       </tbody>
     </table>
     <div class="note warn"><span class="lbl">넣기 전에 확인</span>
@@ -694,7 +1000,13 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       영상 페이지에서 <b>공유 › 퍼가기</b> 가 되는지 먼저 확인하세요.
       재생시간도 실제 값과 맞춰야 수업 시간 계산이 어긋나지 않습니다.</div>
 
-    <h3 id="s8-3">분류와 교재 추가</h3>
+    <h3 id="s9-3">분류와 교재 추가</h3>
+    <p><b>분류</b>는 <code>categories</code> 탭입니다. 대분류 여섯과 소분류 스물셋이 여기에 들어 있습니다.</p>
+    <figure>
+      <div class="shot"><img src="__IMG_SHEET_C__" alt="구글 시트 categories 탭"></div>
+      <figcaption>대분류ID 하나에 소분류가 여러 줄 붙습니다. 이 표를 고치면 사이트 위 가로줄과
+        그 아래 칩이 그대로 따라옵니다.</figcaption>
+    </figure>
     <p><b>분류</b>는 <code>categories</code> 탭에서 관리합니다. 여기를 고치면 상단 메뉴와 칩이 그대로 따라옵니다.</p>
     <table>
       <thead><tr><th>열</th><th>설명</th></tr></thead>
@@ -719,7 +1031,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       </tbody>
     </table>
 
-    <h3 id="s8-4">고친 뒤에는 캐시 비우기</h3>
+    <h3 id="s9-4">고친 뒤에는 캐시 비우기</h3>
     <div class="note warn"><span class="lbl">이 단계를 빠뜨리면 안 바뀝니다</span>
       영상과 분류는 속도를 위해 <b>6시간 동안 서버에 캐시</b>됩니다.
       시트를 고친 뒤 바로 반영하려면 Apps Script 편집기에서
@@ -731,7 +1043,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <li>사이트를 새로고침하면 반영됩니다.</li>
     </ol>
 
-    <h3 id="s8-5">대표 영상과 안내 캐릭터 바꾸기</h3>
+    <h3 id="s9-5">대표 영상과 안내 캐릭터 바꾸기</h3>
     <p>첫 화면 대표 영상과 점핑이 그림은 시트가 아니라 <b>저장소 파일</b>입니다.</p>
     <table>
       <thead><tr><th>바꿀 것</th><th>파일</th><th>그 다음</th></tr></thead>
@@ -744,9 +1056,9 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <b><code>index.html</code> 을 직접 고치면 다음 빌드에 사라집니다.</b></p>
   </section>
 
-  <!-- ═══════ 9 ═══════ -->
-  <section id="s9">
-    <h2 class="sec"><span class="no">09</span> 문제 해결</h2>
+  <!-- ═══════ 10 ═══════ -->
+  <section id="s10">
+    <h2 class="sec"><span class="no">10</span> 문제 해결</h2>
     <table>
       <thead><tr><th>증상</th><th>원인과 해결</th></tr></thead>
       <tbody>
@@ -762,7 +1074,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
   </section>
 
   <!-- ═══════ 부록 ═══════ -->
-  <section id="s10">
+  <section id="s11">
     <h2 class="sec"><span class="no">부록</span> 빠른 참조</h2>
 
     <h3>체험 계정</h3>
@@ -793,7 +1105,7 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <thead><tr><th>탭</th><th>열</th></tr></thead>
       <tbody>
         <tr><td>categories</td><td>대분류ID, 대분류명, 대분류순서, 소분류ID, 소분류명, 소분류순서, N뱃지</td></tr>
-        <tr><td>videos</td><td>영상ID, 대분류ID, 소분류ID, 제목, youtube_id, 재생시간, 조회수, 등록일, 노출여부</td></tr>
+        <tr><td>videos</td><td>영상ID, 대분류ID, 소분류ID, 제목, youtube_id, 재생시간, 조회수, 등록일, 노출여부, 등록자</td></tr>
         <tr><td>users</td><td>아이디, 비번해시, 이름, 소속, 지역, 권한, 가입일, 상태</td></tr>
         <tr><td>classes</td><td>수업ID, 소유자, 수업년월, 지역, 학교, 학년, 반, 정원, 메모, 스케줄그룹</td></tr>
         <tr><td>attendance</td><td>수업ID, 학생명, 날짜, 출결</td></tr>

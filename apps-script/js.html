@@ -279,6 +279,7 @@ function renderRoute() {
   if (key === 'guide') return viewGuide();
   if (key === 'library') return viewLibrary();
   if (key === 'classes') return viewClasses();
+  if (key === 'videos') return viewVideos();
   if (key === 'members') return viewMembers();
   if (key === 'myatt') return viewMyAttendance();
   if (key === 'textbook') return viewTextbook();
@@ -1797,6 +1798,269 @@ function buildReport(r) {
 
       '<div class="rep-foot">미래형학교체육 스마트점핑(Smart-Jumping) · ' + esc(c.school) + ' ' + esc(c.grade) + '-' + esc(c.cls) + '</div>' +
     '</div>';
+}
+
+/* ═══════════ 영상 등록·관리 (교사·관리자) ═══════════
+   교사는 자기가 올린 영상을, 관리자는 전체를 본다.
+   등록한 영상은 곧바로 라이브러리에 들어가 다른 선생님도 담아 쓴다. */
+
+function viewVideos() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">영상 등록 · 관리</h1>' +
+    '<p class="page-desc">유튜브 주소를 붙여 넣으면 제목과 재생시간을 불러옵니다. ' +
+    '등록한 영상은 바로 라이브러리에 올라가 다른 선생님도 씁니다.</p></div>' +
+    '<div class="panel panel-pad vreg">' +
+      '<div class="vreg-row">' +
+        '<input id="vUrl" class="inp" placeholder="https://youtu.be/… 또는 https://www.youtube.com/watch?v=…" autocomplete="off">' +
+        '<button id="vLookup" class="btn btn-primary">불러오기</button>' +
+      '</div>' +
+      '<div id="vPrev" hidden></div>' +
+      '<p id="vMsg" class="vreg-msg" hidden></p>' +
+    '</div>' +
+    '<div id="vListWrap">' + skelPanel() + '</div>';
+
+  $('#vLookup').addEventListener('click', doLookup);
+  $('#vUrl').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLookup(); });
+  loadMyVideos();
+}
+
+function vmsg(text, kind) {
+  var el = $('#vMsg');
+  if (!el) return;
+  el.hidden = !text;
+  el.textContent = text || '';
+  el.className = 'vreg-msg' + (kind ? ' ' + kind : '');
+}
+
+function loadMyVideos() {
+  srv('api_myVideos', S.user.id).then(function (r) {
+    if (!r.ok) { $('#vListWrap').innerHTML = '<div class="empty"><b>' + esc(r.msg) + '</b></div>'; return; }
+    viewVideos._data = r;
+    renderMyVideos();
+  }).catch(function (e) { $('#vListWrap').innerHTML = errBox(e); });
+}
+
+/* 영역 · 세부 분류 고르는 두 줄 */
+function catSelects(c1, c2) {
+  var o1 = S.categories.map(function (c) {
+    return '<option value="' + esc(c.id) + '"' + (c.id === c1 ? ' selected' : '') + '>' + esc(c.name) + '</option>';
+  }).join('');
+  var cur = S.categories.filter(function (c) { return c.id === c1; })[0] || S.categories[0];
+  var o2 = ((cur && cur.subs) || []).map(function (s) {
+    return '<option value="' + esc(s.id) + '"' + (s.id === c2 ? ' selected' : '') + '>' + esc(s.name) + '</option>';
+  }).join('');
+  return '<select class="inp selC1">' + o1 + '</select><select class="inp selC2">' + o2 + '</select>';
+}
+
+/* 영역을 바꾸면 세부 분류를 다시 채운다 */
+function bindCatSelects(root) {
+  var s1 = root.querySelector('.selC1'), s2 = root.querySelector('.selC2');
+  if (!s1 || !s2) return;
+  s1.addEventListener('change', function () {
+    var c = S.categories.filter(function (x) { return x.id === s1.value; })[0];
+    s2.innerHTML = ((c && c.subs) || []).map(function (s) {
+      return '<option value="' + esc(s.id) + '">' + esc(s.name) + '</option>';
+    }).join('');
+  });
+}
+
+function doLookup() {
+  var url = $('#vUrl').value.trim();
+  if (!url) { vmsg('유튜브 주소를 넣어 주세요.', 'warn'); return; }
+  var btn = $('#vLookup');
+  btn.disabled = true; btn.textContent = '불러오는 중…';
+  vmsg('');
+  $('#vPrev').hidden = true;
+
+  srv('api_ytLookup', S.user.id, url).then(function (r) {
+    btn.disabled = false; btn.textContent = '불러오기';
+    if (!r.ok) { vmsg(r.msg, 'warn'); return; }
+    if (r.dupId) {
+      vmsg('이미 등록된 영상입니다. (' + r.dupId + ' ' + r.dupTitle + ')', 'warn');
+      return;
+    }
+    var p = $('#vPrev');
+    p.innerHTML =
+      '<div class="vprev">' +
+        '<img class="vprev-th" src="' + esc(r.thumb) + '" alt="">' +
+        '<div class="vprev-body">' +
+          '<label class="vlab">제목</label>' +
+          '<input id="vTitle" class="inp" value="' + esc(r.title) + '">' +
+          '<div class="vgrid">' +
+            '<div><label class="vlab">영역 · 세부 분류</label>' + catSelects(S.c1, '') + '</div>' +
+            '<div><label class="vlab">재생시간</label>' +
+              '<input id="vDur" class="inp" value="' + esc(r.dur) + '" placeholder="04:30"></div>' +
+          '</div>' +
+          '<div class="vprev-foot">' +
+            '<span class="vyt">' + esc(r.yt) + '</span>' +
+            '<button id="vAdd" class="btn btn-primary">등록</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    p.hidden = false;
+    bindCatSelects(p);
+    if (r.embed === false) vmsg('이 영상은 유튜브에서 외부 재생을 막아 두었습니다. 등록해도 교실에서 재생되지 않습니다.', 'warn');
+    else if (r.note) vmsg(r.note);
+    $('#vAdd').addEventListener('click', function () { doAdd(r.yt); });
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = '불러오기';
+    vmsg('불러오지 못했습니다. ' + (e && e.message ? e.message : e), 'warn');
+  });
+}
+
+function doAdd(yt) {
+  var p = $('#vPrev');
+  var obj = {
+    yt: yt,
+    title: $('#vTitle').value.trim(),
+    c1: p.querySelector('.selC1').value,
+    c2: p.querySelector('.selC2').value,
+    dur: $('#vDur').value.trim()
+  };
+  if (!obj.title) { vmsg('제목을 넣어 주세요.', 'warn'); return; }
+  var btn = $('#vAdd');
+  btn.disabled = true; btn.textContent = '등록 중…';
+
+  srv('api_addVideo', S.user.id, obj).then(function (r) {
+    btn.disabled = false; btn.textContent = '등록';
+    if (!r.ok) { vmsg(r.msg, 'warn'); return; }
+    toast('등록했습니다. (' + r.id + ')');
+    $('#vUrl').value = '';
+    p.hidden = true;
+    vmsg('');
+    reloadLibrary();
+    loadMyVideos();
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = '등록';
+    vmsg('등록하지 못했습니다. ' + (e && e.message ? e.message : e), 'warn');
+  });
+}
+
+/** 라이브러리 목록을 서버에서 다시 받아 새 영상이 바로 보이게 한다 */
+function reloadLibrary() {
+  srv('api_bootstrap', S.user ? S.user.id : '').then(function (d) {
+    if (!d) return;
+    S.categories = d.categories || S.categories;
+    S.videos = d.videos || S.videos;
+  }).catch(function () {});
+}
+
+function renderMyVideos() {
+  var r = viewVideos._data;
+  var q = (renderMyVideos._q || '').toLowerCase();
+  var list = r.videos.filter(function (v) {
+    if (!q) return true;
+    return (v.title + ' ' + v.id + ' ' + v.yt + ' ' + (v.by || '')).toLowerCase().indexOf(q) >= 0;
+  });
+  var name = function (id, subId) {
+    var c = S.categories.filter(function (x) { return x.id === id; })[0];
+    if (!c) return id;
+    var s = (c.subs || []).filter(function (x) { return x.id === subId; })[0];
+    return c.name + (s ? ' · ' + s.name : '');
+  };
+
+  var rows = list.map(function (v) {
+    return '<tr' + (v.show ? '' : ' class="row-off"') + ' data-vid="' + esc(v.id) + '">' +
+      '<td class="vt-th"><img src="https://i.ytimg.com/vi/' + esc(v.yt) + '/default.jpg" alt=""></td>' +
+      '<td><b>' + esc(v.title) + '</b><span class="vt-sub">' + esc(v.id) + ' · ' + esc(v.yt) +
+        (v.dur ? ' · ' + esc(v.dur) : '') + '</span></td>' +
+      '<td class="vt-cat">' + esc(name(v.c1, v.c2)) + '</td>' +
+      (r.admin ? '<td class="vt-by">' + esc(v.by || '—') + '</td>' : '') +
+      '<td class="vt-date">' + esc(v.date) + '</td>' +
+      '<td class="vt-act">' +
+        '<button class="btn btn-sm" data-act="edit">수정</button>' +
+        '<button class="btn btn-sm" data-act="show">' + (v.show ? '숨기기' : '보이기') + '</button>' +
+        '<button class="btn btn-sm btn-danger" data-act="del">삭제</button>' +
+      '</td></tr>';
+  }).join('');
+
+  $('#vListWrap').innerHTML =
+    '<div class="panel">' +
+      '<div class="count-row">' +
+        '<span class="count-txt">' + (r.admin ? '전체' : '내가 등록한 영상') +
+          ' <b>' + r.videos.length + '</b> / 검색 <b>' + list.length + '</b></span>' +
+        '<input id="vq" class="inp inp-sm" placeholder="제목·ID 검색" value="' + esc(renderMyVideos._q || '') + '">' +
+      '</div>' +
+      (list.length
+        ? '<table class="tbl vtbl"><thead><tr><th></th><th>영상</th><th>분류</th>' +
+          (r.admin ? '<th>등록자</th>' : '') + '<th>등록일</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>'
+        : '<div class="empty"><b>아직 등록한 영상이 없습니다</b>위에서 유튜브 주소를 붙여 넣어 등록하세요.</div>') +
+    '</div>';
+
+  var qi = $('#vq');
+  qi.addEventListener('input', function () {
+    renderMyVideos._q = qi.value;
+    var at = qi.selectionStart;
+    renderMyVideos();
+    var n = $('#vq'); n.focus(); n.setSelectionRange(at, at);
+  });
+
+  $$('#vListWrap [data-act]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var id = b.closest('tr').getAttribute('data-vid');
+      var v = r.videos.filter(function (x) { return x.id === id; })[0];
+      if (!v) return;
+      var act = b.getAttribute('data-act');
+      if (act === 'edit') return editVideo(v);
+      if (act === 'show') return saveVideo(v.id, { show: !v.show });
+      if (act === 'del') return delVideo(v);
+    });
+  });
+}
+
+function editVideo(v) {
+  modal('영상 수정',
+    '<div class="vedit">' +
+      '<label class="vlab">제목</label>' +
+      '<input id="evTitle" class="inp" value="' + esc(v.title) + '">' +
+      '<div class="vgrid">' +
+        '<div><label class="vlab">영역 · 세부 분류</label>' + catSelects(v.c1, v.c2) + '</div>' +
+        '<div><label class="vlab">재생시간</label>' +
+          '<input id="evDur" class="inp" value="' + esc(v.dur || '') + '" placeholder="04:30"></div>' +
+      '</div>' +
+      '<p class="vreg-msg">유튜브 주소는 바꿀 수 없습니다. 다른 영상이면 지우고 새로 등록하세요.</p>' +
+    '</div>',
+    '<button class="btn" id="evCancel">취소</button>' +
+    '<button class="btn btn-primary" id="evSave">저장</button>');
+  bindCatSelects($('#modalBody'));
+  $('#evCancel').addEventListener('click', closeModal);
+  $('#evSave').addEventListener('click', function () {
+    saveVideo(v.id, {
+      title: $('#evTitle').value.trim(),
+      c1: $('#modalBody').querySelector('.selC1').value,
+      c2: $('#modalBody').querySelector('.selC2').value,
+      dur: $('#evDur').value.trim()
+    });
+  });
+}
+
+function saveVideo(id, patch) {
+  srv('api_updateVideo', S.user.id, id, patch).then(function (r) {
+    if (!r.ok) { toast(r.msg); return; }
+    closeModal();
+    toast('저장했습니다.');
+    reloadLibrary();
+    loadMyVideos();
+  }).catch(function (e) { toast('저장하지 못했습니다.'); });
+}
+
+function delVideo(v) {
+  modal('영상 삭제',
+    '<p>「<b>' + esc(v.title) + '</b>」 을 목록에서 지웁니다.</p>' +
+    '<p class="vreg-msg">담은 영상과 즐겨찾기, 커리큘럼에 들어 있던 자취도 함께 사라집니다. ' +
+    '유튜브에 올린 원본은 그대로 남습니다.</p>',
+    '<button class="btn" id="dvCancel">취소</button>' +
+    '<button class="btn btn-danger" id="dvOk">삭제</button>');
+  $('#dvCancel').addEventListener('click', closeModal);
+  $('#dvOk').addEventListener('click', function () {
+    srv('api_deleteVideo', S.user.id, v.id).then(function (r) {
+      if (!r.ok) { toast(r.msg); return; }
+      closeModal();
+      toast('지웠습니다.');
+      reloadLibrary();
+      loadMyVideos();
+    }).catch(function () { toast('지우지 못했습니다.'); });
+  });
 }
 
 /* ═══════════ 회원관리 (관리자 전용) ═══════════ */

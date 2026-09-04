@@ -1179,6 +1179,44 @@ button.st-tag:hover{ filter:brightness(.94); }
   box-shadow:0 0 0 3px rgba(74,222,128,.28); animation:live 2.2s var(--ease) infinite;
 }
 @keyframes live{ 0%,100%{ opacity:1 } 50%{ opacity:.3 } }
+/* ── 영상 등록 · 관리 ── */
+.vreg{ margin-bottom:18px; }
+.vreg-row{ display:flex; gap:9px; }
+.vreg-row .inp{ flex:1; min-width:0; }
+.vreg-msg{ margin:10px 0 0; font-size:13px; color:var(--muted); }
+.vreg-msg.warn{ color:var(--danger); font-weight:600; }
+.inp-sm{ width:200px; height:34px; font-size:13px; }
+
+.vprev{ display:flex; gap:16px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
+.vprev-th{ width:200px; height:112px; object-fit:cover; border-radius:10px; flex:none; background:#eef2f8; }
+.vprev-body{ flex:1; min-width:0; }
+.vlab{ display:block; font-size:12px; font-weight:700; color:var(--muted); margin:0 0 5px; }
+.vprev-body .inp, .vedit .inp, .vgrid select{ width:100%; }
+.vgrid{ display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-top:11px; }
+.vgrid .selC1{ margin-bottom:7px; }
+.vprev-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:13px; }
+.vyt{ font-size:12px; color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace; }
+.vedit .vgrid{ grid-template-columns:2fr 1fr; }
+
+.vtbl td{ vertical-align:middle; }
+.vt-th img{ width:74px; height:42px; object-fit:cover; border-radius:6px; display:block; background:#eef2f8; }
+.vt-sub{ display:block; font-size:12px; color:var(--muted); margin-top:3px;
+  font-family:ui-monospace,Menlo,Consolas,monospace; }
+.vt-cat, .vt-by, .vt-date{ font-size:13px; color:var(--n-600); white-space:nowrap; }
+.vt-act{ white-space:nowrap; text-align:right; }
+.vt-act .btn{ margin-left:5px; }
+.vt-act .btn-danger{ background:transparent; color:var(--danger); border:1px solid var(--danger); }
+.vt-act .btn-danger:hover{ background:var(--danger); color:#fff; }
+tr.row-off{ opacity:.5; }
+tr.row-off .vt-sub::after{ content:' · 숨김'; font-weight:700; }
+
+@media (max-width:760px){
+  .vprev{ flex-direction:column; }
+  .vprev-th{ width:100%; height:auto; aspect-ratio:16/9; }
+  .vgrid{ grid-template-columns:1fr; }
+  .vt-th, .vt-cat, .vt-by, .vt-date{ display:none; }
+  .inp-sm{ width:130px; }
+}
 @media (prefers-reduced-motion:reduce){ .mh-tag i{ animation:none } }
 .mh h2{
   margin:14px 0 0; color:#fff; font-size:31px; font-weight:800;
@@ -1383,6 +1421,13 @@ button.st-tag:hover{ filter:brightness(.94); }
           <path d="M8.5 11h7M8.5 15h4.5"/>
         </svg><span class="nav-txt">수업관리</span></a>
 
+      <a href="#/videos" data-nav="videos" data-role="교사,관리자">
+        <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="5.5" width="18" height="13" rx="2.5"/>
+          <path d="M10.5 9.8v4.4l3.8-2.2z"/>
+          <path d="M3 9.5h18"/>
+        </svg><span class="nav-txt">영상등록</span></a>
+
       <a href="#/members" data-nav="members" data-role="관리자">
         <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="9.5" cy="8.5" r="3"/>
@@ -1475,7 +1520,7 @@ button.st-tag:hover{ filter:brightness(.94); }
 
 
 <script>
-  window.SJ_DATA = {"ver":"sj-s7-104-6-teacher:테스트:관리자|test:교사:교사|teststu:학생:학생","appTitle":"미래형학교체육 '스마트점핑'(Smart-Jumping)","today":"2026-09-04","categories":[{"id":"C1","name":"명상","order":1,"subs":[{"id":"S11","name":"호흡 명상","order":1,"badge":""},{"id":"S12","name":"마음챙김 명상","order":2,"badge":""},{"id":"S13","name":"어린이 명상","order":3,"badge":"N"}]},{"id":"C2","name":"시간타이머","order":2,"subs":[{"id":"S21","name":"휴식영상 타이머","order":1,"badge":""},{"id":"S22","name":"카운터 타이머","order":2,"badge":"N"}]},{"id":"C3","name":"준비운동 | 타바타","order":3,"subs":[{"id":"S31","name":"몸풀기 & 스트레칭","order":1,"badge":""},{"id":"S32","name":"타바타 & 기초체력","order":2,"badge":""},{"id":"S33","name":"기초체력 추천 조합","order":3,"badge":""},{"id":"S34","name":"점핑 근력운동","order":4,"badge":""},{"id":"S35","name":"정리운동 · 쿨다운","order":5,"badge":"N"},{"id":"S36","name":"레크리에이션 놀이","order":6,"badge":"N"}]},{"id":"C4","name":"스마트점핑","order":4,"subs":[{"id":"S41","name":"급수 친구들 1단계 [브로빗]","order":1,"badge":""},{"id":"S42","name":"급수 친구들 2단계 [월라비]","order":2,"badge":""},{"id":"S43","name":"급수 친구들 3단계 [이글]","order":3,"badge":""},{"id":"S44","name":"쌩쌩이 · 2단뛰기","order":4,"badge":""},{"id":"S45","name":"음악줄넘기","order":5,"badge":"N"},{"id":"S46","name":"[지도자 필수교육]","order":6,"badge":""}]},{"id":"C5","name":"비트 트레이닝","order":5,"subs":[{"id":"S51","name":"동요 율동","order":1,"badge":""},{"id":"S52","name":"체조 메들리","order":2,"badge":""},{"id":"S53","name":"K-POP 키즈댄스","order":3,"badge":"N"}]},{"id":"C6","name":"Killing Time Zone","order":6,"subs":[{"id":"S61","name":"나라별 국기맞추기","order":1,"badge":""},{"id":"S62","name":"숨은그림 · 틀린그림 찾기","order":2,"badge":"N"},{"id":"S63","name":"넌센스 퀴즈","order":3,"badge":"N"}]}],"videos":[{"id":"V0001","c1":"C1","c2":"S11","title":"명상 초보자를 위한 마음챙김 명상 가이드 5분 ㅣ 생각이 복잡할 때 알아차림 명상","yt":"2x4ECODdULE","dur":"06:16","views":1091,"date":"2026-09-04"},{"id":"V0002","c1":"C1","c2":"S11","title":"마음이 차분해지는 5분 호흡운동 | 브레스워크 | 명상 | 잠 잘 오는 명상 | 편안해지는 명상 | 휴식 명상","yt":"bG4e-HnlJTE","dur":"10:17","views":2062,"date":"2026-09-04"},{"id":"V0003","c1":"C1","c2":"S11","title":"들숨날숨 호흡연습 1단계 (5분 명상) / 마음챙김 기초명상, 쉬운명상","yt":"RJO2qgqVol0","dur":"05:17","views":3033,"date":"2026-09-04"},{"id":"V0004","c1":"C1","c2":"S11","title":"5분 호흡명상 - 뇌를 위한 최고의 휴식법 (스트레스 해소, 뇌 피로회복)","yt":"dZewQEbQQM0","dur":"07:13","views":4004,"date":"2026-09-04"},{"id":"V0005","c1":"C1","c2":"S11","title":"[처음 만나는 마음챙김 명상] 안희영 소장과 쉽게 배워보는 '호흡 마음챙김명상'","yt":"H8DIbAhJ8fg","dur":"14:55","views":4975,"date":"2026-09-04"},{"id":"V0006","c1":"C1","c2":"S12","title":"마음챙김 - 호흡 명상","yt":"tNao3xp5yjM","dur":"01:42","views":5946,"date":"2026-09-04"},{"id":"V0007","c1":"C1","c2":"S12","title":"제주특별자치도교육청 학생건강증진추진단 마음챙김 애니메이션 초등3편 - 감정 마음챙김 _  #명상 #초등 #호흡 #건강 #제주교육 #감정","yt":"uVlUn_c1Xew","dur":"05:42","views":6917,"date":"2026-09-04"},{"id":"V0008","c1":"C1","c2":"S13","title":"초등학생을 위한 소리 듣기 명상 | 어린이 명상 | 마보","yt":"nIICI7cSSUM","dur":"03:57","views":7888,"date":"2026-09-04"},{"id":"V0009","c1":"C1","c2":"S13","title":"🌊어린이 1분 바다명상🌊가장 쉽고 재미있는 명상 - 집중력, 기억력, 행복, 사랑, 자아, 긍정, 감사, 끈기, 인내, 자기조절능력 키우기 명상","yt":"8H44pw20-74","dur":"03:49","views":8859,"date":"2026-09-04"},{"id":"V0010","c1":"C1","c2":"S13","title":"[홍익학당] 어린이 숫자명상","yt":"LjQ0HhOLkuk","dur":"02:08","views":430,"date":"2026-09-04"},{"id":"V0011","c1":"C1","c2":"S13","title":"Me-time 어린이 가을훈련 - 어린이 5분명상(Ver. 대각지)","yt":"WVBh1C-bRbo","dur":"08:20","views":1401,"date":"2026-09-04"},{"id":"V0012","c1":"C2","c2":"S21","title":"5분 타이머 편안한 숲 힐링타임 - 5 Minute Countdown Timer with Forest","yt":"119KVJumA1M","dur":"05:03","views":2372,"date":"2026-09-04"},{"id":"V0013","c1":"C2","c2":"S21","title":"⏰⌛5분 타이머 | 5분 카운트 다운 | 5분 휴식시간 | 5분 쉬는시간 | 배경음악","yt":"mIYObGZ1I_w","dur":"05:05","views":3343,"date":"2026-09-04"},{"id":"V0014","c1":"C2","c2":"S21","title":"[10분]귀여운 고양이 타이머/3분,1분 중간 알람/10minute timer","yt":"pZnefFq4aDk","dur":"10:20","views":4314,"date":"2026-09-04"},{"id":"V0015","c1":"C2","c2":"S21","title":"타이머 10분,  알람 10분 우리나라 수업, 정리 타이머 10 min Timer, 징소리 카운트다운","yt":"w0OHKiIV44E","dur":"10:08","views":5285,"date":"2026-09-04"},{"id":"V0016","c1":"C2","c2":"S22","title":"5 minute timer with music 타이머 5분 카운트다운 countdown","yt":"qIiMFZ88NDI","dur":"05:03","views":6256,"date":"2026-09-04"},{"id":"V0017","c1":"C2","c2":"S22","title":"5분 알람 타이머 (카운트다운)","yt":"Byzwstv74Xw","dur":"05:16","views":7227,"date":"2026-09-04"},{"id":"V0018","c1":"C2","c2":"S22","title":"[5분 타이머] 5minute countdown mineetimer with alarm","yt":"0fZC2y5pCck","dur":"05:11","views":8198,"date":"2026-09-04"},{"id":"V0019","c1":"C2","c2":"S22","title":"5 minute timerㅣ 5분타이머ㅣ봄맞이5분타이머ㅣ정리정돈음악 ㅣ생활습관타이머 ㅣㅣ 교실타이머 ㅣ5minute countdown timer","yt":"ec3vEdyG8oI","dur":"05:23","views":9169,"date":"2026-09-04"},{"id":"V0020","c1":"C2","c2":"S22","title":"5분 타이머","yt":"CXV_DqsWSPU","dur":"05:05","views":740,"date":"2026-09-04"},{"id":"V0021","c1":"C2","c2":"S22","title":"Countdown For 5 Minutes","yt":"3dJ4wFqQzz4","dur":"05:10","views":1711,"date":"2026-09-04"},{"id":"V0022","c1":"C2","c2":"S22","title":"3분 알람 타이머 (카운트다운)","yt":"fJMgbAw_sAI","dur":"03:16","views":2682,"date":"2026-09-04"},{"id":"V0023","c1":"C2","c2":"S22","title":"⏰⌛1분 타이머 | 1분 카운트 다운 | 1분 휴식시간 | 1분 쉬는시간 | 배경음악","yt":"-bobh50VdbA","dur":"01:20","views":3653,"date":"2026-09-04"},{"id":"V0024","c1":"C2","c2":"S22","title":"1분 타이머 / 1분 카운트 다운 / 1분 알람","yt":"KEwM1DMZoo8","dur":"22:23","views":4624,"date":"2026-09-04"},{"id":"V0025","c1":"C2","c2":"S22","title":"10분 알람 타이머 (카운트다운)","yt":"PiU0fht2ENE","dur":"10:16","views":5595,"date":"2026-09-04"},{"id":"V0026","c1":"C2","c2":"S22","title":"이동시간ㅣ3분 타이머ㅣ특별실 이동ㅣ정리 정돈ㅣ질서를 지켜 줄 서기ㅣ학급경영ㅣ쏭쌤TV","yt":"1RZd1U8uGR8","dur":"03:06","views":6566,"date":"2026-09-04"},{"id":"V0027","c1":"C2","c2":"S22","title":"3분 타이머 / 3분 카운트다운 / 3분 알람","yt":"Zgn93PpZUg8","dur":"30:10","views":7537,"date":"2026-09-04"},{"id":"V0028","c1":"C2","c2":"S22","title":"10분 - 타이머&알람 (10분 카운트다운 타이머) │시작음:또로롱 / 중간소리:없음 / 종료음:알람소리","yt":"LE0RWymF1Vc","dur":"10:12","views":8508,"date":"2026-09-04"},{"id":"V0029","c1":"C2","c2":"S22","title":"[Timer][10minutes][타이머][10분]/[카운트다운]/[그라데이션][다크그레이배경][마감소리][나머지무음]","yt":"uPSoj0_OW9A","dur":"10:20","views":9479,"date":"2026-09-04"},{"id":"V0030","c1":"C3","c2":"S31","title":"교실체육 전 3분 워밍업 (준비운동 | 스트레칭 | 교실 체력 트레이닝  )","yt":"hMCvvDHB46o","dur":"03:07","views":1050,"date":"2026-09-04"},{"id":"V0031","c1":"C3","c2":"S31","title":"[서초초등체육교실 시즌3] 준비운동","yt":"ZmUj-E9A44E","dur":"04:43","views":2021,"date":"2026-09-04"},{"id":"V0032","c1":"C3","c2":"S31","title":"온라인 체육 수업 - 5분 스트레칭 [준비운동]","yt":"PFJe9i9UbZ4","dur":"05:09","views":2992,"date":"2026-09-04"},{"id":"V0033","c1":"C3","c2":"S31","title":"의자 앉아 맨손체조ㅣ책상 스트레칭ㅣ의자 스트레칭ㅣ교실 스트레칭ㅣ놀이 준비운동ㅣ쏭쌤TV","yt":"2lru6IsOQ6Y","dur":"04:05","views":3963,"date":"2026-09-04"},{"id":"V0034","c1":"C3","c2":"S31","title":"체육 수업 준비운동 및 정리운동 - 기백반 체육교실의 일상적인 준비운동 따라하기","yt":"erMfzZ5_or8","dur":"05:29","views":4934,"date":"2026-09-04"},{"id":"V0035","c1":"C3","c2":"S31","title":"3분, 초간단 운동 전 워밍업 스트레칭(부상 예방, 운동효과 대박, 가동범위 증가)","yt":"8qf727092l4","dur":"03:29","views":5905,"date":"2026-09-04"},{"id":"V0036","c1":"C3","c2":"S31","title":"준비운동","yt":"_bqes3Cw5ug","dur":"03:27","views":6876,"date":"2026-09-04"},{"id":"V0037","c1":"C3","c2":"S32","title":"[마포구체육회]홈트레이닝/칼로리 폭파 4분 타바타","yt":"G9p1ZehAAnI","dur":"04:38","views":7847,"date":"2026-09-04"},{"id":"V0038","c1":"C3","c2":"S32","title":"체지방↓DOWN, 근력↑UP \"4분 타바타 홈트레이닝\" (초보자,중상급자 모두가능!)","yt":"BL8kwdj-XWU","dur":"05:54","views":8818,"date":"2026-09-04"},{"id":"V0039","c1":"C3","c2":"S32","title":"집에서 누구나 [4분 타바타] 1편 / 화성시문화재단과 홈트레이닝하기","yt":"RFFWIbUcBXo","dur":"10:42","views":389,"date":"2026-09-04"},{"id":"V0040","c1":"C3","c2":"S32","title":"운동초보에게 딱! 홈트 4분 타바타운동으로 저질체력 탈출해보자! | Low physical fitness? You can change it! Tabata for beginner","yt":"BxElnlkcfts","dur":"04:35","views":1360,"date":"2026-09-04"},{"id":"V0041","c1":"C3","c2":"S32","title":"[실전]하루 4분 체지방 태우기 운동 - 집에서 하는 다이어트 타바타 운동 5 [핏분 유쾌한 홈트레이닝]","yt":"ta-Uq_prRT8","dur":"06:34","views":2331,"date":"2026-09-04"},{"id":"V0042","c1":"C3","c2":"S33","title":"뱃살 빼는 최고의 운동 ! 4분 쉬지 않고 (신 타바타 버전)ㅣ고민수","yt":"EPXeswXkJDg","dur":"06:27","views":3302,"date":"2026-09-04"},{"id":"V0043","c1":"C3","c2":"S33","title":"4분 운동으로 1시간 운동효과 ? 타바타 전신편 !/ 홈트레이닝","yt":"4deNtH6p2U0","dur":"04:24","views":4273,"date":"2026-09-04"},{"id":"V0044","c1":"C3","c2":"S33","title":"Day35 하루 4분 홈트 타바타운동(8가지 코어 등척성운동 )","yt":"esPoIcFC_T4","dur":"06:08","views":5244,"date":"2026-09-04"},{"id":"V0045","c1":"C3","c2":"S34","title":"쳐진 엉덩이 올리는 4분 타바타 운동 (홈트레이닝)ㅣ고민수","yt":"AytACfar2AI","dur":"09:18","views":6215,"date":"2026-09-04"},{"id":"V0046","c1":"C3","c2":"S34","title":"[주원홈트] 준비운동 스트레칭 - 운동 전에는 꼭 따라해야 하는 워밍업 영상","yt":"2oN6SFl85VY","dur":"06:24","views":7186,"date":"2026-09-04"},{"id":"V0047","c1":"C3","c2":"S34","title":"하루를 이 동작으로 시작해보세요! (준비운동, 순환운동, 스트레칭, 워밍업, 운동 전 스트레칭) [비온뒤 금쪽 운동 상담소] #9 (김수관 코치 & 정진희 PD)","yt":"zguPP2ymhH0","dur":"16:48","views":8157,"date":"2026-09-04"},{"id":"V0048","c1":"C3","c2":"S35","title":"[Cool-Down] 마무리 스트레칭 누워서 하는 정리운동 탄력에 필수!!","yt":"d3MtqJSDO90","dur":"10:11","views":9128,"date":"2026-09-04"},{"id":"V0049","c1":"C3","c2":"S35","title":"운동 후, 쿨다운 스트레칭 10분 꼭 해주세요 (정리운동 스트레칭, 운동후 근육통 풀기)","yt":"X8t6C07BJ80","dur":"10:06","views":699,"date":"2026-09-04"},{"id":"V0050","c1":"C3","c2":"S35","title":"5분만에 끝나는, 달리기 후 스트레칭, #쿨다운 #마무리운동","yt":"mdvTr_xhiH8","dur":"07:39","views":1670,"date":"2026-09-04"},{"id":"V0051","c1":"C3","c2":"S35","title":"하루 6분 운동 후 마무리 쿨다운 스트레칭 (전신 스트레칭)","yt":"9GawCESbFFk","dur":"06:29","views":2641,"date":"2026-09-04"},{"id":"V0052","c1":"C3","c2":"S35","title":"운동후 스트레칭 모음,  이거 하나면 운동효과 2배! 쿨다운 끝!","yt":"4TwQwVFLi4Q","dur":"07:55","views":3612,"date":"2026-09-04"},{"id":"V0053","c1":"C3","c2":"S35","title":"홈트레이닝 마무리 운동-웃음체조 정리운동 스트레칭버전 집에서따라하기","yt":"YXzPcEATOPg","dur":"04:20","views":4583,"date":"2026-09-04"},{"id":"V0054","c1":"C3","c2":"S36","title":"교실놀이로 레크레이션 진행해보기-재미있는 놀이 게임 레크리에이션","yt":"z149ha1sCbQ","dur":"07:50","views":5554,"date":"2026-09-04"},{"id":"V0055","c1":"C3","c2":"S36","title":"놀이게임 5가지-초등 놀이 레크레이션 신나는 야외놀이 강당놀이 교실놀이","yt":"Gr9qZrju9Pk","dur":"12:18","views":6525,"date":"2026-09-04"},{"id":"V0056","c1":"C3","c2":"S36","title":"교실체육 | 경쟁 없는 놀이! 초간단 원형 놀이 3종 세트!","yt":"36Gc0L7X-_M","dur":"04:56","views":7496,"date":"2026-09-04"},{"id":"V0057","c1":"C3","c2":"S36","title":"교실놀이ㅣ책상을 활용한 13종 교실놀이 설명ㅣ놀이체육ㅣ초등체육","yt":"mOHgNUGpZLE","dur":"11:43","views":8467,"date":"2026-09-04"},{"id":"V0058","c1":"C3","c2":"S36","title":"[교실놀이]  \"준비물 없이 즐기는 재미있는 실내놀이 전편  풀영상\"  |팍찐놀이| 레크리에이션|","yt":"gYQhS1ioY0o","dur":"1:02:43","views":9438,"date":"2026-09-04"},{"id":"V0059","c1":"C3","c2":"S36","title":"원바운딩놀이! 협력놀이! 교실놀이체육!  실내체육! 놀이! 초등체육! fun p.e. games! Physical Education!","yt":"juCbUO6zpL0","dur":"02:11","views":1009,"date":"2026-09-04"},{"id":"V0060","c1":"C3","c2":"S36","title":"교실놀이 ㅣ 새학기 교실놀이 5종세트","yt":"A2X7o51KwuI","dur":"06:54","views":1980,"date":"2026-09-04"},{"id":"V0061","c1":"C3","c2":"S36","title":"교실놀이 ㅣ 오른쪽! 왼쪽! 흔들어~~ ㅣ 레크레이션","yt":"gBsXje_teyg","dur":"01:24","views":2951,"date":"2026-09-04"},{"id":"V0062","c1":"C4","c2":"S41","title":"줄넘기 | 초등체육 | 온라인체육 | 줄넘기기초","yt":"zPGci2cL6j4","dur":"05:14","views":3922,"date":"2026-09-04"},{"id":"V0063","c1":"C4","c2":"S41","title":"[1강]줄넘기 초보를 위한 줄넘기 기본 배우기!","yt":"Mdc7kmOKuMU","dur":"04:31","views":4893,"date":"2026-09-04"},{"id":"V0064","c1":"C4","c2":"S41","title":"줄넘기처음배우기 초급강의 1부 / 줄넘기 잘하는법(온라인체육수업 ) 기초부터 탄탄하게","yt":"_yWerNDS2AQ","dur":"06:58","views":5864,"date":"2026-09-04"},{"id":"V0065","c1":"C4","c2":"S41","title":"[양수쌤 놀이체육] 온라인 체육 - 줄넘기 양발 모아뛰기 2가지!","yt":"nDvxGWOUNk4","dur":"03:22","views":6835,"date":"2026-09-04"},{"id":"V0066","c1":"C4","c2":"S42","title":"[365+체육온활동] 초급 6. 혼자서 줄넘기","yt":"XdQRqIR-x64","dur":"07:59","views":7806,"date":"2026-09-04"},{"id":"V0067","c1":"C4","c2":"S42","title":"제1강 줄넘기 기초과정","yt":"P6RU0NUgu8E","dur":"08:46","views":8777,"date":"2026-09-04"},{"id":"V0068","c1":"C4","c2":"S42","title":"줄넘기 -기초과정","yt":"DnUmpP-_Chk","dur":"08:46","views":348,"date":"2026-09-04"},{"id":"V0069","c1":"C4","c2":"S42","title":"줄넘기2(점프스쿼트)","yt":"zrPszwVKjJE","dur":"02:06","views":1319,"date":"2026-09-04"},{"id":"V0070","c1":"C4","c2":"S43","title":"줄넘기쌩쌩이 쉽게 하기[2단뛰기 연습방법]","yt":"gT9Y9FBb1ic","dur":"01:22","views":2290,"date":"2026-09-04"},{"id":"V0071","c1":"C4","c2":"S43","title":"2중뛰기/쌩쌩이/2단뛰기 뛰는 방법!!","yt":"DwYFyXlwM40","dur":"04:19","views":3261,"date":"2026-09-04"},{"id":"V0072","c1":"C4","c2":"S43","title":"줄넘기 얼마나 아십니까? 줄넘기 2단뛰기 잘하는 법, 정말 천천히 알려드립니다 [ 달팽이레슨 ] 190716","yt":"G_jCU_oL8AE","dur":"05:08","views":4232,"date":"2026-09-04"},{"id":"V0073","c1":"C4","c2":"S43","title":"쌩쌩이, 2단뛰기 성공 하기 '2중뛰기' 하는 방법","yt":"l9chx0Z7qBw","dur":"02:02","views":5203,"date":"2026-09-04"},{"id":"V0074","c1":"C4","c2":"S44","title":"[8강]쌩쌩이 도전! 2단뛰기 마스터하기!","yt":"jmm8k9OmK1Y","dur":"03:47","views":6174,"date":"2026-09-04"},{"id":"V0075","c1":"C4","c2":"S44","title":"2분 안에 배우는 줄넘기 기본동작 - 2중뛰기(=쌩쌩이) (feat.점프스쿨)","yt":"XA3xY1WCvn8","dur":"01:27","views":7145,"date":"2026-09-04"},{"id":"V0076","c1":"C4","c2":"S44","title":"줄넘기 중수에서 고수로! 뒤로 줄넘기+쌩쌩이ㅣ이현준의 명징티비 이카이스 마이풀","yt":"adt2JguLrAo","dur":"02:40","views":8116,"date":"2026-09-04"},{"id":"V0077","c1":"C4","c2":"S44","title":"줄넘기,2단뛰기,100개","yt":"i6gF_5J4fek","dur":"01:02","views":9087,"date":"2026-09-04"},{"id":"V0078","c1":"C4","c2":"S45","title":"[윤쌤의 신나는 음악줄넘기] 초급 1단계 기본 동작","yt":"-hDMjJr9Smc","dur":"02:03","views":658,"date":"2026-09-04"},{"id":"V0079","c1":"C4","c2":"S45","title":"[윤쌤의 신나는 음악줄넘기] 고급 1단계 기본 동작","yt":"aYRIfdsH0u8","dur":"01:59","views":1629,"date":"2026-09-04"},{"id":"V0080","c1":"C4","c2":"S45","title":"방학특집! 신나는 음악과 함께 즐기는 줄넘기 기본동작 7가지!🌈🎶","yt":"SNC04hlGt6Y","dur":"03:46","views":2600,"date":"2026-09-04"},{"id":"V0081","c1":"C4","c2":"S45","title":"초보자도 OK! 인기동요 네잎클로버와 함께 즐기는 음악줄넘기🍀🎶","yt":"23hTV_VXKNE","dur":"01:18","views":3571,"date":"2026-09-04"},{"id":"V0082","c1":"C4","c2":"S45","title":"[음악줄넘기]초등학교 2학년 넘사벽 줄넘기 | 줄넘기 실력을 뽐내는 초등학생 | Jump Rope","yt":"6PvI3f7jZfE","dur":"01:06","views":4542,"date":"2026-09-04"},{"id":"V0083","c1":"C4","c2":"S45","title":"줄넘기시범공연","yt":"wWEsWFTJCnk","dur":"11:30","views":5513,"date":"2026-09-04"},{"id":"V0084","c1":"C4","c2":"S46","title":"(고화질) 초등 줄넘기 공인급수 10~1급 풀영상! (Jump rope)","yt":"HHmor6wmxMo","dur":"09:42","views":6484,"date":"2026-09-04"},{"id":"V0085","c1":"C5","c2":"S51","title":"★튼튼쌤의 율동체조교실 인기율동 특집★ㅣ핑크퐁 인기 율동동요와 함께 하는 신나는 댄스♬ㅣ곰 세마리, 멋쟁이 토마토, 악어 떼, 작은 주전자, 주먹 쥐고ㅣ핑크퐁! 인기동요","yt":"dw31Gdfj7oY","dur":"11:40","views":7455,"date":"2026-09-04"},{"id":"V0086","c1":"C5","c2":"S51","title":"체조 노래모음ㅣ인기동요모음ㅣ친구와 즐거운 노래와 댄스로 신나게 체조 율동을 즐겨보아요!ㅣ랄라라키즈","yt":"FiVBh8pv78Y","dur":"03:22","views":8426,"date":"2026-09-04"},{"id":"V0087","c1":"C5","c2":"S51","title":"높이높이 쭉쭉 ♪ | 신나는 율동 체조 | 응급처치 프린세스와 함께 쭉쭉 체조해요! | 율동동요 | 어린이 인기동요★지니키즈","yt":"OP8fuogWSlQ","dur":"00:58","views":9397,"date":"2026-09-04"},{"id":"V0088","c1":"C5","c2":"S51","title":"쭉쭉 체조 🎶 | 신나는 댄스타임 | 어린이 율동 | 인기율동 | 어린이 홈트 | 로티프렌즈 인기동요 | LOTTY FRIENDS","yt":"mfpamFUdivE","dur":"03:22","views":968,"date":"2026-09-04"},{"id":"V0089","c1":"C5","c2":"S52","title":"신나는 율동동요 댄스 모음 60분 ♪ | 시원하게 몸을 움직여요🤸‍♂️| 동물동요 l 방귀체조 | 어린이 인기동요 연속듣기 ★ 지니키즈","yt":"_EkTLdKEOy4","dur":"48:34","views":1939,"date":"2026-09-04"},{"id":"V0090","c1":"C5","c2":"S52","title":"뚝딱뚝딱 율동 동요! 💃 | 신나게 몸을 움직여요 | 어린이를 위한 운동 노래","yt":"DFT4-ro_iIM","dur":"15:49","views":2910,"date":"2026-09-04"},{"id":"V0091","c1":"C5","c2":"S52","title":"오늘도 튼튼하게💪🏻튼튼쌤과 체조해요! | 인기 체조 모음집 | 몽키 바나나, 아기상어 체조, 쑥쑥 키크기 체조 | 신나는 율동 체조 | 어린이 체조 | 핑크퐁! 인기동요","yt":"5Hll_yymS2w","dur":"1:30:16","views":3881,"date":"2026-09-04"},{"id":"V0092","c1":"C5","c2":"S53","title":"🕺 SODA POP - Saja Boys 간단춤 | 따라하기 쉬운 K-POP 안무 | 케데몬 | 흥딩스쿨","yt":"GKkixovHHro","dur":"01:41","views":4852,"date":"2026-09-04"},{"id":"V0093","c1":"C5","c2":"S53","title":"키즈 댄스 k-pop 안무 기초 배우기 | 캐리tv 히트송-‘럽럽(Love Love)’ 안무 기본기 배우기 part.2 | k-pop Kids dance class","yt":"YDFWIe-ibz8","dur":"05:48","views":5823,"date":"2026-09-04"},{"id":"V0094","c1":"C6","c2":"S61","title":"국기 퀴즈 | 국기 맞히기 195개 | 3초 안에 국기 맞히기 | 국기 100+ 도전 🌏 | flag quiz 2024","yt":"Ln9mCebyeNk","dur":"18:19","views":6794,"date":"2026-09-04"},{"id":"V0095","c1":"C6","c2":"S61","title":"세계여러나라 국기퀴즈 | 국기맞추기 게임 | 세계여러나라 국기 | 세계여러나라 놀이 | 세계여러나라 퀴즈 (어린이 / 유아 / 초등저학년)","yt":"f9PuBMgLtpA","dur":"03:43","views":7765,"date":"2026-09-04"},{"id":"V0096","c1":"C6","c2":"S61","title":"🚩최고 난이도 국기 보고  56개국 나라 이름 맞추기 8단계 퀴즈.","yt":"L73dXfVsLKc","dur":"09:28","views":8736,"date":"2026-09-04"},{"id":"V0097","c1":"C6","c2":"S61","title":"국기 맞히기 퀴즈, 국기 사진 보고 100개 나라 맞히기, 난이도 초중급","yt":"D8vF6CXRhgc","dur":"13:41","views":307,"date":"2026-09-04"},{"id":"V0098","c1":"C6","c2":"S62","title":"집중력 향상 놀이! \"안 숨은그림 찾기 1탄\"","yt":"nA9I1iv_E8w","dur":"06:46","views":1278,"date":"2026-09-04"},{"id":"V0099","c1":"C6","c2":"S62","title":"[다른그림찾기]💥90초 안에 다른점 3개 찾아주세요! 집중력 향상 두뇌 퀴즈 Find the difference 치매 예방 퀴즈 / 두뇌게임 [틀린그림찾기] 678","yt":"DKA9vzuKFio","dur":"09:26","views":2249,"date":"2026-09-04"},{"id":"V0100","c1":"C6","c2":"S62","title":"【다른그림찾기 | 치매예방】천재도 차이점 3개 중 한 곳은 못 찾습니다! 재밌고 건강한 기억 훈련 퀴즈 문제!【두뇌운동 | Find Difference | 틀린그림찾기】#1602","yt":"0FLsBYtNPkg","dur":"09:26","views":3220,"date":"2026-09-04"},{"id":"V0101","c1":"C6","c2":"S63","title":"넌센스 퀴즈! 최고 재미있는 넌센스모음. 빵빵터지는 웃긴 것만 모은 아재퀴즈! 두뇌 트레이닝! 초성퀴즈ㅣ퍼즐ㅣ그림퀴즈ㅣ넌센스ㅣ초등학생퀴즈ㅣ유머퀴즈","yt":"4FR8-GOwlWs","dur":"04:06","views":4191,"date":"2026-09-04"},{"id":"V0102","c1":"C6","c2":"S63","title":"재미있는 넌센스퀴즈 모음 1탄(15문제) #넌센스 #넌센스퀴즈 #아재개그 #유머 #퀴즈 #수수께끼 ","yt":"7gjp3gdZE2U","dur":"04:14","views":5162,"date":"2026-09-04"},{"id":"V0103","c1":"C6","c2":"S63","title":"[두뇌퀴즈] \"뇌가 똑똑해지는 그림 넌센스 퀴즈 \"|수수께끼|아재개그|","yt":"JJRoMT3SiEg","dur":"08:03","views":6133,"date":"2026-09-04"},{"id":"V0104","c1":"C6","c2":"S63","title":"[넌센스] \"뇌가 똑똑해지는 그림 넌센스 퀴즈 30\"|수수께끼|아재개그|","yt":"zRJj-JwMpcc","dur":"10:54","views":7104,"date":"2026-09-04"}],"users":[{"id":"teacher","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"테스트","org":"스마트점핑 본부","region":"울산광역시 북구","role":"관리자"},{"id":"test","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"교사","org":"옥동초등학교","region":"울산광역시 남구","role":"교사"},{"id":"teststu","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"학생","org":"강동초등학교 3학년 2반","region":"울산광역시 북구","role":"학생"}],"classes":[{"id":"CL001","owner":"teacher","ym":"2026-07","region":"울산광역시 북구","school":"강동초등학교","grade":1,"cls":3,"cap":8,"memo":"","sched":"1학기 기본과정"},{"id":"CL002","owner":"teacher","ym":"2026-08","region":"울산광역시 북구","school":"강동초등학교","grade":2,"cls":1,"cap":12,"memo":"","sched":"1학기 기본과정"},{"id":"CL003","owner":"teacher","ym":"2026-07","region":"울산광역시 북구","school":"강동초등학교","grade":3,"cls":2,"cap":15,"memo":"","sched":"리듬 점핑반"},{"id":"CL004","owner":"test","ym":"2026-08","region":"울산광역시 남구","school":"옥동초등학교","grade":4,"cls":1,"cap":20,"memo":"","sched":"체력왕 도전"},{"id":"CL005","owner":"test","ym":"2026-07","region":"부산광역시 해운대구","school":"해운대초등학교","grade":5,"cls":4,"cap":18,"memo":"","sched":"체력왕 도전"},{"id":"CL006","owner":"test","ym":"2026-08","region":"서울특별시 강남구","school":"대치초등학교","grade":6,"cls":2,"cap":22,"memo":"","sched":""}],"attendance":[{"classId":"CL001","name":"김민준","date":"2026-08-28","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-08-28","status":"출"},{"classId":"CL001","name":"박지호","date":"2026-08-28","status":"출"},{"classId":"CL001","name":"최수아","date":"2026-08-28","status":"결"},{"classId":"CL001","name":"정예준","date":"2026-08-28","status":"출"},{"classId":"CL001","name":"강하윤","date":"2026-08-28","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-08-28","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-08-28","status":"출"},{"classId":"CL001","name":"학생","date":"2026-08-28","status":"출"},{"classId":"CL001","name":"김민준","date":"2026-09-01","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-09-01","status":"출"},{"classId":"CL001","name":"박지호","date":"2026-09-01","status":"결"},{"classId":"CL001","name":"최수아","date":"2026-09-01","status":"출"},{"classId":"CL001","name":"정예준","date":"2026-09-01","status":"지"},{"classId":"CL001","name":"강하윤","date":"2026-09-01","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-09-01","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-09-01","status":"출"},{"classId":"CL001","name":"학생","date":"2026-09-01","status":"출"},{"classId":"CL001","name":"김민준","date":"2026-09-04","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-09-04","status":"결"},{"classId":"CL001","name":"박지호","date":"2026-09-04","status":"출"},{"classId":"CL001","name":"최수아","date":"2026-09-04","status":"지"},{"classId":"CL001","name":"정예준","date":"2026-09-04","status":"출"},{"classId":"CL001","name":"강하윤","date":"2026-09-04","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-09-04","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-09-04","status":"출"},{"classId":"CL001","name":"학생","date":"2026-09-04","status":"결"}],"equipment":[{"owner":"teacher","name":"스마트점핑 로프 (표준형)","agency":"울산대리점","fresh":20,"used":5},{"owner":"teacher","name":"스마트점핑 매트","agency":"울산대리점","fresh":12,"used":3},{"owner":"test","name":"스마트점핑 로프 (학급용)","agency":"울산대리점","fresh":30,"used":2}],"schedules":[{"owner":"teacher","name":"1학기 기본과정","items":[{"no":1,"videoIds":["V0008","V0030","V0062","V0048"]},{"no":2,"videoIds":["V0009","V0031","V0066","V0049"]}]},{"owner":"teacher","name":"리듬 점핑반","items":[{"no":1,"videoIds":["V0012","V0078","V0092"]}]},{"owner":"test","name":"체력왕 도전","items":[{"no":1,"videoIds":["V0032","V0037","V0042","V0050"]},{"no":2,"videoIds":["V0054","V0045","V0098"]}]}],"textbooks":[{"no":1,"title":"스마트점핑 01권","cover":"","link":"","badge":"특호"},{"no":2,"title":"스마트점핑 02권","cover":"","link":"","badge":""},{"no":3,"title":"스마트점핑 03권","cover":"","link":"","badge":""},{"no":4,"title":"스마트점핑 04권","cover":"","link":"","badge":""},{"no":5,"title":"스마트점핑 05권","cover":"","link":"","badge":""},{"no":6,"title":"스마트점핑 06권","cover":"","link":"","badge":""},{"no":7,"title":"스마트점핑 07권","cover":"","link":"","badge":""},{"no":8,"title":"스마트점핑 08권","cover":"","link":"","badge":""},{"no":9,"title":"스마트점핑 09권","cover":"","link":"","badge":""},{"no":10,"title":"스마트점핑 10권","cover":"","link":"","badge":""},{"no":11,"title":"스마트점핑 11권","cover":"","link":"","badge":""},{"no":12,"title":"스마트점핑 12권","cover":"","link":"","badge":""}],"favorites":{"teacher":["V0008","V0016","V0030","V0062","V0085"]}};
+  window.SJ_DATA = {"ver":"sj-s7-104-6-teacher:테스트:관리자|test:교사:교사|teststu:학생:학생","appTitle":"미래형학교체육 '스마트점핑'(Smart-Jumping)","today":"2026-09-04","categories":[{"id":"C1","name":"명상","order":1,"subs":[{"id":"S11","name":"호흡 명상","order":1,"badge":""},{"id":"S12","name":"마음챙김 명상","order":2,"badge":""},{"id":"S13","name":"어린이 명상","order":3,"badge":"N"}]},{"id":"C2","name":"시간타이머","order":2,"subs":[{"id":"S21","name":"휴식영상 타이머","order":1,"badge":""},{"id":"S22","name":"카운터 타이머","order":2,"badge":"N"}]},{"id":"C3","name":"준비운동 | 타바타","order":3,"subs":[{"id":"S31","name":"몸풀기 & 스트레칭","order":1,"badge":""},{"id":"S32","name":"타바타 & 기초체력","order":2,"badge":""},{"id":"S33","name":"기초체력 추천 조합","order":3,"badge":""},{"id":"S34","name":"점핑 근력운동","order":4,"badge":""},{"id":"S35","name":"정리운동 · 쿨다운","order":5,"badge":"N"},{"id":"S36","name":"레크리에이션 놀이","order":6,"badge":"N"}]},{"id":"C4","name":"스마트점핑","order":4,"subs":[{"id":"S41","name":"급수 친구들 1단계 [브로빗]","order":1,"badge":""},{"id":"S42","name":"급수 친구들 2단계 [월라비]","order":2,"badge":""},{"id":"S43","name":"급수 친구들 3단계 [이글]","order":3,"badge":""},{"id":"S44","name":"쌩쌩이 · 2단뛰기","order":4,"badge":""},{"id":"S45","name":"음악줄넘기","order":5,"badge":"N"},{"id":"S46","name":"[지도자 필수교육]","order":6,"badge":""}]},{"id":"C5","name":"비트 트레이닝","order":5,"subs":[{"id":"S51","name":"동요 율동","order":1,"badge":""},{"id":"S52","name":"체조 메들리","order":2,"badge":""},{"id":"S53","name":"K-POP 키즈댄스","order":3,"badge":"N"}]},{"id":"C6","name":"Killing Time Zone","order":6,"subs":[{"id":"S61","name":"나라별 국기맞추기","order":1,"badge":""},{"id":"S62","name":"숨은그림 · 틀린그림 찾기","order":2,"badge":"N"},{"id":"S63","name":"넌센스 퀴즈","order":3,"badge":"N"}]}],"videos":[{"id":"V0001","c1":"C1","c2":"S11","title":"명상 초보자를 위한 마음챙김 명상 가이드 5분 ㅣ 생각이 복잡할 때 알아차림 명상","yt":"2x4ECODdULE","dur":"06:16","views":1091,"date":"2026-09-05"},{"id":"V0002","c1":"C1","c2":"S11","title":"마음이 차분해지는 5분 호흡운동 | 브레스워크 | 명상 | 잠 잘 오는 명상 | 편안해지는 명상 | 휴식 명상","yt":"bG4e-HnlJTE","dur":"10:17","views":2062,"date":"2026-09-05"},{"id":"V0003","c1":"C1","c2":"S11","title":"들숨날숨 호흡연습 1단계 (5분 명상) / 마음챙김 기초명상, 쉬운명상","yt":"RJO2qgqVol0","dur":"05:17","views":3033,"date":"2026-09-05"},{"id":"V0004","c1":"C1","c2":"S11","title":"5분 호흡명상 - 뇌를 위한 최고의 휴식법 (스트레스 해소, 뇌 피로회복)","yt":"dZewQEbQQM0","dur":"07:13","views":4004,"date":"2026-09-05"},{"id":"V0005","c1":"C1","c2":"S11","title":"[처음 만나는 마음챙김 명상] 안희영 소장과 쉽게 배워보는 '호흡 마음챙김명상'","yt":"H8DIbAhJ8fg","dur":"14:55","views":4975,"date":"2026-09-05"},{"id":"V0006","c1":"C1","c2":"S12","title":"마음챙김 - 호흡 명상","yt":"tNao3xp5yjM","dur":"01:42","views":5946,"date":"2026-09-05"},{"id":"V0007","c1":"C1","c2":"S12","title":"제주특별자치도교육청 학생건강증진추진단 마음챙김 애니메이션 초등3편 - 감정 마음챙김 _  #명상 #초등 #호흡 #건강 #제주교육 #감정","yt":"uVlUn_c1Xew","dur":"05:42","views":6917,"date":"2026-09-05"},{"id":"V0008","c1":"C1","c2":"S13","title":"초등학생을 위한 소리 듣기 명상 | 어린이 명상 | 마보","yt":"nIICI7cSSUM","dur":"03:57","views":7888,"date":"2026-09-05"},{"id":"V0009","c1":"C1","c2":"S13","title":"🌊어린이 1분 바다명상🌊가장 쉽고 재미있는 명상 - 집중력, 기억력, 행복, 사랑, 자아, 긍정, 감사, 끈기, 인내, 자기조절능력 키우기 명상","yt":"8H44pw20-74","dur":"03:49","views":8859,"date":"2026-09-05"},{"id":"V0010","c1":"C1","c2":"S13","title":"[홍익학당] 어린이 숫자명상","yt":"LjQ0HhOLkuk","dur":"02:08","views":430,"date":"2026-09-05"},{"id":"V0011","c1":"C1","c2":"S13","title":"Me-time 어린이 가을훈련 - 어린이 5분명상(Ver. 대각지)","yt":"WVBh1C-bRbo","dur":"08:20","views":1401,"date":"2026-09-05"},{"id":"V0012","c1":"C2","c2":"S21","title":"5분 타이머 편안한 숲 힐링타임 - 5 Minute Countdown Timer with Forest","yt":"119KVJumA1M","dur":"05:03","views":2372,"date":"2026-09-05"},{"id":"V0013","c1":"C2","c2":"S21","title":"⏰⌛5분 타이머 | 5분 카운트 다운 | 5분 휴식시간 | 5분 쉬는시간 | 배경음악","yt":"mIYObGZ1I_w","dur":"05:05","views":3343,"date":"2026-09-05"},{"id":"V0014","c1":"C2","c2":"S21","title":"[10분]귀여운 고양이 타이머/3분,1분 중간 알람/10minute timer","yt":"pZnefFq4aDk","dur":"10:20","views":4314,"date":"2026-09-05"},{"id":"V0015","c1":"C2","c2":"S21","title":"타이머 10분,  알람 10분 우리나라 수업, 정리 타이머 10 min Timer, 징소리 카운트다운","yt":"w0OHKiIV44E","dur":"10:08","views":5285,"date":"2026-09-05"},{"id":"V0016","c1":"C2","c2":"S22","title":"5 minute timer with music 타이머 5분 카운트다운 countdown","yt":"qIiMFZ88NDI","dur":"05:03","views":6256,"date":"2026-09-05"},{"id":"V0017","c1":"C2","c2":"S22","title":"5분 알람 타이머 (카운트다운)","yt":"Byzwstv74Xw","dur":"05:16","views":7227,"date":"2026-09-05"},{"id":"V0018","c1":"C2","c2":"S22","title":"[5분 타이머] 5minute countdown mineetimer with alarm","yt":"0fZC2y5pCck","dur":"05:11","views":8198,"date":"2026-09-05"},{"id":"V0019","c1":"C2","c2":"S22","title":"5 minute timerㅣ 5분타이머ㅣ봄맞이5분타이머ㅣ정리정돈음악 ㅣ생활습관타이머 ㅣㅣ 교실타이머 ㅣ5minute countdown timer","yt":"ec3vEdyG8oI","dur":"05:23","views":9169,"date":"2026-09-05"},{"id":"V0020","c1":"C2","c2":"S22","title":"5분 타이머","yt":"CXV_DqsWSPU","dur":"05:05","views":740,"date":"2026-09-05"},{"id":"V0021","c1":"C2","c2":"S22","title":"Countdown For 5 Minutes","yt":"3dJ4wFqQzz4","dur":"05:10","views":1711,"date":"2026-09-05"},{"id":"V0022","c1":"C2","c2":"S22","title":"3분 알람 타이머 (카운트다운)","yt":"fJMgbAw_sAI","dur":"03:16","views":2682,"date":"2026-09-05"},{"id":"V0023","c1":"C2","c2":"S22","title":"⏰⌛1분 타이머 | 1분 카운트 다운 | 1분 휴식시간 | 1분 쉬는시간 | 배경음악","yt":"-bobh50VdbA","dur":"01:20","views":3653,"date":"2026-09-05"},{"id":"V0024","c1":"C2","c2":"S22","title":"1분 타이머 / 1분 카운트 다운 / 1분 알람","yt":"KEwM1DMZoo8","dur":"22:23","views":4624,"date":"2026-09-05"},{"id":"V0025","c1":"C2","c2":"S22","title":"10분 알람 타이머 (카운트다운)","yt":"PiU0fht2ENE","dur":"10:16","views":5595,"date":"2026-09-05"},{"id":"V0026","c1":"C2","c2":"S22","title":"이동시간ㅣ3분 타이머ㅣ특별실 이동ㅣ정리 정돈ㅣ질서를 지켜 줄 서기ㅣ학급경영ㅣ쏭쌤TV","yt":"1RZd1U8uGR8","dur":"03:06","views":6566,"date":"2026-09-05"},{"id":"V0027","c1":"C2","c2":"S22","title":"3분 타이머 / 3분 카운트다운 / 3분 알람","yt":"Zgn93PpZUg8","dur":"30:10","views":7537,"date":"2026-09-05"},{"id":"V0028","c1":"C2","c2":"S22","title":"10분 - 타이머&알람 (10분 카운트다운 타이머) │시작음:또로롱 / 중간소리:없음 / 종료음:알람소리","yt":"LE0RWymF1Vc","dur":"10:12","views":8508,"date":"2026-09-05"},{"id":"V0029","c1":"C2","c2":"S22","title":"[Timer][10minutes][타이머][10분]/[카운트다운]/[그라데이션][다크그레이배경][마감소리][나머지무음]","yt":"uPSoj0_OW9A","dur":"10:20","views":9479,"date":"2026-09-05"},{"id":"V0030","c1":"C3","c2":"S31","title":"교실체육 전 3분 워밍업 (준비운동 | 스트레칭 | 교실 체력 트레이닝  )","yt":"hMCvvDHB46o","dur":"03:07","views":1050,"date":"2026-09-05"},{"id":"V0031","c1":"C3","c2":"S31","title":"[서초초등체육교실 시즌3] 준비운동","yt":"ZmUj-E9A44E","dur":"04:43","views":2021,"date":"2026-09-05"},{"id":"V0032","c1":"C3","c2":"S31","title":"온라인 체육 수업 - 5분 스트레칭 [준비운동]","yt":"PFJe9i9UbZ4","dur":"05:09","views":2992,"date":"2026-09-05"},{"id":"V0033","c1":"C3","c2":"S31","title":"의자 앉아 맨손체조ㅣ책상 스트레칭ㅣ의자 스트레칭ㅣ교실 스트레칭ㅣ놀이 준비운동ㅣ쏭쌤TV","yt":"2lru6IsOQ6Y","dur":"04:05","views":3963,"date":"2026-09-05"},{"id":"V0034","c1":"C3","c2":"S31","title":"체육 수업 준비운동 및 정리운동 - 기백반 체육교실의 일상적인 준비운동 따라하기","yt":"erMfzZ5_or8","dur":"05:29","views":4934,"date":"2026-09-05"},{"id":"V0035","c1":"C3","c2":"S31","title":"3분, 초간단 운동 전 워밍업 스트레칭(부상 예방, 운동효과 대박, 가동범위 증가)","yt":"8qf727092l4","dur":"03:29","views":5905,"date":"2026-09-05"},{"id":"V0036","c1":"C3","c2":"S31","title":"준비운동","yt":"_bqes3Cw5ug","dur":"03:27","views":6876,"date":"2026-09-05"},{"id":"V0037","c1":"C3","c2":"S32","title":"[마포구체육회]홈트레이닝/칼로리 폭파 4분 타바타","yt":"G9p1ZehAAnI","dur":"04:38","views":7847,"date":"2026-09-05"},{"id":"V0038","c1":"C3","c2":"S32","title":"체지방↓DOWN, 근력↑UP \"4분 타바타 홈트레이닝\" (초보자,중상급자 모두가능!)","yt":"BL8kwdj-XWU","dur":"05:54","views":8818,"date":"2026-09-05"},{"id":"V0039","c1":"C3","c2":"S32","title":"집에서 누구나 [4분 타바타] 1편 / 화성시문화재단과 홈트레이닝하기","yt":"RFFWIbUcBXo","dur":"10:42","views":389,"date":"2026-09-05"},{"id":"V0040","c1":"C3","c2":"S32","title":"운동초보에게 딱! 홈트 4분 타바타운동으로 저질체력 탈출해보자! | Low physical fitness? You can change it! Tabata for beginner","yt":"BxElnlkcfts","dur":"04:35","views":1360,"date":"2026-09-05"},{"id":"V0041","c1":"C3","c2":"S32","title":"[실전]하루 4분 체지방 태우기 운동 - 집에서 하는 다이어트 타바타 운동 5 [핏분 유쾌한 홈트레이닝]","yt":"ta-Uq_prRT8","dur":"06:34","views":2331,"date":"2026-09-05"},{"id":"V0042","c1":"C3","c2":"S33","title":"뱃살 빼는 최고의 운동 ! 4분 쉬지 않고 (신 타바타 버전)ㅣ고민수","yt":"EPXeswXkJDg","dur":"06:27","views":3302,"date":"2026-09-05"},{"id":"V0043","c1":"C3","c2":"S33","title":"4분 운동으로 1시간 운동효과 ? 타바타 전신편 !/ 홈트레이닝","yt":"4deNtH6p2U0","dur":"04:24","views":4273,"date":"2026-09-05"},{"id":"V0044","c1":"C3","c2":"S33","title":"Day35 하루 4분 홈트 타바타운동(8가지 코어 등척성운동 )","yt":"esPoIcFC_T4","dur":"06:08","views":5244,"date":"2026-09-05"},{"id":"V0045","c1":"C3","c2":"S34","title":"쳐진 엉덩이 올리는 4분 타바타 운동 (홈트레이닝)ㅣ고민수","yt":"AytACfar2AI","dur":"09:18","views":6215,"date":"2026-09-05"},{"id":"V0046","c1":"C3","c2":"S34","title":"[주원홈트] 준비운동 스트레칭 - 운동 전에는 꼭 따라해야 하는 워밍업 영상","yt":"2oN6SFl85VY","dur":"06:24","views":7186,"date":"2026-09-05"},{"id":"V0047","c1":"C3","c2":"S34","title":"하루를 이 동작으로 시작해보세요! (준비운동, 순환운동, 스트레칭, 워밍업, 운동 전 스트레칭) [비온뒤 금쪽 운동 상담소] #9 (김수관 코치 & 정진희 PD)","yt":"zguPP2ymhH0","dur":"16:48","views":8157,"date":"2026-09-05"},{"id":"V0048","c1":"C3","c2":"S35","title":"[Cool-Down] 마무리 스트레칭 누워서 하는 정리운동 탄력에 필수!!","yt":"d3MtqJSDO90","dur":"10:11","views":9128,"date":"2026-09-05"},{"id":"V0049","c1":"C3","c2":"S35","title":"운동 후, 쿨다운 스트레칭 10분 꼭 해주세요 (정리운동 스트레칭, 운동후 근육통 풀기)","yt":"X8t6C07BJ80","dur":"10:06","views":699,"date":"2026-09-05"},{"id":"V0050","c1":"C3","c2":"S35","title":"5분만에 끝나는, 달리기 후 스트레칭, #쿨다운 #마무리운동","yt":"mdvTr_xhiH8","dur":"07:39","views":1670,"date":"2026-09-05"},{"id":"V0051","c1":"C3","c2":"S35","title":"하루 6분 운동 후 마무리 쿨다운 스트레칭 (전신 스트레칭)","yt":"9GawCESbFFk","dur":"06:29","views":2641,"date":"2026-09-05"},{"id":"V0052","c1":"C3","c2":"S35","title":"운동후 스트레칭 모음,  이거 하나면 운동효과 2배! 쿨다운 끝!","yt":"4TwQwVFLi4Q","dur":"07:55","views":3612,"date":"2026-09-05"},{"id":"V0053","c1":"C3","c2":"S35","title":"홈트레이닝 마무리 운동-웃음체조 정리운동 스트레칭버전 집에서따라하기","yt":"YXzPcEATOPg","dur":"04:20","views":4583,"date":"2026-09-05"},{"id":"V0054","c1":"C3","c2":"S36","title":"교실놀이로 레크레이션 진행해보기-재미있는 놀이 게임 레크리에이션","yt":"z149ha1sCbQ","dur":"07:50","views":5554,"date":"2026-09-05"},{"id":"V0055","c1":"C3","c2":"S36","title":"놀이게임 5가지-초등 놀이 레크레이션 신나는 야외놀이 강당놀이 교실놀이","yt":"Gr9qZrju9Pk","dur":"12:18","views":6525,"date":"2026-09-05"},{"id":"V0056","c1":"C3","c2":"S36","title":"교실체육 | 경쟁 없는 놀이! 초간단 원형 놀이 3종 세트!","yt":"36Gc0L7X-_M","dur":"04:56","views":7496,"date":"2026-09-05"},{"id":"V0057","c1":"C3","c2":"S36","title":"교실놀이ㅣ책상을 활용한 13종 교실놀이 설명ㅣ놀이체육ㅣ초등체육","yt":"mOHgNUGpZLE","dur":"11:43","views":8467,"date":"2026-09-05"},{"id":"V0058","c1":"C3","c2":"S36","title":"[교실놀이]  \"준비물 없이 즐기는 재미있는 실내놀이 전편  풀영상\"  |팍찐놀이| 레크리에이션|","yt":"gYQhS1ioY0o","dur":"1:02:43","views":9438,"date":"2026-09-05"},{"id":"V0059","c1":"C3","c2":"S36","title":"원바운딩놀이! 협력놀이! 교실놀이체육!  실내체육! 놀이! 초등체육! fun p.e. games! Physical Education!","yt":"juCbUO6zpL0","dur":"02:11","views":1009,"date":"2026-09-05"},{"id":"V0060","c1":"C3","c2":"S36","title":"교실놀이 ㅣ 새학기 교실놀이 5종세트","yt":"A2X7o51KwuI","dur":"06:54","views":1980,"date":"2026-09-05"},{"id":"V0061","c1":"C3","c2":"S36","title":"교실놀이 ㅣ 오른쪽! 왼쪽! 흔들어~~ ㅣ 레크레이션","yt":"gBsXje_teyg","dur":"01:24","views":2951,"date":"2026-09-05"},{"id":"V0062","c1":"C4","c2":"S41","title":"줄넘기 | 초등체육 | 온라인체육 | 줄넘기기초","yt":"zPGci2cL6j4","dur":"05:14","views":3922,"date":"2026-09-05"},{"id":"V0063","c1":"C4","c2":"S41","title":"[1강]줄넘기 초보를 위한 줄넘기 기본 배우기!","yt":"Mdc7kmOKuMU","dur":"04:31","views":4893,"date":"2026-09-05"},{"id":"V0064","c1":"C4","c2":"S41","title":"줄넘기처음배우기 초급강의 1부 / 줄넘기 잘하는법(온라인체육수업 ) 기초부터 탄탄하게","yt":"_yWerNDS2AQ","dur":"06:58","views":5864,"date":"2026-09-05"},{"id":"V0065","c1":"C4","c2":"S41","title":"[양수쌤 놀이체육] 온라인 체육 - 줄넘기 양발 모아뛰기 2가지!","yt":"nDvxGWOUNk4","dur":"03:22","views":6835,"date":"2026-09-05"},{"id":"V0066","c1":"C4","c2":"S42","title":"[365+체육온활동] 초급 6. 혼자서 줄넘기","yt":"XdQRqIR-x64","dur":"07:59","views":7806,"date":"2026-09-05"},{"id":"V0067","c1":"C4","c2":"S42","title":"제1강 줄넘기 기초과정","yt":"P6RU0NUgu8E","dur":"08:46","views":8777,"date":"2026-09-05"},{"id":"V0068","c1":"C4","c2":"S42","title":"줄넘기 -기초과정","yt":"DnUmpP-_Chk","dur":"08:46","views":348,"date":"2026-09-05"},{"id":"V0069","c1":"C4","c2":"S42","title":"줄넘기2(점프스쿼트)","yt":"zrPszwVKjJE","dur":"02:06","views":1319,"date":"2026-09-05"},{"id":"V0070","c1":"C4","c2":"S43","title":"줄넘기쌩쌩이 쉽게 하기[2단뛰기 연습방법]","yt":"gT9Y9FBb1ic","dur":"01:22","views":2290,"date":"2026-09-05"},{"id":"V0071","c1":"C4","c2":"S43","title":"2중뛰기/쌩쌩이/2단뛰기 뛰는 방법!!","yt":"DwYFyXlwM40","dur":"04:19","views":3261,"date":"2026-09-05"},{"id":"V0072","c1":"C4","c2":"S43","title":"줄넘기 얼마나 아십니까? 줄넘기 2단뛰기 잘하는 법, 정말 천천히 알려드립니다 [ 달팽이레슨 ] 190716","yt":"G_jCU_oL8AE","dur":"05:08","views":4232,"date":"2026-09-05"},{"id":"V0073","c1":"C4","c2":"S43","title":"쌩쌩이, 2단뛰기 성공 하기 '2중뛰기' 하는 방법","yt":"l9chx0Z7qBw","dur":"02:02","views":5203,"date":"2026-09-05"},{"id":"V0074","c1":"C4","c2":"S44","title":"[8강]쌩쌩이 도전! 2단뛰기 마스터하기!","yt":"jmm8k9OmK1Y","dur":"03:47","views":6174,"date":"2026-09-05"},{"id":"V0075","c1":"C4","c2":"S44","title":"2분 안에 배우는 줄넘기 기본동작 - 2중뛰기(=쌩쌩이) (feat.점프스쿨)","yt":"XA3xY1WCvn8","dur":"01:27","views":7145,"date":"2026-09-05"},{"id":"V0076","c1":"C4","c2":"S44","title":"줄넘기 중수에서 고수로! 뒤로 줄넘기+쌩쌩이ㅣ이현준의 명징티비 이카이스 마이풀","yt":"adt2JguLrAo","dur":"02:40","views":8116,"date":"2026-09-05"},{"id":"V0077","c1":"C4","c2":"S44","title":"줄넘기,2단뛰기,100개","yt":"i6gF_5J4fek","dur":"01:02","views":9087,"date":"2026-09-05"},{"id":"V0078","c1":"C4","c2":"S45","title":"[윤쌤의 신나는 음악줄넘기] 초급 1단계 기본 동작","yt":"-hDMjJr9Smc","dur":"02:03","views":658,"date":"2026-09-05"},{"id":"V0079","c1":"C4","c2":"S45","title":"[윤쌤의 신나는 음악줄넘기] 고급 1단계 기본 동작","yt":"aYRIfdsH0u8","dur":"01:59","views":1629,"date":"2026-09-05"},{"id":"V0080","c1":"C4","c2":"S45","title":"방학특집! 신나는 음악과 함께 즐기는 줄넘기 기본동작 7가지!🌈🎶","yt":"SNC04hlGt6Y","dur":"03:46","views":2600,"date":"2026-09-05"},{"id":"V0081","c1":"C4","c2":"S45","title":"초보자도 OK! 인기동요 네잎클로버와 함께 즐기는 음악줄넘기🍀🎶","yt":"23hTV_VXKNE","dur":"01:18","views":3571,"date":"2026-09-05"},{"id":"V0082","c1":"C4","c2":"S45","title":"[음악줄넘기]초등학교 2학년 넘사벽 줄넘기 | 줄넘기 실력을 뽐내는 초등학생 | Jump Rope","yt":"6PvI3f7jZfE","dur":"01:06","views":4542,"date":"2026-09-05"},{"id":"V0083","c1":"C4","c2":"S45","title":"줄넘기시범공연","yt":"wWEsWFTJCnk","dur":"11:30","views":5513,"date":"2026-09-05"},{"id":"V0084","c1":"C4","c2":"S46","title":"(고화질) 초등 줄넘기 공인급수 10~1급 풀영상! (Jump rope)","yt":"HHmor6wmxMo","dur":"09:42","views":6484,"date":"2026-09-05"},{"id":"V0085","c1":"C5","c2":"S51","title":"★튼튼쌤의 율동체조교실 인기율동 특집★ㅣ핑크퐁 인기 율동동요와 함께 하는 신나는 댄스♬ㅣ곰 세마리, 멋쟁이 토마토, 악어 떼, 작은 주전자, 주먹 쥐고ㅣ핑크퐁! 인기동요","yt":"dw31Gdfj7oY","dur":"11:40","views":7455,"date":"2026-09-05"},{"id":"V0086","c1":"C5","c2":"S51","title":"체조 노래모음ㅣ인기동요모음ㅣ친구와 즐거운 노래와 댄스로 신나게 체조 율동을 즐겨보아요!ㅣ랄라라키즈","yt":"FiVBh8pv78Y","dur":"03:22","views":8426,"date":"2026-09-05"},{"id":"V0087","c1":"C5","c2":"S51","title":"높이높이 쭉쭉 ♪ | 신나는 율동 체조 | 응급처치 프린세스와 함께 쭉쭉 체조해요! | 율동동요 | 어린이 인기동요★지니키즈","yt":"OP8fuogWSlQ","dur":"00:58","views":9397,"date":"2026-09-05"},{"id":"V0088","c1":"C5","c2":"S51","title":"쭉쭉 체조 🎶 | 신나는 댄스타임 | 어린이 율동 | 인기율동 | 어린이 홈트 | 로티프렌즈 인기동요 | LOTTY FRIENDS","yt":"mfpamFUdivE","dur":"03:22","views":968,"date":"2026-09-05"},{"id":"V0089","c1":"C5","c2":"S52","title":"신나는 율동동요 댄스 모음 60분 ♪ | 시원하게 몸을 움직여요🤸‍♂️| 동물동요 l 방귀체조 | 어린이 인기동요 연속듣기 ★ 지니키즈","yt":"_EkTLdKEOy4","dur":"48:34","views":1939,"date":"2026-09-05"},{"id":"V0090","c1":"C5","c2":"S52","title":"뚝딱뚝딱 율동 동요! 💃 | 신나게 몸을 움직여요 | 어린이를 위한 운동 노래","yt":"DFT4-ro_iIM","dur":"15:49","views":2910,"date":"2026-09-05"},{"id":"V0091","c1":"C5","c2":"S52","title":"오늘도 튼튼하게💪🏻튼튼쌤과 체조해요! | 인기 체조 모음집 | 몽키 바나나, 아기상어 체조, 쑥쑥 키크기 체조 | 신나는 율동 체조 | 어린이 체조 | 핑크퐁! 인기동요","yt":"5Hll_yymS2w","dur":"1:30:16","views":3881,"date":"2026-09-05"},{"id":"V0092","c1":"C5","c2":"S53","title":"🕺 SODA POP - Saja Boys 간단춤 | 따라하기 쉬운 K-POP 안무 | 케데몬 | 흥딩스쿨","yt":"GKkixovHHro","dur":"01:41","views":4852,"date":"2026-09-05"},{"id":"V0093","c1":"C5","c2":"S53","title":"키즈 댄스 k-pop 안무 기초 배우기 | 캐리tv 히트송-‘럽럽(Love Love)’ 안무 기본기 배우기 part.2 | k-pop Kids dance class","yt":"YDFWIe-ibz8","dur":"05:48","views":5823,"date":"2026-09-05"},{"id":"V0094","c1":"C6","c2":"S61","title":"국기 퀴즈 | 국기 맞히기 195개 | 3초 안에 국기 맞히기 | 국기 100+ 도전 🌏 | flag quiz 2024","yt":"Ln9mCebyeNk","dur":"18:19","views":6794,"date":"2026-09-05"},{"id":"V0095","c1":"C6","c2":"S61","title":"세계여러나라 국기퀴즈 | 국기맞추기 게임 | 세계여러나라 국기 | 세계여러나라 놀이 | 세계여러나라 퀴즈 (어린이 / 유아 / 초등저학년)","yt":"f9PuBMgLtpA","dur":"03:43","views":7765,"date":"2026-09-05"},{"id":"V0096","c1":"C6","c2":"S61","title":"🚩최고 난이도 국기 보고  56개국 나라 이름 맞추기 8단계 퀴즈.","yt":"L73dXfVsLKc","dur":"09:28","views":8736,"date":"2026-09-05"},{"id":"V0097","c1":"C6","c2":"S61","title":"국기 맞히기 퀴즈, 국기 사진 보고 100개 나라 맞히기, 난이도 초중급","yt":"D8vF6CXRhgc","dur":"13:41","views":307,"date":"2026-09-05"},{"id":"V0098","c1":"C6","c2":"S62","title":"집중력 향상 놀이! \"안 숨은그림 찾기 1탄\"","yt":"nA9I1iv_E8w","dur":"06:46","views":1278,"date":"2026-09-05"},{"id":"V0099","c1":"C6","c2":"S62","title":"[다른그림찾기]💥90초 안에 다른점 3개 찾아주세요! 집중력 향상 두뇌 퀴즈 Find the difference 치매 예방 퀴즈 / 두뇌게임 [틀린그림찾기] 678","yt":"DKA9vzuKFio","dur":"09:26","views":2249,"date":"2026-09-05"},{"id":"V0100","c1":"C6","c2":"S62","title":"【다른그림찾기 | 치매예방】천재도 차이점 3개 중 한 곳은 못 찾습니다! 재밌고 건강한 기억 훈련 퀴즈 문제!【두뇌운동 | Find Difference | 틀린그림찾기】#1602","yt":"0FLsBYtNPkg","dur":"09:26","views":3220,"date":"2026-09-05"},{"id":"V0101","c1":"C6","c2":"S63","title":"넌센스 퀴즈! 최고 재미있는 넌센스모음. 빵빵터지는 웃긴 것만 모은 아재퀴즈! 두뇌 트레이닝! 초성퀴즈ㅣ퍼즐ㅣ그림퀴즈ㅣ넌센스ㅣ초등학생퀴즈ㅣ유머퀴즈","yt":"4FR8-GOwlWs","dur":"04:06","views":4191,"date":"2026-09-05"},{"id":"V0102","c1":"C6","c2":"S63","title":"재미있는 넌센스퀴즈 모음 1탄(15문제) #넌센스 #넌센스퀴즈 #아재개그 #유머 #퀴즈 #수수께끼 ","yt":"7gjp3gdZE2U","dur":"04:14","views":5162,"date":"2026-09-05"},{"id":"V0103","c1":"C6","c2":"S63","title":"[두뇌퀴즈] \"뇌가 똑똑해지는 그림 넌센스 퀴즈 \"|수수께끼|아재개그|","yt":"JJRoMT3SiEg","dur":"08:03","views":6133,"date":"2026-09-05"},{"id":"V0104","c1":"C6","c2":"S63","title":"[넌센스] \"뇌가 똑똑해지는 그림 넌센스 퀴즈 30\"|수수께끼|아재개그|","yt":"zRJj-JwMpcc","dur":"10:54","views":7104,"date":"2026-09-05"}],"users":[{"id":"teacher","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"테스트","org":"스마트점핑 본부","region":"울산광역시 북구","role":"관리자"},{"id":"test","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"교사","org":"옥동초등학교","region":"울산광역시 남구","role":"교사"},{"id":"teststu","hash":"03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4","name":"학생","org":"강동초등학교 3학년 2반","region":"울산광역시 북구","role":"학생"}],"classes":[{"id":"CL001","owner":"teacher","ym":"2026-07","region":"울산광역시 북구","school":"강동초등학교","grade":1,"cls":3,"cap":8,"memo":"","sched":"1학기 기본과정"},{"id":"CL002","owner":"teacher","ym":"2026-08","region":"울산광역시 북구","school":"강동초등학교","grade":2,"cls":1,"cap":12,"memo":"","sched":"1학기 기본과정"},{"id":"CL003","owner":"teacher","ym":"2026-07","region":"울산광역시 북구","school":"강동초등학교","grade":3,"cls":2,"cap":15,"memo":"","sched":"리듬 점핑반"},{"id":"CL004","owner":"test","ym":"2026-08","region":"울산광역시 남구","school":"옥동초등학교","grade":4,"cls":1,"cap":20,"memo":"","sched":"체력왕 도전"},{"id":"CL005","owner":"test","ym":"2026-07","region":"부산광역시 해운대구","school":"해운대초등학교","grade":5,"cls":4,"cap":18,"memo":"","sched":"체력왕 도전"},{"id":"CL006","owner":"test","ym":"2026-08","region":"서울특별시 강남구","school":"대치초등학교","grade":6,"cls":2,"cap":22,"memo":"","sched":""}],"attendance":[{"classId":"CL001","name":"김민준","date":"2026-08-29","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-08-29","status":"출"},{"classId":"CL001","name":"박지호","date":"2026-08-29","status":"출"},{"classId":"CL001","name":"최수아","date":"2026-08-29","status":"결"},{"classId":"CL001","name":"정예준","date":"2026-08-29","status":"출"},{"classId":"CL001","name":"강하윤","date":"2026-08-29","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-08-29","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-08-29","status":"출"},{"classId":"CL001","name":"학생","date":"2026-08-29","status":"출"},{"classId":"CL001","name":"김민준","date":"2026-09-02","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-09-02","status":"출"},{"classId":"CL001","name":"박지호","date":"2026-09-02","status":"결"},{"classId":"CL001","name":"최수아","date":"2026-09-02","status":"출"},{"classId":"CL001","name":"정예준","date":"2026-09-02","status":"지"},{"classId":"CL001","name":"강하윤","date":"2026-09-02","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-09-02","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-09-02","status":"출"},{"classId":"CL001","name":"학생","date":"2026-09-02","status":"출"},{"classId":"CL001","name":"김민준","date":"2026-09-05","status":"출"},{"classId":"CL001","name":"이서연","date":"2026-09-05","status":"결"},{"classId":"CL001","name":"박지호","date":"2026-09-05","status":"출"},{"classId":"CL001","name":"최수아","date":"2026-09-05","status":"지"},{"classId":"CL001","name":"정예준","date":"2026-09-05","status":"출"},{"classId":"CL001","name":"강하윤","date":"2026-09-05","status":"출"},{"classId":"CL001","name":"조은우","date":"2026-09-05","status":"출"},{"classId":"CL001","name":"윤채원","date":"2026-09-05","status":"출"},{"classId":"CL001","name":"학생","date":"2026-09-05","status":"결"}],"equipment":[{"owner":"teacher","name":"스마트점핑 로프 (표준형)","agency":"울산대리점","fresh":20,"used":5},{"owner":"teacher","name":"스마트점핑 매트","agency":"울산대리점","fresh":12,"used":3},{"owner":"test","name":"스마트점핑 로프 (학급용)","agency":"울산대리점","fresh":30,"used":2}],"schedules":[{"owner":"teacher","name":"1학기 기본과정","items":[{"no":1,"videoIds":["V0008","V0030","V0062","V0048"]},{"no":2,"videoIds":["V0009","V0031","V0066","V0049"]}]},{"owner":"teacher","name":"리듬 점핑반","items":[{"no":1,"videoIds":["V0012","V0078","V0092"]}]},{"owner":"test","name":"체력왕 도전","items":[{"no":1,"videoIds":["V0032","V0037","V0042","V0050"]},{"no":2,"videoIds":["V0054","V0045","V0098"]}]}],"textbooks":[{"no":1,"title":"스마트점핑 01권","cover":"","link":"","badge":"특호"},{"no":2,"title":"스마트점핑 02권","cover":"","link":"","badge":""},{"no":3,"title":"스마트점핑 03권","cover":"","link":"","badge":""},{"no":4,"title":"스마트점핑 04권","cover":"","link":"","badge":""},{"no":5,"title":"스마트점핑 05권","cover":"","link":"","badge":""},{"no":6,"title":"스마트점핑 06권","cover":"","link":"","badge":""},{"no":7,"title":"스마트점핑 07권","cover":"","link":"","badge":""},{"no":8,"title":"스마트점핑 08권","cover":"","link":"","badge":""},{"no":9,"title":"스마트점핑 09권","cover":"","link":"","badge":""},{"no":10,"title":"스마트점핑 10권","cover":"","link":"","badge":""},{"no":11,"title":"스마트점핑 11권","cover":"","link":"","badge":""},{"no":12,"title":"스마트점핑 12권","cover":"","link":"","badge":""}],"favorites":{"teacher":["V0008","V0016","V0030","V0062","V0085"]}};
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
@@ -1587,6 +1632,45 @@ button.st-tag:hover{ filter:brightness(.94); }
   function roleOf(userId) { var u = userOf(userId); return u ? u.role : ''; }
   function isAdmin(userId) { return roleOf(userId) === '관리자'; }
 
+  /* ── 영상 (시드 + 이 브라우저에서 등록·수정·삭제한 것) ── */
+
+  function ytId(input) {
+    var s = String(input || '').trim();
+    if (!s) return '';
+    var m = s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);
+    if (m) return m[1];
+    return /^[A-Za-z0-9_-]{11}$/.test(s) ? s : '';
+  }
+  function canAdd(userId) {
+    var r = roleOf(userId);
+    return r === '교사' || r === '관리자';
+  }
+  function canEdit(userId, v) {
+    if (isAdmin(userId)) return true;
+    return roleOf(userId) === '교사' && v && v.by === userId;
+  }
+
+  /** withHidden 이 true 면 숨긴 영상까지 준다 (등록·관리 화면용) */
+  function allVideos(withHidden) {
+    var gone = get('videoDeleted', []) || [];
+    var edits = get('videoEdits', {}) || {};
+    var base = SEED.videos
+      .filter(function (v) { return gone.indexOf(v.id) < 0; })
+      .map(function (v) {
+        var e = edits[v.id] || {};
+        return {
+          id: v.id, c1: e.c1 || v.c1, c2: e.c2 || v.c2,
+          title: e.title || v.title, yt: v.yt,
+          dur: e.dur === undefined ? v.dur : e.dur,
+          views: v.views || 0, date: v.date, by: v.by || '',
+          show: e.show === undefined ? true : !!e.show
+        };
+      });
+    var added = (get('newVideos', []) || []).filter(function (v) { return gone.indexOf(v.id) < 0; });
+    var all = base.concat(added);
+    return withHidden ? all : all.filter(function (v) { return v.show !== false; });
+  }
+
   /* ══════════════ API 구현 ══════════════ */
   var API = {
 
@@ -1623,7 +1707,8 @@ button.st-tag:hover{ filter:brightness(.94); }
       var views = get('views', {});
       return {
         categories: SEED.categories,
-        videos: SEED.videos.map(function (v) {
+        // 이 브라우저에서 등록·수정·삭제한 것까지 합쳐서 준다
+        videos: allVideos(false).map(function (v) {
           return {
             id: v.id, c1: v.c1, c2: v.c2, title: v.title, yt: v.yt,
             dur: v.dur, views: (v.views || 0) + (views[v.id] || 0), date: v.date
@@ -1994,6 +2079,131 @@ button.st-tag:hover{ filter:brightness(.94); }
       });
     },
 
+    /* ══════════════ 영상 등록·관리 ══════════════
+       데모는 이 브라우저에만 저장된다. 등록한 영상도 이 브라우저에서만 보인다.
+       재생시간은 브라우저에서 읽을 수 없어(유튜브가 막는다) 손으로 적는다. */
+
+    api_ytLookup: function (userId, input) {
+      if (!canAdd(userId)) return { ok: false, msg: '교사 권한부터 영상을 등록할 수 있습니다.' };
+      var id = ytId(input);
+      if (!id) return { ok: false, msg: '유튜브 주소를 알아보지 못했습니다. 주소 전체를 붙여 넣어 주세요.' };
+      var dup = allVideos(true).filter(function (v) { return v.yt === id; })[0];
+      return fetch('https://www.youtube.com/oembed?format=json&url=' +
+        encodeURIComponent('https://www.youtube.com/watch?v=' + id))
+        .then(function (r) {
+          if (!r.ok) throw new Error('없는 영상');
+          return r.json();
+        })
+        .then(function (j) {
+          return {
+            ok: true, yt: id, title: String(j.title || ''), dur: '', embed: true,
+            thumb: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg',
+            dupId: dup ? dup.id : '', dupTitle: dup ? dup.title : '',
+            note: '데모에서는 재생시간을 자동으로 읽지 못합니다. 직접 적어 주세요.'
+          };
+        })
+        .catch(function () {
+          return { ok: false, msg: '유튜브에서 찾지 못했습니다. 비공개이거나 삭제된 영상입니다.' };
+        });
+    },
+
+    api_addVideo: function (userId, obj) {
+      if (!canAdd(userId)) return { ok: false, msg: '교사 권한부터 영상을 등록할 수 있습니다.' };
+      obj = obj || {};
+      var yt = ytId(obj.yt);
+      if (!yt) return { ok: false, msg: '유튜브 주소를 다시 확인해 주세요.' };
+      var title = String(obj.title || '').trim();
+      if (!title) return { ok: false, msg: '제목을 넣어 주세요.' };
+      var c1 = String(obj.c1 || '').trim(), c2 = String(obj.c2 || '').trim();
+      if (!c1 || !c2) return { ok: false, msg: '영역과 세부 분류를 골라 주세요.' };
+      var okCat = SEED.categories.some(function (c) {
+        return c.id === c1 && (c.subs || []).some(function (s) { return s.id === c2; });
+      });
+      if (!okCat) return { ok: false, msg: '없는 분류입니다. 영역과 세부 분류를 다시 고르세요.' };
+      if (allVideos(true).some(function (v) { return v.yt === yt; })) {
+        return { ok: false, msg: '이미 등록된 영상입니다.' };
+      }
+
+      var max = 0;
+      allVideos(true).forEach(function (v) {
+        var m = String(v.id).match(/^V(\d+)$/);
+        if (m) max = Math.max(max, Number(m[1]));
+      });
+      var id = 'V' + ('000' + (max + 1)).slice(-4);
+      var list = get('newVideos', []);
+      list.push({
+        id: id, c1: c1, c2: c2, title: title, yt: yt,
+        dur: String(obj.dur || '').trim(), views: 0, date: todayStr(),
+        by: userId, show: true
+      });
+      set('newVideos', list);
+      return { ok: true, id: id };
+    },
+
+    api_myVideos: function (userId) {
+      if (!canAdd(userId)) return { ok: false, msg: '교사 권한부터 볼 수 있습니다.' };
+      var admin = isAdmin(userId);
+      var list = allVideos(true).filter(function (v) { return admin || v.by === userId; });
+      return { ok: true, videos: list.slice().reverse(), admin: admin };
+    },
+
+    api_updateVideo: function (userId, videoId, obj) {
+      obj = obj || {};
+      var cur = allVideos(true).filter(function (v) { return v.id === videoId; })[0];
+      if (!cur) return { ok: false, msg: '영상을 찾을 수 없습니다.' };
+      if (!canEdit(userId, cur)) {
+        return { ok: false, msg: '내가 등록한 영상만 고칠 수 있습니다. 관리자에게 요청하세요.' };
+      }
+      var title = obj.title === undefined ? cur.title : String(obj.title).trim();
+      if (!title) return { ok: false, msg: '제목은 비울 수 없습니다.' };
+      var c1 = obj.c1 === undefined ? cur.c1 : String(obj.c1).trim();
+      var c2 = obj.c2 === undefined ? cur.c2 : String(obj.c2).trim();
+      var okCat = SEED.categories.some(function (c) {
+        return c.id === c1 && (c.subs || []).some(function (s) { return s.id === c2; });
+      });
+      if (!okCat) return { ok: false, msg: '없는 분류입니다.' };
+      var patch = {
+        title: title, c1: c1, c2: c2,
+        dur: obj.dur === undefined ? cur.dur : String(obj.dur).trim(),
+        show: obj.show === undefined ? cur.show : !!obj.show
+      };
+
+      var added = get('newVideos', []);
+      var i = added.findIndex(function (v) { return v.id === videoId; });
+      if (i >= 0) {
+        added[i] = Object.assign({}, added[i], patch);
+        set('newVideos', added);
+      } else {
+        var edits = get('videoEdits', {});
+        edits[videoId] = Object.assign({}, edits[videoId] || {}, patch);
+        set('videoEdits', edits);
+      }
+      return { ok: true };
+    },
+
+    api_deleteVideo: function (userId, videoId) {
+      var cur = allVideos(true).filter(function (v) { return v.id === videoId; })[0];
+      if (!cur) return { ok: false, msg: '영상을 찾을 수 없습니다.' };
+      if (!canEdit(userId, cur)) {
+        return { ok: false, msg: '내가 등록한 영상만 지울 수 있습니다. 관리자에게 요청하세요.' };
+      }
+      var added = get('newVideos', []).filter(function (v) { return v.id !== videoId; });
+      set('newVideos', added);
+      var gone = get('videoDeleted', []);
+      if (gone.indexOf(videoId) < 0) { gone.push(videoId); set('videoDeleted', gone); }
+
+      /* 담은 목록·즐겨찾기에 남은 자취를 지운다 */
+      ['playlists', 'favorites'].forEach(function (key) {
+        var box = get(key, {}) || {}, touched = false;
+        Object.keys(box).forEach(function (uid) {
+          var left = (box[uid] || []).filter(function (x) { return x !== videoId; });
+          if (left.length !== (box[uid] || []).length) { box[uid] = left; touched = true; }
+        });
+        if (touched) set(key, box);
+      });
+      return { ok: true };
+    },
+
     api_signup: function (obj) {
       if (!obj || !obj.id || !obj.pw || !obj.name) {
         return { ok: false, msg: '아이디·비밀번호·이름은 필수입니다.' };
@@ -2343,6 +2553,7 @@ function renderRoute() {
   if (key === 'guide') return viewGuide();
   if (key === 'library') return viewLibrary();
   if (key === 'classes') return viewClasses();
+  if (key === 'videos') return viewVideos();
   if (key === 'members') return viewMembers();
   if (key === 'myatt') return viewMyAttendance();
   if (key === 'textbook') return viewTextbook();
@@ -3861,6 +4072,269 @@ function buildReport(r) {
 
       '<div class="rep-foot">미래형학교체육 스마트점핑(Smart-Jumping) · ' + esc(c.school) + ' ' + esc(c.grade) + '-' + esc(c.cls) + '</div>' +
     '</div>';
+}
+
+/* ═══════════ 영상 등록·관리 (교사·관리자) ═══════════
+   교사는 자기가 올린 영상을, 관리자는 전체를 본다.
+   등록한 영상은 곧바로 라이브러리에 들어가 다른 선생님도 담아 쓴다. */
+
+function viewVideos() {
+  $('#view').innerHTML =
+    '<div class="page-head"><h1 class="page-title">영상 등록 · 관리</h1>' +
+    '<p class="page-desc">유튜브 주소를 붙여 넣으면 제목과 재생시간을 불러옵니다. ' +
+    '등록한 영상은 바로 라이브러리에 올라가 다른 선생님도 씁니다.</p></div>' +
+    '<div class="panel panel-pad vreg">' +
+      '<div class="vreg-row">' +
+        '<input id="vUrl" class="inp" placeholder="https://youtu.be/… 또는 https://www.youtube.com/watch?v=…" autocomplete="off">' +
+        '<button id="vLookup" class="btn btn-primary">불러오기</button>' +
+      '</div>' +
+      '<div id="vPrev" hidden></div>' +
+      '<p id="vMsg" class="vreg-msg" hidden></p>' +
+    '</div>' +
+    '<div id="vListWrap">' + skelPanel() + '</div>';
+
+  $('#vLookup').addEventListener('click', doLookup);
+  $('#vUrl').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLookup(); });
+  loadMyVideos();
+}
+
+function vmsg(text, kind) {
+  var el = $('#vMsg');
+  if (!el) return;
+  el.hidden = !text;
+  el.textContent = text || '';
+  el.className = 'vreg-msg' + (kind ? ' ' + kind : '');
+}
+
+function loadMyVideos() {
+  srv('api_myVideos', S.user.id).then(function (r) {
+    if (!r.ok) { $('#vListWrap').innerHTML = '<div class="empty"><b>' + esc(r.msg) + '</b></div>'; return; }
+    viewVideos._data = r;
+    renderMyVideos();
+  }).catch(function (e) { $('#vListWrap').innerHTML = errBox(e); });
+}
+
+/* 영역 · 세부 분류 고르는 두 줄 */
+function catSelects(c1, c2) {
+  var o1 = S.categories.map(function (c) {
+    return '<option value="' + esc(c.id) + '"' + (c.id === c1 ? ' selected' : '') + '>' + esc(c.name) + '</option>';
+  }).join('');
+  var cur = S.categories.filter(function (c) { return c.id === c1; })[0] || S.categories[0];
+  var o2 = ((cur && cur.subs) || []).map(function (s) {
+    return '<option value="' + esc(s.id) + '"' + (s.id === c2 ? ' selected' : '') + '>' + esc(s.name) + '</option>';
+  }).join('');
+  return '<select class="inp selC1">' + o1 + '</select><select class="inp selC2">' + o2 + '</select>';
+}
+
+/* 영역을 바꾸면 세부 분류를 다시 채운다 */
+function bindCatSelects(root) {
+  var s1 = root.querySelector('.selC1'), s2 = root.querySelector('.selC2');
+  if (!s1 || !s2) return;
+  s1.addEventListener('change', function () {
+    var c = S.categories.filter(function (x) { return x.id === s1.value; })[0];
+    s2.innerHTML = ((c && c.subs) || []).map(function (s) {
+      return '<option value="' + esc(s.id) + '">' + esc(s.name) + '</option>';
+    }).join('');
+  });
+}
+
+function doLookup() {
+  var url = $('#vUrl').value.trim();
+  if (!url) { vmsg('유튜브 주소를 넣어 주세요.', 'warn'); return; }
+  var btn = $('#vLookup');
+  btn.disabled = true; btn.textContent = '불러오는 중…';
+  vmsg('');
+  $('#vPrev').hidden = true;
+
+  srv('api_ytLookup', S.user.id, url).then(function (r) {
+    btn.disabled = false; btn.textContent = '불러오기';
+    if (!r.ok) { vmsg(r.msg, 'warn'); return; }
+    if (r.dupId) {
+      vmsg('이미 등록된 영상입니다. (' + r.dupId + ' ' + r.dupTitle + ')', 'warn');
+      return;
+    }
+    var p = $('#vPrev');
+    p.innerHTML =
+      '<div class="vprev">' +
+        '<img class="vprev-th" src="' + esc(r.thumb) + '" alt="">' +
+        '<div class="vprev-body">' +
+          '<label class="vlab">제목</label>' +
+          '<input id="vTitle" class="inp" value="' + esc(r.title) + '">' +
+          '<div class="vgrid">' +
+            '<div><label class="vlab">영역 · 세부 분류</label>' + catSelects(S.c1, '') + '</div>' +
+            '<div><label class="vlab">재생시간</label>' +
+              '<input id="vDur" class="inp" value="' + esc(r.dur) + '" placeholder="04:30"></div>' +
+          '</div>' +
+          '<div class="vprev-foot">' +
+            '<span class="vyt">' + esc(r.yt) + '</span>' +
+            '<button id="vAdd" class="btn btn-primary">등록</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    p.hidden = false;
+    bindCatSelects(p);
+    if (r.embed === false) vmsg('이 영상은 유튜브에서 외부 재생을 막아 두었습니다. 등록해도 교실에서 재생되지 않습니다.', 'warn');
+    else if (r.note) vmsg(r.note);
+    $('#vAdd').addEventListener('click', function () { doAdd(r.yt); });
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = '불러오기';
+    vmsg('불러오지 못했습니다. ' + (e && e.message ? e.message : e), 'warn');
+  });
+}
+
+function doAdd(yt) {
+  var p = $('#vPrev');
+  var obj = {
+    yt: yt,
+    title: $('#vTitle').value.trim(),
+    c1: p.querySelector('.selC1').value,
+    c2: p.querySelector('.selC2').value,
+    dur: $('#vDur').value.trim()
+  };
+  if (!obj.title) { vmsg('제목을 넣어 주세요.', 'warn'); return; }
+  var btn = $('#vAdd');
+  btn.disabled = true; btn.textContent = '등록 중…';
+
+  srv('api_addVideo', S.user.id, obj).then(function (r) {
+    btn.disabled = false; btn.textContent = '등록';
+    if (!r.ok) { vmsg(r.msg, 'warn'); return; }
+    toast('등록했습니다. (' + r.id + ')');
+    $('#vUrl').value = '';
+    p.hidden = true;
+    vmsg('');
+    reloadLibrary();
+    loadMyVideos();
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = '등록';
+    vmsg('등록하지 못했습니다. ' + (e && e.message ? e.message : e), 'warn');
+  });
+}
+
+/** 라이브러리 목록을 서버에서 다시 받아 새 영상이 바로 보이게 한다 */
+function reloadLibrary() {
+  srv('api_bootstrap', S.user ? S.user.id : '').then(function (d) {
+    if (!d) return;
+    S.categories = d.categories || S.categories;
+    S.videos = d.videos || S.videos;
+  }).catch(function () {});
+}
+
+function renderMyVideos() {
+  var r = viewVideos._data;
+  var q = (renderMyVideos._q || '').toLowerCase();
+  var list = r.videos.filter(function (v) {
+    if (!q) return true;
+    return (v.title + ' ' + v.id + ' ' + v.yt + ' ' + (v.by || '')).toLowerCase().indexOf(q) >= 0;
+  });
+  var name = function (id, subId) {
+    var c = S.categories.filter(function (x) { return x.id === id; })[0];
+    if (!c) return id;
+    var s = (c.subs || []).filter(function (x) { return x.id === subId; })[0];
+    return c.name + (s ? ' · ' + s.name : '');
+  };
+
+  var rows = list.map(function (v) {
+    return '<tr' + (v.show ? '' : ' class="row-off"') + ' data-vid="' + esc(v.id) + '">' +
+      '<td class="vt-th"><img src="https://i.ytimg.com/vi/' + esc(v.yt) + '/default.jpg" alt=""></td>' +
+      '<td><b>' + esc(v.title) + '</b><span class="vt-sub">' + esc(v.id) + ' · ' + esc(v.yt) +
+        (v.dur ? ' · ' + esc(v.dur) : '') + '</span></td>' +
+      '<td class="vt-cat">' + esc(name(v.c1, v.c2)) + '</td>' +
+      (r.admin ? '<td class="vt-by">' + esc(v.by || '—') + '</td>' : '') +
+      '<td class="vt-date">' + esc(v.date) + '</td>' +
+      '<td class="vt-act">' +
+        '<button class="btn btn-sm" data-act="edit">수정</button>' +
+        '<button class="btn btn-sm" data-act="show">' + (v.show ? '숨기기' : '보이기') + '</button>' +
+        '<button class="btn btn-sm btn-danger" data-act="del">삭제</button>' +
+      '</td></tr>';
+  }).join('');
+
+  $('#vListWrap').innerHTML =
+    '<div class="panel">' +
+      '<div class="count-row">' +
+        '<span class="count-txt">' + (r.admin ? '전체' : '내가 등록한 영상') +
+          ' <b>' + r.videos.length + '</b> / 검색 <b>' + list.length + '</b></span>' +
+        '<input id="vq" class="inp inp-sm" placeholder="제목·ID 검색" value="' + esc(renderMyVideos._q || '') + '">' +
+      '</div>' +
+      (list.length
+        ? '<table class="tbl vtbl"><thead><tr><th></th><th>영상</th><th>분류</th>' +
+          (r.admin ? '<th>등록자</th>' : '') + '<th>등록일</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>'
+        : '<div class="empty"><b>아직 등록한 영상이 없습니다</b>위에서 유튜브 주소를 붙여 넣어 등록하세요.</div>') +
+    '</div>';
+
+  var qi = $('#vq');
+  qi.addEventListener('input', function () {
+    renderMyVideos._q = qi.value;
+    var at = qi.selectionStart;
+    renderMyVideos();
+    var n = $('#vq'); n.focus(); n.setSelectionRange(at, at);
+  });
+
+  $$('#vListWrap [data-act]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var id = b.closest('tr').getAttribute('data-vid');
+      var v = r.videos.filter(function (x) { return x.id === id; })[0];
+      if (!v) return;
+      var act = b.getAttribute('data-act');
+      if (act === 'edit') return editVideo(v);
+      if (act === 'show') return saveVideo(v.id, { show: !v.show });
+      if (act === 'del') return delVideo(v);
+    });
+  });
+}
+
+function editVideo(v) {
+  modal('영상 수정',
+    '<div class="vedit">' +
+      '<label class="vlab">제목</label>' +
+      '<input id="evTitle" class="inp" value="' + esc(v.title) + '">' +
+      '<div class="vgrid">' +
+        '<div><label class="vlab">영역 · 세부 분류</label>' + catSelects(v.c1, v.c2) + '</div>' +
+        '<div><label class="vlab">재생시간</label>' +
+          '<input id="evDur" class="inp" value="' + esc(v.dur || '') + '" placeholder="04:30"></div>' +
+      '</div>' +
+      '<p class="vreg-msg">유튜브 주소는 바꿀 수 없습니다. 다른 영상이면 지우고 새로 등록하세요.</p>' +
+    '</div>',
+    '<button class="btn" id="evCancel">취소</button>' +
+    '<button class="btn btn-primary" id="evSave">저장</button>');
+  bindCatSelects($('#modalBody'));
+  $('#evCancel').addEventListener('click', closeModal);
+  $('#evSave').addEventListener('click', function () {
+    saveVideo(v.id, {
+      title: $('#evTitle').value.trim(),
+      c1: $('#modalBody').querySelector('.selC1').value,
+      c2: $('#modalBody').querySelector('.selC2').value,
+      dur: $('#evDur').value.trim()
+    });
+  });
+}
+
+function saveVideo(id, patch) {
+  srv('api_updateVideo', S.user.id, id, patch).then(function (r) {
+    if (!r.ok) { toast(r.msg); return; }
+    closeModal();
+    toast('저장했습니다.');
+    reloadLibrary();
+    loadMyVideos();
+  }).catch(function (e) { toast('저장하지 못했습니다.'); });
+}
+
+function delVideo(v) {
+  modal('영상 삭제',
+    '<p>「<b>' + esc(v.title) + '</b>」 을 목록에서 지웁니다.</p>' +
+    '<p class="vreg-msg">담은 영상과 즐겨찾기, 커리큘럼에 들어 있던 자취도 함께 사라집니다. ' +
+    '유튜브에 올린 원본은 그대로 남습니다.</p>',
+    '<button class="btn" id="dvCancel">취소</button>' +
+    '<button class="btn btn-danger" id="dvOk">삭제</button>');
+  $('#dvCancel').addEventListener('click', closeModal);
+  $('#dvOk').addEventListener('click', function () {
+    srv('api_deleteVideo', S.user.id, v.id).then(function (r) {
+      if (!r.ok) { toast(r.msg); return; }
+      closeModal();
+      toast('지웠습니다.');
+      reloadLibrary();
+      loadMyVideos();
+    }).catch(function () { toast('지우지 못했습니다.'); });
+  });
 }
 
 /* ═══════════ 회원관리 (관리자 전용) ═══════════ */

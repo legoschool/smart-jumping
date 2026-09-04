@@ -742,6 +742,226 @@ function api_resetMemberPw(adminId, targetId, newPw) {
 }
 
 /* ═══════════════════════════════════════════
+   영상 등록·관리
+
+   교사가 사이트에서 유튜브 주소를 붙여 넣어 등록한다. 등록한 영상은 곧바로
+   전체 라이브러리에 들어가 다른 선생님도 담아 쓸 수 있다.
+   시트를 직접 여는 것은 이제 선택이다.
+
+   권한
+     학생   못 한다
+     교사   등록. 자기가 올린 영상만 수정·삭제
+     관리자 전체 영상 수정·삭제·숨김
+   ═══════════════════════════════════════════ */
+
+/** 주소든 ID든 11자 유튜브 ID 만 뽑아 낸다 */
+function ytId_(input) {
+  const s = String(input || '').trim();
+  if (!s) return '';
+  const m = s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  return /^[A-Za-z0-9_-]{11}$/.test(s) ? s : '';
+}
+
+/** 초 → 04:30 / 1:02:03 */
+function mmss_(sec) {
+  sec = Math.max(0, Math.round(Number(sec) || 0));
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  const p = function (n) { return ('0' + n).slice(-2); };
+  return h ? (h + ':' + p(m) + ':' + p(s)) : (p(m) + ':' + p(s));
+}
+
+/** 영상을 등록할 수 있는 권한인가 */
+function canAddVideo_(userId) {
+  const r = roleOf_(userId);
+  return r === '교사' || r === '관리자';
+}
+
+/** 그 영상을 고치거나 지울 수 있는가. 관리자는 전부, 교사는 자기가 올린 것만 */
+function canEditVideo_(userId, row) {
+  const r = roleOf_(userId);
+  if (r === '관리자') return true;
+  if (r !== '교사') return false;
+  return String(row['등록자'] || '') === String(userId);
+}
+
+function nextVideoId_(rows) {
+  let max = 0;
+  rows.forEach(function (v) {
+    const m = String(v['영상ID']).match(/^V(\d+)$/);
+    if (m) max = Math.max(max, Number(m[1]));
+  });
+  return 'V' + ('000' + (max + 1)).slice(-4);
+}
+
+/**
+ * 유튜브에서 제목·재생시간·퍼가기 허용 여부를 읽어 온다.
+ * 등록 화면에서 주소를 붙여 넣는 순간 부른다. 호출 두 번(oEmbed + watch)이다.
+ */
+function api_ytLookup(userId, input) {
+  if (!canAddVideo_(userId)) return { ok: false, msg: '교사 권한부터 영상을 등록할 수 있습니다.' };
+
+  const id = ytId_(input);
+  if (!id) return { ok: false, msg: '유튜브 주소를 알아보지 못했습니다. 주소 전체를 붙여 넣어 주세요.' };
+
+  const dup = readAll_(T.VIDEOS).filter(function (v) {
+    return String(v['youtube_id']).trim() === id;
+  })[0];
+
+  let title = '', dur = '', embed = true;
+  try {
+    const o = UrlFetchApp.fetch(
+      'https://www.youtube.com/oembed?format=json&url=' +
+      encodeURIComponent('https://www.youtube.com/watch?v=' + id),
+      { muteHttpExceptions: true });
+    if (o.getResponseCode() !== 200) {
+      return { ok: false, msg: '유튜브에서 찾지 못했습니다. 비공개이거나 삭제된 영상입니다.' };
+    }
+    title = String(JSON.parse(o.getContentText()).title || '');
+  } catch (e) {
+    return { ok: false, msg: '유튜브에 연결하지 못했습니다. 잠시 뒤 다시 시도하세요.' };
+  }
+
+  /* 재생시간과 퍼가기 여부는 watch 페이지에서 읽는다. 실패해도 등록은 막지 않는다 */
+  try {
+    const w = UrlFetchApp.fetch('https://www.youtube.com/watch?v=' + id,
+      { muteHttpExceptions: true, headers: { 'Accept-Language': 'ko-KR,ko' } });
+    const html = w.getContentText();
+    const ml = html.match(/"lengthSeconds":"(\d+)"/);
+    if (ml) dur = mmss_(ml[1]);
+    const me = html.match(/"playableInEmbed":(true|false)/);
+    if (me) embed = (me[1] === 'true');
+  } catch (e) { /* 제목만으로도 등록은 된다 */ }
+
+  return {
+    ok: true, yt: id, title: title, dur: dur, embed: embed,
+    thumb: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg',
+    dupId: dup ? String(dup['영상ID']) : '',
+    dupTitle: dup ? String(dup['제목']) : ''
+  };
+}
+
+/** 영상 한 편 등록 */
+function api_addVideo(userId, obj) {
+  return withLock_(function () {
+    if (!canAddVideo_(userId)) return { ok: false, msg: '교사 권한부터 영상을 등록할 수 있습니다.' };
+    obj = obj || {};
+
+    const yt = ytId_(obj.yt);
+    if (!yt) return { ok: false, msg: '유튜브 주소를 다시 확인해 주세요.' };
+    const title = String(obj.title || '').trim();
+    if (!title) return { ok: false, msg: '제목을 넣어 주세요.' };
+    const c1 = String(obj.c1 || '').trim(), c2 = String(obj.c2 || '').trim();
+    if (!c1 || !c2) return { ok: false, msg: '영역과 세부 분류를 골라 주세요.' };
+
+    const cats = readAll_(T.CATEGORIES);
+    const okCat = cats.some(function (r) {
+      return String(r['대분류ID']) === c1 && String(r['소분류ID']) === c2;
+    });
+    if (!okCat) return { ok: false, msg: '없는 분류입니다. 영역과 세부 분류를 다시 고르세요.' };
+
+    const rows = readAll_(T.VIDEOS);
+    if (rows.some(function (v) { return String(v['youtube_id']).trim() === yt; })) {
+      return { ok: false, msg: '이미 등록된 영상입니다.' };
+    }
+
+    const id = nextVideoId_(rows);
+    appendRows_(T.VIDEOS, [{
+      '영상ID': id, '대분류ID': c1, '소분류ID': c2, '제목': title,
+      'youtube_id': yt, '재생시간': String(obj.dur || '').trim(),
+      '조회수': 0, '등록일': today_(), '노출여부': 'Y', '등록자': String(userId)
+    }]);
+    clearCache_();
+    return { ok: true, id: id };
+  });
+}
+
+/** 등록·관리 화면 목록. 관리자는 전체(숨김 포함), 교사는 자기가 올린 것 */
+function api_myVideos(userId) {
+  if (!canAddVideo_(userId)) return { ok: false, msg: '교사 권한부터 볼 수 있습니다.' };
+  const isAdmin = roleOf_(userId) === '관리자';
+  const list = readAll_(T.VIDEOS)
+    .filter(function (v) { return isAdmin || String(v['등록자'] || '') === String(userId); })
+    .map(function (v) {
+      return {
+        id: String(v['영상ID']), c1: String(v['대분류ID']), c2: String(v['소분류ID']),
+        title: String(v['제목']), yt: String(v['youtube_id'] || '').trim(),
+        dur: String(v['재생시간'] || ''), views: Number(v['조회수']) || 0,
+        date: String(v['등록일'] || ''), by: String(v['등록자'] || ''),
+        show: String(v['노출여부']).toUpperCase() !== 'N'
+      };
+    })
+    .reverse();
+  return { ok: true, videos: list, admin: isAdmin };
+}
+
+/** 제목·분류·재생시간·노출여부 수정 */
+function api_updateVideo(userId, videoId, obj) {
+  return withLock_(function () {
+    obj = obj || {};
+    const rows = readAll_(T.VIDEOS);
+    const idx = rows.findIndex(function (v) { return String(v['영상ID']) === String(videoId); });
+    if (idx < 0) return { ok: false, msg: '영상을 찾을 수 없습니다.' };
+    if (!canEditVideo_(userId, rows[idx])) {
+      return { ok: false, msg: '내가 등록한 영상만 고칠 수 있습니다. 관리자에게 요청하세요.' };
+    }
+
+    const cur = rows[idx];
+    const title = obj.title === undefined ? String(cur['제목']) : String(obj.title).trim();
+    if (!title) return { ok: false, msg: '제목은 비울 수 없습니다.' };
+    const c1 = obj.c1 === undefined ? String(cur['대분류ID']) : String(obj.c1).trim();
+    const c2 = obj.c2 === undefined ? String(cur['소분류ID']) : String(obj.c2).trim();
+    const okCat = readAll_(T.CATEGORIES).some(function (r) {
+      return String(r['대분류ID']) === c1 && String(r['소분류ID']) === c2;
+    });
+    if (!okCat) return { ok: false, msg: '없는 분류입니다.' };
+
+    const show = obj.show === undefined ? String(cur['노출여부']) : (obj.show ? 'Y' : 'N');
+    const dur = obj.dur === undefined ? String(cur['재생시간']) : String(obj.dur).trim();
+
+    const sh = sheet_(T.VIDEOS), r = idx + 2;
+    sh.getRange(r, 2).setValue(c1);
+    sh.getRange(r, 3).setValue(c2);
+    sh.getRange(r, 4).setValue(title);
+    sh.getRange(r, 6).setValue(dur);
+    sh.getRange(r, 9).setValue(show);
+    clearCache_();
+    return { ok: true };
+  });
+}
+
+/** 영상 삭제. 담은 목록·즐겨찾기·커리큘럼에 남은 자취까지 지운다 */
+function api_deleteVideo(userId, videoId) {
+  return withLock_(function () {
+    const rows = readAll_(T.VIDEOS);
+    const idx = rows.findIndex(function (v) { return String(v['영상ID']) === String(videoId); });
+    if (idx < 0) return { ok: false, msg: '영상을 찾을 수 없습니다.' };
+    if (!canEditVideo_(userId, rows[idx])) {
+      return { ok: false, msg: '내가 등록한 영상만 지울 수 있습니다. 관리자에게 요청하세요.' };
+    }
+
+    sheet_(T.VIDEOS).deleteRow(idx + 2);
+
+    const drop = function (tab, col) {
+      const list = readAll_(tab);
+      let touched = false;
+      list.forEach(function (row) {
+        const ids = String(row[col] || '').split(',').map(function (x) { return x.trim(); });
+        const left = ids.filter(function (x) { return x && x !== String(videoId); });
+        if (left.length !== ids.filter(Boolean).length) { row[col] = left.join(','); touched = true; }
+      });
+      if (touched) replaceAll_(tab, list);
+    };
+    drop(T.PLAYLISTS, '담은영상ID목록');
+    drop(T.FAVORITES, '즐겨찾기영상ID목록');
+    drop(T.SCHEDULES, '영상ID목록');
+
+    clearCache_();
+    return { ok: true };
+  });
+}
+
+/* ═══════════════════════════════════════════
    관리
    ═══════════════════════════════════════════ */
 

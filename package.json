@@ -14,7 +14,10 @@
     "check": "npm test && npm run build",
     "guide": "node tools/guide/build.js && node tools/guide/pdf.js",
     "guide:shots": "node tools/guide/capture.js && node tools/guide/capture-extra.js && node tools/guide/optimize.js",
-    "guide:measure": "node tools/guide/measure.js"
+    "guide:measure": "node tools/guide/measure.js",
+    "guide:mask": "node tools/guide/mask-yt.js",
+    "guide:sheet": "node tools/guide/capture-sheet.js",
+    "guide:live": "node tools/guide/capture-live.js"
   },
   "dependencies": {
     "xlsx": "^0.18.5"

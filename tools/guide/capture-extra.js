@@ -86,6 +86,37 @@ const log = (...a) => console.log(...a);
   await sleep(900);
   await shot('21c-classes-table', '.panel');
 
+  log('\n▶ 영상 등록 · 관리');
+  /* 교사로 들어가 실제로 한 편 불러오고 등록해 화면을 만든다.
+     데모의 localStorage 는 이 캡처용 브라우저에만 남는다 */
+  await login('test');
+  await go('#/videos');
+  await sleep(900);
+  await page.evaluate(() => {
+    document.querySelector('#vUrl').value = 'https://www.youtube.com/watch?v=9bZkp7q19f0';
+    document.querySelector('#vLookup').click();
+  });
+  await page.waitForFunction(() => {
+    const p = document.querySelector('#vPrev');
+    return p && !p.hidden;
+  }, { timeout: 20000 }).catch(() => {});
+  await sleep(600);
+  await page.evaluate(() => {
+    const d = document.querySelector('#vDur');
+    if (d && !d.value) d.value = '04:13';
+  });
+  await shot('35-video-form', '.vreg');
+
+  await page.evaluate(() => { const b = document.querySelector('#vAdd'); if (b) b.click(); });
+  await sleep(2200);
+  await shot('36-video-list', '#vListWrap');
+
+  /* 관리자 화면 — 등록자 열과 수정 · 숨기기 · 삭제 */
+  await login('teacher');
+  await go('#/videos');
+  await sleep(1500);
+  await shot('37-video-admin', '#vListWrap');
+
   await browser.close();
   log('\n실패 ' + fail.length + '건' + (fail.length ? ': ' + fail.join(', ') : ''));
 })();

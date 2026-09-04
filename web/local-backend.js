@@ -107,6 +107,45 @@
   function roleOf(userId) { var u = userOf(userId); return u ? u.role : ''; }
   function isAdmin(userId) { return roleOf(userId) === '관리자'; }
 
+  /* ── 영상 (시드 + 이 브라우저에서 등록·수정·삭제한 것) ── */
+
+  function ytId(input) {
+    var s = String(input || '').trim();
+    if (!s) return '';
+    var m = s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);
+    if (m) return m[1];
+    return /^[A-Za-z0-9_-]{11}$/.test(s) ? s : '';
+  }
+  function canAdd(userId) {
+    var r = roleOf(userId);
+    return r === '교사' || r === '관리자';
+  }
+  function canEdit(userId, v) {
+    if (isAdmin(userId)) return true;
+    return roleOf(userId) === '교사' && v && v.by === userId;
+  }
+
+  /** withHidden 이 true 면 숨긴 영상까지 준다 (등록·관리 화면용) */
+  function allVideos(withHidden) {
+    var gone = get('videoDeleted', []) || [];
+    var edits = get('videoEdits', {}) || {};
+    var base = SEED.videos
+      .filter(function (v) { return gone.indexOf(v.id) < 0; })
+      .map(function (v) {
+        var e = edits[v.id] || {};
+        return {
+          id: v.id, c1: e.c1 || v.c1, c2: e.c2 || v.c2,
+          title: e.title || v.title, yt: v.yt,
+          dur: e.dur === undefined ? v.dur : e.dur,
+          views: v.views || 0, date: v.date, by: v.by || '',
+          show: e.show === undefined ? true : !!e.show
+        };
+      });
+    var added = (get('newVideos', []) || []).filter(function (v) { return gone.indexOf(v.id) < 0; });
+    var all = base.concat(added);
+    return withHidden ? all : all.filter(function (v) { return v.show !== false; });
+  }
+
   /* ══════════════ API 구현 ══════════════ */
   var API = {
 
@@ -143,7 +182,8 @@
       var views = get('views', {});
       return {
         categories: SEED.categories,
-        videos: SEED.videos.map(function (v) {
+        // 이 브라우저에서 등록·수정·삭제한 것까지 합쳐서 준다
+        videos: allVideos(false).map(function (v) {
           return {
             id: v.id, c1: v.c1, c2: v.c2, title: v.title, yt: v.yt,
             dur: v.dur, views: (v.views || 0) + (views[v.id] || 0), date: v.date
@@ -512,6 +552,131 @@
         if (w.indexOf(userId) < 0) { w.push(userId); set('withdrawn', w); }
         return { ok: true };
       });
+    },
+
+    /* ══════════════ 영상 등록·관리 ══════════════
+       데모는 이 브라우저에만 저장된다. 등록한 영상도 이 브라우저에서만 보인다.
+       재생시간은 브라우저에서 읽을 수 없어(유튜브가 막는다) 손으로 적는다. */
+
+    api_ytLookup: function (userId, input) {
+      if (!canAdd(userId)) return { ok: false, msg: '교사 권한부터 영상을 등록할 수 있습니다.' };
+      var id = ytId(input);
+      if (!id) return { ok: false, msg: '유튜브 주소를 알아보지 못했습니다. 주소 전체를 붙여 넣어 주세요.' };
+      var dup = allVideos(true).filter(function (v) { return v.yt === id; })[0];
+      return fetch('https://www.youtube.com/oembed?format=json&url=' +
+        encodeURIComponent('https://www.youtube.com/watch?v=' + id))
+        .then(function (r) {
+          if (!r.ok) throw new Error('없는 영상');
+          return r.json();
+        })
+        .then(function (j) {
+          return {
+            ok: true, yt: id, title: String(j.title || ''), dur: '', embed: true,
+            thumb: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg',
+            dupId: dup ? dup.id : '', dupTitle: dup ? dup.title : '',
+            note: '데모에서는 재생시간을 자동으로 읽지 못합니다. 직접 적어 주세요.'
+          };
+        })
+        .catch(function () {
+          return { ok: false, msg: '유튜브에서 찾지 못했습니다. 비공개이거나 삭제된 영상입니다.' };
+        });
+    },
+
+    api_addVideo: function (userId, obj) {
+      if (!canAdd(userId)) return { ok: false, msg: '교사 권한부터 영상을 등록할 수 있습니다.' };
+      obj = obj || {};
+      var yt = ytId(obj.yt);
+      if (!yt) return { ok: false, msg: '유튜브 주소를 다시 확인해 주세요.' };
+      var title = String(obj.title || '').trim();
+      if (!title) return { ok: false, msg: '제목을 넣어 주세요.' };
+      var c1 = String(obj.c1 || '').trim(), c2 = String(obj.c2 || '').trim();
+      if (!c1 || !c2) return { ok: false, msg: '영역과 세부 분류를 골라 주세요.' };
+      var okCat = SEED.categories.some(function (c) {
+        return c.id === c1 && (c.subs || []).some(function (s) { return s.id === c2; });
+      });
+      if (!okCat) return { ok: false, msg: '없는 분류입니다. 영역과 세부 분류를 다시 고르세요.' };
+      if (allVideos(true).some(function (v) { return v.yt === yt; })) {
+        return { ok: false, msg: '이미 등록된 영상입니다.' };
+      }
+
+      var max = 0;
+      allVideos(true).forEach(function (v) {
+        var m = String(v.id).match(/^V(\d+)$/);
+        if (m) max = Math.max(max, Number(m[1]));
+      });
+      var id = 'V' + ('000' + (max + 1)).slice(-4);
+      var list = get('newVideos', []);
+      list.push({
+        id: id, c1: c1, c2: c2, title: title, yt: yt,
+        dur: String(obj.dur || '').trim(), views: 0, date: todayStr(),
+        by: userId, show: true
+      });
+      set('newVideos', list);
+      return { ok: true, id: id };
+    },
+
+    api_myVideos: function (userId) {
+      if (!canAdd(userId)) return { ok: false, msg: '교사 권한부터 볼 수 있습니다.' };
+      var admin = isAdmin(userId);
+      var list = allVideos(true).filter(function (v) { return admin || v.by === userId; });
+      return { ok: true, videos: list.slice().reverse(), admin: admin };
+    },
+
+    api_updateVideo: function (userId, videoId, obj) {
+      obj = obj || {};
+      var cur = allVideos(true).filter(function (v) { return v.id === videoId; })[0];
+      if (!cur) return { ok: false, msg: '영상을 찾을 수 없습니다.' };
+      if (!canEdit(userId, cur)) {
+        return { ok: false, msg: '내가 등록한 영상만 고칠 수 있습니다. 관리자에게 요청하세요.' };
+      }
+      var title = obj.title === undefined ? cur.title : String(obj.title).trim();
+      if (!title) return { ok: false, msg: '제목은 비울 수 없습니다.' };
+      var c1 = obj.c1 === undefined ? cur.c1 : String(obj.c1).trim();
+      var c2 = obj.c2 === undefined ? cur.c2 : String(obj.c2).trim();
+      var okCat = SEED.categories.some(function (c) {
+        return c.id === c1 && (c.subs || []).some(function (s) { return s.id === c2; });
+      });
+      if (!okCat) return { ok: false, msg: '없는 분류입니다.' };
+      var patch = {
+        title: title, c1: c1, c2: c2,
+        dur: obj.dur === undefined ? cur.dur : String(obj.dur).trim(),
+        show: obj.show === undefined ? cur.show : !!obj.show
+      };
+
+      var added = get('newVideos', []);
+      var i = added.findIndex(function (v) { return v.id === videoId; });
+      if (i >= 0) {
+        added[i] = Object.assign({}, added[i], patch);
+        set('newVideos', added);
+      } else {
+        var edits = get('videoEdits', {});
+        edits[videoId] = Object.assign({}, edits[videoId] || {}, patch);
+        set('videoEdits', edits);
+      }
+      return { ok: true };
+    },
+
+    api_deleteVideo: function (userId, videoId) {
+      var cur = allVideos(true).filter(function (v) { return v.id === videoId; })[0];
+      if (!cur) return { ok: false, msg: '영상을 찾을 수 없습니다.' };
+      if (!canEdit(userId, cur)) {
+        return { ok: false, msg: '내가 등록한 영상만 지울 수 있습니다. 관리자에게 요청하세요.' };
+      }
+      var added = get('newVideos', []).filter(function (v) { return v.id !== videoId; });
+      set('newVideos', added);
+      var gone = get('videoDeleted', []);
+      if (gone.indexOf(videoId) < 0) { gone.push(videoId); set('videoDeleted', gone); }
+
+      /* 담은 목록·즐겨찾기에 남은 자취를 지운다 */
+      ['playlists', 'favorites'].forEach(function (key) {
+        var box = get(key, {}) || {}, touched = false;
+        Object.keys(box).forEach(function (uid) {
+          var left = (box[uid] || []).filter(function (x) { return x !== videoId; });
+          if (left.length !== (box[uid] || []).length) { box[uid] = left; touched = true; }
+        });
+        if (touched) set(key, box);
+      });
+      return { ok: true };
     },
 
     api_signup: function (obj) {

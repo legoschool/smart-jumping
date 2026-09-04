@@ -16,7 +16,8 @@ global.__api = {
   api_textbooks, api_updateProfile, api_signup, readAll_, T,
   api_classCurriculum, api_attendanceSummary, api_deleteAttendanceDate,
   api_members, api_setMemberRole, api_setMemberStatus, api_resetMemberPw,
-  api_saveFavorites, api_myAttendance, api_classReport
+  api_saveFavorites, api_myAttendance, api_classReport,
+  api_ytLookup, api_addVideo, api_myVideos, api_updateVideo, api_deleteVideo, ytId_, mmss_
 };
 `;
 eval(src);
@@ -335,6 +336,62 @@ ok('중복 아이디 거부', !A.api_signup({ id: 'teacher', pw: 'x', name: 'y' 
 ok('신규 가입 성공', A.api_signup({ id: 'newbie', pw: 'abcd', name: '신규교사' }).ok);
 ok('가입 후 로그인', A.api_login('newbie', 'abcd').ok);
 
+console.log('\n━━━ 13. 영상 등록·관리 ━━━');
+ok('주소에서 ID 추출 (watch)', A.ytId_('https://www.youtube.com/watch?v=AbCdEfGh123&t=30s') === 'AbCdEfGh123');
+ok('주소에서 ID 추출 (youtu.be)', A.ytId_('https://youtu.be/AbCdEfGh123') === 'AbCdEfGh123');
+ok('ID 만 넣어도 통과', A.ytId_('AbCdEfGh123') === 'AbCdEfGh123');
+ok('엉뚱한 주소는 빈 값', A.ytId_('https://example.com/a') === '');
+ok('초 → 재생시간', A.mmss_(376) === '06:16' && A.mmss_(3723) === '1:02:03', A.mmss_(376) + ' / ' + A.mmss_(3723));
+
+const vBefore = A.readAll_(A.T.VIDEOS).length;
+ok('학생은 등록 못 함', !A.api_addVideo('teststu', { yt: 'AbCdEfGh123', title: 'x', c1: 'C1', c2: 'S11' }).ok);
+ok('분류 없이 등록 거부', !A.api_addVideo('test', { yt: 'AbCdEfGh123', title: 'x' }).ok);
+ok('없는 분류 거부', !A.api_addVideo('test', { yt: 'AbCdEfGh123', title: 'x', c1: 'C9', c2: 'S99' }).ok);
+
+const vAdded = A.api_addVideo('test', {
+  yt: 'https://youtu.be/AbCdEfGh123', title: '교사가 올린 영상', c1: 'C1', c2: 'S11', dur: '04:30'
+});
+ok('교사 등록 성공', vAdded.ok, vAdded.id);
+ok('영상ID 이어서 발급', vAdded.id === 'V0105', vAdded.id);
+ok('videos 한 줄 늘어남', A.readAll_(A.T.VIDEOS).length === vBefore + 1);
+ok('중복 등록 거부', !A.api_addVideo('test', { yt: 'AbCdEfGh123', title: 'y', c1: 'C1', c2: 'S11' }).ok);
+
+const vRow = A.readAll_(A.T.VIDEOS).find(v => String(v['영상ID']) === vAdded.id);
+ok('등록자가 남는다', String(vRow['등록자']) === 'test', String(vRow['등록자']));
+ok('바로 노출된다', String(vRow['노출여부']) === 'Y');
+ok('라이브러리에 바로 보임',
+   A.api_bootstrap('test').videos.some(v => v.id === vAdded.id));
+
+const vMine = A.api_myVideos('test');
+ok('교사는 자기 것만 본다', vMine.ok && vMine.videos.length === 1 && vMine.videos[0].id === vAdded.id,
+   vMine.videos.length + '건');
+ok('관리자는 전체를 본다', A.api_myVideos('teacher').videos.length === vBefore + 1);
+ok('학생은 목록도 못 본다', !A.api_myVideos('teststu').ok);
+
+ok('남의 영상은 못 고침', !A.api_updateVideo('test', 'V0001', { title: '가로채기' }).ok);
+ok('관리자는 남의 것도 고침', A.api_updateVideo('teacher', vAdded.id, { title: '관리자가 고친 제목' }).ok);
+ok('고친 제목 반영',
+   A.readAll_(A.T.VIDEOS).find(v => String(v['영상ID']) === vAdded.id)['제목'] === '관리자가 고친 제목');
+
+ok('숨기기', A.api_updateVideo('teacher', vAdded.id, { show: false }).ok);
+ok('숨긴 영상은 라이브러리에서 빠짐',
+   !A.api_bootstrap('test').videos.some(v => v.id === vAdded.id));
+ok('숨겨도 관리 목록에는 남음',
+   A.api_myVideos('test').videos.some(v => v.id === vAdded.id && v.show === false));
+A.api_updateVideo('teacher', vAdded.id, { show: true });
+
+/* 담은 목록에 넣어 두고 지우면 자취까지 사라져야 한다 */
+A.api_savePlaylist('test', [vAdded.id, 'V0002']);
+ok('남의 영상은 못 지움', !A.api_deleteVideo('test', 'V0001').ok);
+ok('교사가 자기 영상 삭제', A.api_deleteVideo('test', vAdded.id).ok);
+ok('videos 원래 개수로', A.readAll_(A.T.VIDEOS).length === vBefore);
+ok('담은 목록에서도 빠짐',
+   A.api_bootstrap('test').playlist.indexOf(vAdded.id) < 0,
+   A.api_bootstrap('test').playlist.join(','));
+ok('없는 영상 삭제는 거부', !A.api_deleteVideo('teacher', vAdded.id).ok);
+
+ok('권한 없으면 조회도 거부', !A.api_ytLookup('teststu', 'AbCdEfGh123').ok);
+ok('주소를 못 읽으면 거부', !A.api_ytLookup('test', '그냥 글자').ok);
 console.log('\n' + '━'.repeat(46));
 console.log(`  통과 ${pass} / 실패 ${fail}`);
 console.log('━'.repeat(46) + '\n');

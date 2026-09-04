@@ -16,3 +16,6 @@ tools/guide/pages/
 
 # 로컬에서 미리 볼 때 잠깐 쓰는 파일
 _guide.*
+
+# 선생님이 보내 주신 유튜브 업로드 원본 캡처 (가공본이 tools/guide/shots/ 에 들어 있다)
+사용설명서/

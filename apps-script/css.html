@@ -1163,6 +1163,44 @@ button.st-tag:hover{ filter:brightness(.94); }
   box-shadow:0 0 0 3px rgba(74,222,128,.28); animation:live 2.2s var(--ease) infinite;
 }
 @keyframes live{ 0%,100%{ opacity:1 } 50%{ opacity:.3 } }
+/* ── 영상 등록 · 관리 ── */
+.vreg{ margin-bottom:18px; }
+.vreg-row{ display:flex; gap:9px; }
+.vreg-row .inp{ flex:1; min-width:0; }
+.vreg-msg{ margin:10px 0 0; font-size:13px; color:var(--muted); }
+.vreg-msg.warn{ color:var(--danger); font-weight:600; }
+.inp-sm{ width:200px; height:34px; font-size:13px; }
+
+.vprev{ display:flex; gap:16px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
+.vprev-th{ width:200px; height:112px; object-fit:cover; border-radius:10px; flex:none; background:#eef2f8; }
+.vprev-body{ flex:1; min-width:0; }
+.vlab{ display:block; font-size:12px; font-weight:700; color:var(--muted); margin:0 0 5px; }
+.vprev-body .inp, .vedit .inp, .vgrid select{ width:100%; }
+.vgrid{ display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-top:11px; }
+.vgrid .selC1{ margin-bottom:7px; }
+.vprev-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:13px; }
+.vyt{ font-size:12px; color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace; }
+.vedit .vgrid{ grid-template-columns:2fr 1fr; }
+
+.vtbl td{ vertical-align:middle; }
+.vt-th img{ width:74px; height:42px; object-fit:cover; border-radius:6px; display:block; background:#eef2f8; }
+.vt-sub{ display:block; font-size:12px; color:var(--muted); margin-top:3px;
+  font-family:ui-monospace,Menlo,Consolas,monospace; }
+.vt-cat, .vt-by, .vt-date{ font-size:13px; color:var(--n-600); white-space:nowrap; }
+.vt-act{ white-space:nowrap; text-align:right; }
+.vt-act .btn{ margin-left:5px; }
+.vt-act .btn-danger{ background:transparent; color:var(--danger); border:1px solid var(--danger); }
+.vt-act .btn-danger:hover{ background:var(--danger); color:#fff; }
+tr.row-off{ opacity:.5; }
+tr.row-off .vt-sub::after{ content:' · 숨김'; font-weight:700; }
+
+@media (max-width:760px){
+  .vprev{ flex-direction:column; }
+  .vprev-th{ width:100%; height:auto; aspect-ratio:16/9; }
+  .vgrid{ grid-template-columns:1fr; }
+  .vt-th, .vt-cat, .vt-by, .vt-date{ display:none; }
+  .inp-sm{ width:130px; }
+}
 @media (prefers-reduced-motion:reduce){ .mh-tag i{ animation:none } }
 .mh h2{
   margin:14px 0 0; color:#fff; font-size:31px; font-weight:800;

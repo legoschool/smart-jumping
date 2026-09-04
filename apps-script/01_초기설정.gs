@@ -66,6 +66,30 @@ function 초기설정_실행() {
   return ss.getUrl();
 }
 
+/**
+ * 머리글만 최신 정의에 맞춘다. 데이터는 건드리지 않는다.
+ * 이미 쓰고 있는 시트에 열이 새로 생겼을 때 한 번 실행한다.
+ * (2026-09: videos 탭에 '등록자' 열이 생겼다)
+ */
+function 시트_열맞추기() {
+  const ss = ss_();
+  const 결과 = [];
+  Object.keys(HEADERS).forEach(function (name) {
+    const sh = ss.getSheetByName(name);
+    if (!sh) { 결과.push(name + ' 탭 없음'); return; }
+    const want = HEADERS[name];
+    if (sh.getMaxColumns() < want.length) {
+      sh.insertColumnsAfter(sh.getMaxColumns(), want.length - sh.getMaxColumns());
+    }
+    const now = sh.getRange(1, 1, 1, want.length).getValues()[0].map(String);
+    if (want.every(function (h, i) { return now[i] === h; })) return;
+    sh.getRange(1, 1, 1, want.length).setValues([want]);
+    결과.push(name + ' 머리글 갱신');
+  });
+  clearCache_();
+  Logger.log(결과.length ? 결과.join(' / ') : '고칠 것이 없습니다.');
+}
+
 /** DB를 완전히 비우고 다시 만들고 싶을 때 */
 function 초기설정_리셋() {
   props_().deleteProperty('SHEET_ID');
