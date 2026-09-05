@@ -50,7 +50,7 @@ function webpSize(buf) {
 
 /* 인쇄용 폭 상한 — 그림 높이가 A4 본문에서 MAXH 를 넘지 않도록 비율로 역산한다.
    콜아웃이 .shot 기준 % 로 찍히므로 .shot 이 그림을 정확히 감싸야 한다. */
-const MAXH = 200, COLW = 184;   /* mm */
+const MAXH = 200, COLW = 184;
 const stamped = [];
 function stampWidth(html, key) {
   const marker = 'src="' + key + '"';

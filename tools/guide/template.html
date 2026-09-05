@@ -180,29 +180,57 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
   .cover{ break-after:page; }
   /* 차례는 숨기지 않고 한 쪽으로 앉힌다 — 종이로 볼 때 오히려 더 필요하다 */
   .toc{ position:static; max-height:none; overflow:visible; border-right:0;
-        padding:0; columns:2; column-gap:34px; break-after:page; }
-  .toc h2{ font-size:13px; margin:0 0 16px; column-span:all;
-           border-bottom:2px solid var(--ink); padding-bottom:8px; }
-  .toc a{ font-size:12.5px; padding:3.5px 0; color:var(--ink);
-          break-inside:avoid; margin-left:0; padding-left:0; border-left:0; }
-  .toc a.top{ margin-top:10px; }
+        break-after:page; }
+  .toc a{ color:var(--ink); break-inside:avoid; margin-left:0; padding-left:0; border-left:0; }
   main{ padding:0; }
   /* 인쇄 폭이 900px 반응형 구간에 걸리므로 여기서 되돌린다 */
-  .cover{ grid-template-columns:1fr auto; align-items:end; padding:52px 10mm 40px; }
-  .cover img{ height:225px; }
+  /* ── 표지: 한 쪽을 통째로 쓴다 ── */
+  .cover{ grid-template-columns:1fr; grid-template-rows:auto 1fr auto;
+          align-items:start; padding:20mm 12mm 10mm; height:267mm;
+          box-sizing:border-box; border-bottom:0; text-align:left; overflow:hidden; }
+  .cover .eyebrow{ font-size:13px; letter-spacing:.3em; }
+  .cover h1{ font-size:72px; margin:7mm 0 0; line-height:1.06; }
+  .cover .lead{ font-size:15px; max-width:none; margin:6mm 0 0; line-height:1.75; }
+  .cover img{ height:auto; max-height:112mm; width:auto; margin:0 auto;
+              align-self:center; justify-self:center; }
+  .cover .meta{ margin:0; gap:8px; }
+  .cover .meta span{ font-size:13px; padding:7px 16px; }
+  .cover-foot{ display:block; margin-top:6mm; padding-top:4mm;
+               border-top:1.5px solid var(--rule); font-size:12px; color:var(--mute); }
+  .cover-foot b{ color:var(--ink); }
+
+  /* ── 차례: 한 쪽을 꽉 채운다 ── */
+  .toc{ columns:2; column-gap:13mm; padding:0; }
+  .toc h2{ font-size:29px; letter-spacing:-.03em; color:var(--ink); column-span:all;
+           margin:0 0 6mm; padding-bottom:3.5mm; border-bottom:2.5px solid var(--ink); }
+  .toc a{ font-size:13.5px; padding:3.5px 0; }
+  .toc a.top{ font-size:16.5px; font-weight:900; margin-top:4mm; padding:5px 0 3px;
+              border-bottom:1px solid var(--hair); break-after:avoid; }
+  .toc a.top:first-of-type{ margin-top:0; }
+  .toc .toc-note{ display:block; column-span:all; margin-top:5mm; padding:4mm 5mm;
+                  background:var(--wash); border:1px solid var(--rule); border-radius:10px;
+                  font-size:12.5px; color:var(--slate); line-height:1.85; }
+  .toc .toc-note b{ color:var(--ink); }
+
   .two{ grid-template-columns:1fr 1fr; }
   .three{ grid-template-columns:repeat(3,1fr); }
   /* --pw 는 빌드가 그림의 실제 비율로 계산해 넣는다 (높이 상한 120mm) */
   /* .shot.narrow/.mid 가 명시도로 앞서므로 셋 다 적어 준다 */
-  .shot{ max-width:var(--pw,100%); margin-left:auto; margin-right:auto; }
+  /* 그림을 조금 줄이면 남은 자리에 더 자주 들어가 아래가 덜 빈다 */
+  .shot{ max-width:min(var(--pw,100%),156mm); margin-left:auto; margin-right:auto; }
   .shot.narrow{ max-width:var(--pw,380px); }
   .shot.mid{ max-width:var(--pw,620px); }
   /* 나란히 놓은 그림은 칸 너비가 이미 높이를 잡아 준다 */
   .two .shot, .two .shot.narrow{ max-width:100%; }
   .three .shot, .three .shot.narrow{ max-width:100%; }
   figure{ margin:13px 0 16px; }
-  h2.sec{ break-before:page; }
-  figure, table, .note, ol.steps, .cal-list li{ break-inside:avoid; }
+  /* 장을 새 쪽에서 시작하면 앞 장 끝이 크게 빈다. 이어서 흐르게 두고 굵은 띠로 구분한다 */
+  h2.sec{ break-before:auto; break-after:avoid; margin-top:16mm; padding-top:7mm; }
+  /* 그림은 통째로 옮긴다. 표와 상자는 쪼개져도 좋다 — 통째로 넘기면 아래가 크게 빈다 */
+  figure{ break-inside:avoid; }
+  table, .note, ol.steps, ol.legend{ break-inside:auto; }
+  tr, ol.steps > li, ol.legend li, .note .lbl{ break-inside:avoid; }
+  thead{ display:table-header-group; }
   figcaption{ break-before:avoid; }
   h3, h4{ break-after:avoid; }
   a{ color:inherit; }
@@ -221,6 +249,11 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       선생님은 2~5장만 보셔도 됩니다.</p>
     <div class="meta">
       <span>영상 104편</span><span>6영역 23분류</span><span>교재 12권</span><span>10개 장</span>
+    </div>
+    <div class="cover-foot">
+      <b>운영판</b> 구글 시트를 읽어 돕니다. 영상을 등록하면 여기에 반영됩니다.<br>
+      <b>체험판</b> legoschool.github.io/smart-jumping · 영상 104편으로 고정, 기능을 둘러볼 때<br>
+      이 책은 화면을 그대로 캡처해 어디를 눌러야 하는지 번호로 짚었습니다.
     </div>
   </div>
   <img src="__IMG_CHAR__" alt="안내 캐릭터 점핑이">
@@ -267,6 +300,11 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <a href="#s9-5">대표 영상·캐릭터</a>
     <a class="top" href="#s10">10. 문제 해결</a>
     <a class="top" href="#s11">부록</a>
+    <p class="toc-note"><b>어디부터 보면 되나</b><br>
+      영상을 올리는 선생님은 <b>1장</b>, 교실에서 틀기만 하는 선생님은 <b>2~5장</b>,
+      학급을 맡은 선생님은 <b>6장</b>까지 보시면 됩니다.
+      <b>9~10장</b>은 시트와 배포를 만지는 관리자 몫입니다.<br>
+      빨간 동그라미 번호는 <b>그림에서 누를 자리</b>를 가리킵니다. 번호와 아래 설명이 짝입니다.</p>
   </nav>
 
   <main>
@@ -298,6 +336,18 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <p>유튜브는 구글 계정으로 씁니다. 보기만 할 때는 계정이 없어도 되지만
       <b>올리려면 채널이 있어야 합니다.</b> 오른쪽 위 프로필 그림을 누르면 계정 메뉴가 열리고,
       여기서 <span class="ui">YouTube 스튜디오</span> 로 들어갑니다.</p>
+    <h4>올리기 전에 정할 것 셋</h4>
+    <table>
+      <thead><tr><th>정할 것</th><th>이렇게 정해 두면 편합니다</th></tr></thead>
+      <tbody>
+        <tr><td>어느 계정에 올릴까</td><td>학교나 사업단 이름의 <b>브랜드 계정</b>. 담당자가 바뀌어도 영상이 남습니다</td></tr>
+        <tr><td>공개 범위를 무엇으로</td><td><b>일부 공개</b>. 검색에는 안 뜨고 사이트에서는 재생됩니다</td></tr>
+        <tr><td>제목을 어떻게 쓸까</td><td><code>준비운동 3차시 어깨 풀기</code> 처럼 영역과 차시를 앞에</td></tr>
+      </tbody>
+    </table>
+    <div class="note tip"><span class="lbl">한 번만 해 두면 되는 것</span>
+      15분이 넘는 영상을 올릴 계획이면 <code>youtube.com/verify</code> 에서 전화번호 인증을 미리 해 두세요.
+      한 차시를 통으로 찍은 영상은 대개 15분을 넘깁니다.</div>
     <figure>
       <div class="shot">
         <img src="__IMG_YT1__" alt="유튜브 계정 메뉴">
@@ -513,6 +563,20 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       로그아웃 상태의 창(시크릿 창)에서 사이트를 열어 그 영상이 재생되는지 보세요.
       내 계정으로는 보이는데 남에게는 검은 화면이 뜨는 경우를 여기서 잡습니다.
       재생이 안 되면 공개 범위가 비공개이거나, 유튜브가 외부 재생을 막아 둔 영상입니다.</div>
+    <h3>이 장을 마치면</h3>
+    <table>
+      <thead><tr><th>확인</th><th>어디서 보나</th></tr></thead>
+      <tbody>
+        <tr><td>유튜브에 올린 영상이 <b>일부 공개</b>인가</td><td>스튜디오 › 콘텐츠 › 공개 상태 열</td></tr>
+        <tr><td>사이트 목록에 그 영상이 보이는가</td><td>왼쪽 <span class="ui">스마트점핑</span> › 해당 영역</td></tr>
+        <tr><td>다른 사람 화면에서도 재생되는가</td><td>시크릿 창으로 사이트 열기</td></tr>
+        <tr><td>제목이 카드 한 줄에 들어가는가</td><td>목록 카드 아래 글씨</td></tr>
+      </tbody>
+    </table>
+    <div class="note tip"><span class="lbl">촬영 전에 정해 두면 편한 것</span>
+      가로로 찍습니다. 세로 영상은 교실 화면 양옆이 검게 남습니다.
+      학생 얼굴이 들어가면 학기 초 촬영 동의를 먼저 받습니다.
+      파일 이름을 <code>영역_차시_내용</code> 으로 맞춰 두면 나중에 스튜디오에서 찾기 쉽습니다.</div>
   </section>
 
   <!-- ═══════ 2 ═══════ -->
@@ -548,6 +612,19 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <h3 id="s2-2">회원가입</h3>
     <p>사이드바의 <span class="ui">회원가입</span> 을 누르면 창이 열립니다.
       아이디 규칙과 중복은 입력하는 동안 바로 확인됩니다.</p>
+    <h4>가입 칸에 무엇을 넣나</h4>
+    <table>
+      <thead><tr><th>칸</th><th>넣는 값</th><th>나중에 고칠 수 있나</th></tr></thead>
+      <tbody>
+        <tr><td>아이디</td><td>영문·숫자. 중복은 입력하는 동안 바로 확인됩니다</td><td><b>못 고칩니다</b></td></tr>
+        <tr><td>비밀번호</td><td>교내용 수준으로 충분합니다</td><td>마이페이지에서</td></tr>
+        <tr><td>이름</td><td>출석부와 회원관리에 보이는 이름</td><td>마이페이지에서</td></tr>
+        <tr><td>소속 · 지역</td><td>학교 이름과 시군구</td><td>마이페이지에서</td></tr>
+      </tbody>
+    </table>
+    <div class="note tip"><span class="lbl">아이디는 바꿀 수 없습니다</span>
+      가입 화면에서 한 번 더 보고 누르세요. 학교 이름과 성을 섞은 <code>okdong-kim</code> 같은 아이디가
+      관리자 화면에서 알아보기 좋습니다.</div>
     <figure>
       <div class="shot mid"><img src="__IMG_04__" alt="회원가입 창"></div>
       <figcaption>가입 시 이름·소속·지역을 함께 받습니다. 소속과 지역은 나중에 마이페이지에서 고칠 수 있습니다.</figcaption>
@@ -558,6 +635,18 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       교사 권한이 필요하면 관리자가 <b>회원관리</b>에서 올려 줍니다.</div>
 
     <h3 id="s2-3">로그인</h3>
+    <h4>로그인이 안 될 때</h4>
+    <table>
+      <thead><tr><th>화면에 뜨는 말</th><th>뜻과 할 일</th></tr></thead>
+      <tbody>
+        <tr><td>아이디 또는 비밀번호가 다릅니다</td><td>대소문자를 봅니다. 그래도 안 되면 관리자에게 초기화를 요청하세요</td></tr>
+        <tr><td>정지된 계정입니다</td><td>관리자가 <b>회원관리</b>에서 상태를 정상으로 되돌려야 합니다</td></tr>
+        <tr><td>메뉴가 안 보입니다</td><td>로그인은 됐지만 권한이 낮은 경우입니다. 권한 표(2-4)를 보세요</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><span class="lbl">교실 컴퓨터에서 쓰실 때</span>
+      로그인 상태는 그 브라우저에 남습니다. 공용 컴퓨터라면 수업이 끝난 뒤
+      왼쪽 카드의 <span class="ui">로그아웃</span> 을 눌러 두세요. 영상 보기와 교재는 로그인 없이도 됩니다.</div>
     <figure>
       <div class="shot mid"><img src="__IMG_03__" alt="로그인 창"></div>
       <figcaption>비밀번호는 SHA-256 해시로 저장됩니다. 교내용 수준이며 은행급 보안은 아닙니다.</figcaption>
@@ -572,7 +661,21 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <div class="shot"><img src="__IMG_33__" alt="학생 사이드바"></div>
         <figcaption><span class="role s">학생</span> 스마트점핑 · 사용법 · 내 출결 · 마이페이지 · 온라인교재</figcaption>
       </figure>
-      <figure>
+      <div class="note"><span class="lbl">메뉴가 사람마다 다릅니다</span>
+      왼쪽 메뉴는 권한에 따라 항목이 달라집니다. 옆 반 선생님 화면에 있는 메뉴가
+      내 화면에 없다면 고장이 아니라 권한 차이입니다. 어떤 권한에 무엇이 열리는지는
+      <a href="#s2-4">2-4 권한 네 가지</a> 에 표로 있습니다.</div>
+    <table>
+      <thead><tr><th>메뉴</th><th>여는 화면</th><th>누가 봅니다</th></tr></thead>
+      <tbody>
+        <tr><td>스마트점핑</td><td>영상 목록</td><td>모두</td></tr>
+        <tr><td>사용법 · 튜토리얼</td><td>따라 하는 안내 화면</td><td>모두</td></tr>
+        <tr><td>수업관리</td><td>학급·출석부·리포트</td><td><span class="role t">교사</span><span class="role a">관리자</span></td></tr>
+        <tr><td>영상등록</td><td>유튜브 주소로 영상 올리기</td><td><span class="role t">교사</span><span class="role a">관리자</span></td></tr>
+        <tr><td>회원관리</td><td>권한·정지·비밀번호 초기화</td><td><span class="role a">관리자</span></td></tr>
+      </tbody>
+    </table>
+    <figure>
         <div class="shot"><img src="__IMG_10__" alt="교사 사이드바"></div>
         <figcaption><span class="role t">교사</span> 여기에 <b>수업관리</b>가 더해집니다</figcaption>
       </figure>
@@ -594,6 +697,16 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <tr><td>남의 수업 조회</td><td>–</td><td>–</td><td>–</td><td>○</td></tr>
       </tbody>
     </table>
+    <div class="note"><span class="lbl">권한을 올리는 순서</span>
+      새 계정은 모두 <span class="role s">학생</span> 으로 시작합니다. 선생님이 가입하셨다면
+      관리자가 <b>회원관리</b>에서 <span class="role t">교사</span> 로 올려 주어야 수업관리와 영상등록이 열립니다.
+      학교에서 여러 분이 함께 쓰신다면 가입을 먼저 다 받고 권한을 한 번에 올리는 편이 빠릅니다.</div>
+    <div class="note tip"><span class="lbl">아이디를 정할 때</span>
+      학교 이름과 성을 섞은 <code>okdong-kim</code> 같은 아이디가 관리자 화면에서 알아보기 좋습니다.
+      나중에 아이디는 바꿀 수 없고 이름·소속·지역만 마이페이지에서 고칩니다.</div>
+    <div class="note warn"><span class="lbl">비밀번호를 잊었다면</span>
+      스스로 되찾는 화면은 없습니다. 관리자가 <b>회원관리</b>에서 임시 비밀번호로 초기화해 줍니다.
+      초기화한 비밀번호는 로그인한 뒤 마이페이지에서 곧바로 바꾸세요.</div>
   </section>
 
   <!-- ═══════ 3 ═══════ -->
@@ -630,6 +743,11 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <li><b>🎬 영상담기</b> — 담은 개수. 누르면 목록이 열립니다</li>
       </ol>
     </figure>
+
+    <div class="note tip"><span class="lbl">화면을 넓게 쓰고 싶을 때</span>
+      브라우저를 전체 화면(<kbd>F11</kbd>)으로 두면 카드가 한 줄에 더 들어갑니다.
+      좁은 화면에서는 왼쪽 메뉴가 접히고 위쪽 줄 세 개로 바뀝니다.
+      교실 프로젝터에 띄울 때는 <span class="ui">▶ 수업시작</span> 이 곧바로 전체 화면으로 들어갑니다.</div>
 
     <h3 id="s3-2">왼쪽 사이드바</h3>
     <figure>
@@ -698,6 +816,12 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <li>영역 › 세부 분류</li>
       </ol>
     </figure>
+    <div class="note tip"><span class="lbl">화면이 좁을 때</span>
+      태블릿이나 좁은 창에서는 왼쪽 메뉴가 접힙니다. 왼쪽 위 줄 세 개를 누르면 다시 펼쳐집니다.
+      교실 프로젝터는 대개 가로로 넓으므로 브라우저를 전체 화면(<kbd>F11</kbd>)으로 두면 카드가 한 줄에 더 들어갑니다.</div>
+    <div class="note"><span class="lbl">로그인하지 않아도 되는 것</span>
+      영상 보기와 재생, 온라인교재는 로그인 없이 됩니다. 교실 컴퓨터에 계정을 남기고 싶지 않을 때
+      그대로 쓰시면 됩니다. 담기와 수업관리처럼 <b>내 것으로 저장되는 기능</b>부터 로그인이 필요합니다.</div>
   </section>
 
   <!-- ═══════ 4 ═══════ -->
@@ -738,9 +862,33 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <p>자주 쓰는 영상은 카드의 <b>★</b> 를 눌러 둡니다. 위 가로줄의
       <span class="ui">★ 즐겨찾기</span> 에서 모아 볼 수 있습니다. 담기와 달리
       <b>즐겨찾기는 수업에 들어가지 않습니다</b> — 나중에 빨리 찾기 위한 표시입니다.</p>
+    <div class="note tip"><span class="lbl">담은 목록은 언제 비워지나</span>
+      스스로 비워지지 않습니다. 다음 수업에 지난 목록이 그대로 남아 있으면
+      목록 창에서 하나씩 빼거나 전부 지우고 다시 담습니다. 자주 쓰는 영상은
+      즐겨찾기에 두면 다시 찾는 시간이 줄어듭니다.</div>
+    <table>
+      <thead><tr><th>하고 싶은 것</th><th>누를 곳</th></tr></thead>
+      <tbody>
+        <tr><td>한 편만 미리 보기</td><td>카드 그림. 담지 않고 그 영상만 재생됩니다</td></tr>
+        <tr><td>차례 바꾸기</td><td>담은 목록 창에서 위아래로 끕니다</td></tr>
+        <tr><td>한 편 빼기</td><td>담은 목록 창의 × 표시</td></tr>
+      </tbody>
+    </table>
     <figure>
       <div class="shot"><img src="__IMG_20__" alt="즐겨찾기 목록"></div>
     </figure>
+    <h3>담기와 즐겨찾기, 무엇이 다른가</h3>
+    <table>
+      <thead><tr><th></th><th>담기</th><th>즐겨찾기</th></tr></thead>
+      <tbody>
+        <tr><td>쓰임</td><td>오늘 수업에서 이어서 틀 목록</td><td>나중에 다시 찾으려고 해 두는 표시</td></tr>
+        <tr><td>수업시작 버튼</td><td>담은 순서대로 이어 재생</td><td>들어가지 않습니다</td></tr>
+        <tr><td>지우는 때</td><td>수업이 끝나면 비웁니다</td><td>학기 내내 둡니다</td></tr>
+      </tbody>
+    </table>
+    <div class="note tip"><span class="lbl">수업 전날에 해 두면 좋은 것</span>
+      담을 영상을 미리 골라 두고 재생시간을 더해 봅니다. 40분 수업이면 영상 합이 25분을 넘지 않는 편이
+      활동 시간을 남깁니다. 정렬을 <span class="ui">재생시간 짧은순</span> 으로 두면 고르기 쉽습니다.</div>
   </section>
 
   <!-- ═══════ 5 ═══════ -->
@@ -769,6 +917,18 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <div class="note warn"><span class="lbl">재생이 막힌 영상</span>
       유튜브가 외부 재생을 막아 둔 영상을 만나면 안내를 띄우고
       <b>5초 뒤 알아서 다음 편으로 넘어갑니다.</b> 수업이 멈추지 않습니다.</div>
+    <h3>교실에서 자주 생기는 일 셋</h3>
+    <table>
+      <thead><tr><th>상황</th><th>이렇게</th></tr></thead>
+      <tbody>
+        <tr><td>소리가 안 난다</td><td>영상 자체가 음소거로 시작합니다. 플레이어 안 스피커 표시를 누르고, 그래도 안 나면 컴퓨터 볼륨을 봅니다</td></tr>
+        <tr><td>화면이 멈춘다</td><td>학교망이 느릴 때입니다. 화질 설정을 낮추거나, 쉬는 시간에 미리 한 번 열어 두면 끊김이 줄어듭니다</td></tr>
+        <tr><td>다음 영상으로 안 넘어간다</td><td>재생 목록에서 그 영상을 눌러 직접 넘깁니다. 막힌 영상이면 5초 뒤 자동으로 넘어갑니다</td></tr>
+      </tbody>
+    </table>
+    <div class="note warn"><span class="lbl">수업이 안 열렸을 때</span>
+      인터넷이 끊기면 영상은 뜨지 않습니다. 담아 둔 목록을 종이에 적어 두면 교사 시연으로 대체할 수 있고,
+      준비운동처럼 음악만 있으면 되는 차시는 교실 스피커로 진행합니다. 수업 계획에 이 한 줄을 미리 넣어 두세요.</div>
   </section>
 
   <!-- ═══════ 6 ═══════ -->
@@ -843,6 +1003,12 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <figcaption>학급 정보 + 커리큘럼 차시 + 회차별 출결표가 한 장에 묶입니다.
         <b>🖨 인쇄 / PDF 저장</b> 을 누르면 그대로 인쇄되거나 PDF로 저장됩니다.</figcaption>
     </figure>
+    <div class="note tip"><span class="lbl">출석을 빨리 넣는 법</span>
+      새 회차를 만들면 지난 회차 명단이 그대로 따라옵니다. 결석한 학생만 눌러 바꾸면 끝입니다.
+      학생 이름을 처음 넣을 때는 명렬표에서 복사해 한 줄에 한 명씩 붙여 넣으면 한 번에 들어갑니다.</div>
+    <div class="note"><span class="lbl">학년이 바뀌면</span>
+      지난해 수업은 지우지 말고 그대로 두세요. 새 학년 반을 <b>수업 등록</b>으로 새로 만들면
+      출석부와 리포트가 따로 쌓입니다. 커리큘럼(프로그램스케줄)은 새 수업에 다시 연결해 쓰면 됩니다.</div>
   </section>
 
   <!-- ═══════ 7 ═══════ -->
@@ -851,7 +1017,14 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <p class="sec-lead">왼쪽 <b>마이페이지</b>를 누르면 하위 메뉴가 펼쳐집니다.
       항목은 권한에 따라 다릅니다.</p>
     <div class="two">
-      <figure>
+      <div class="note"><span class="lbl">마이페이지에 있는 것과 없는 것</span>
+      정보수정, 교구보유현황, 프로그램스케줄, 회원탈퇴 넷입니다.
+      담은 영상과 즐겨찾기는 여기가 아니라 영상 목록 화면에 있습니다.
+      출석과 리포트는 <b>수업관리</b> 안에 있습니다.</div>
+    <div class="note tip"><span class="lbl">비밀번호를 바꾸는 자리</span>
+      정보수정 화면 아래쪽입니다. 비워 두면 지금 비밀번호가 그대로 유지되고,
+      적으면 그 값으로 바뀝니다. 관리자가 초기화해 준 임시 비밀번호는 여기서 바로 바꾸세요.</div>
+    <figure>
         <div class="shot"><img src="__IMG_25__" alt="정보수정"></div>
         <figcaption><b>정보수정</b> — 이름·소속·지역과 비밀번호를 바꿉니다. 아이디는 못 바꿉니다.</figcaption>
       </figure>
@@ -878,6 +1051,13 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <div class="shot"><img src="__IMG_34__" alt="내 출결"></div>
       <figcaption><span class="role s">학생</span> 본인의 출결과 누적 출석률만 보입니다. 남의 기록은 조회되지 않습니다.</figcaption>
     </figure>
+    <div class="note tip"><span class="lbl">교구는 언제 세나</span>
+      학기 초와 학기 말 두 번이면 충분합니다. 새 제품과 중고 제품을 나눠 적어 두면
+      다음 해 신청 수량을 잡을 때 그대로 씁니다. 대리점명을 적어 두면 파손 교체를 문의하기 쉽습니다.</div>
+    <div class="note warn"><span class="lbl">회원탈퇴는 되돌릴 수 없습니다</span>
+      탈퇴하면 담은 영상, 즐겨찾기, 수업, 출석 기록이 함께 사라집니다.
+      학교를 옮기시는 것이라면 탈퇴 대신 관리자에게 계정 정지를 요청하는 편이 낫습니다.
+      기록은 남고 로그인만 막힙니다.</div>
   </section>
 
   <!-- ═══════ 8 ═══════ -->
@@ -902,6 +1082,13 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
       <div class="shot"><img src="__IMG_32__" alt="관리자가 보는 수업관리"></div>
       <figcaption>관리자의 수업관리에는 <b>담당</b> 열이 있어 어느 교사의 수업인지 보입니다.</figcaption>
     </figure>
+    <div class="note warn"><span class="lbl">권한을 다룰 때 지킬 것 셋</span>
+      마지막 관리자는 권한을 낮출 수 없습니다. 화면이 막아 줍니다.
+      자기 자신의 권한과 상태는 바꿀 수 없습니다. 다른 관리자에게 부탁해야 합니다.
+      비밀번호를 초기화해 주었으면 그 자리에서 본인에게 알리고, 로그인 뒤 바로 바꾸게 하세요.</div>
+    <div class="note tip"><span class="lbl">학기 초에 몰아서</span>
+      새 학기에는 가입이 한꺼번에 들어옵니다. 회원관리에서 권한 칩으로 <span class="role s">학생</span> 만
+      걸러 보면 올려 줄 선생님을 한눈에 찾습니다.</div>
   </section>
 
   <!-- ═══════ 9 ═══════ -->
@@ -936,6 +1123,10 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     <h3 id="s9-1b">사이트에서 전체 영상 관리 <span class="role a">관리자</span></h3>
     <p>왼쪽 <span class="ui">영상등록</span> 은 관리자에게 다르게 보입니다.
       교사는 자기가 올린 영상만 보지만, <b>관리자는 전체 영상을 봅니다.</b> 숨긴 영상까지 나옵니다.</p>
+    <div class="note warn"><span class="lbl">지우기 전에 한 번 더</span>
+      삭제는 영상 한 줄만 지우는 것이 아닙니다. 선생님들이 담아 둔 목록과 즐겨찾기,
+      커리큘럼 차시에 걸려 있던 그 영상까지 함께 빠집니다. 되돌릴 수 없습니다.
+      분류가 어긋났거나 잠시 내려야 하는 정도면 <b>숨기기</b> 로 충분합니다.</div>
     <figure>
       <div class="shot"><img src="__IMG_VADMIN__" alt="관리자가 보는 영상 목록"></div>
       <figcaption><b>등록자</b> 열이 하나 더 있습니다. 처음부터 들어 있던 영상은 등록자가 비어 있고(—),
@@ -1009,6 +1200,10 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
 
     <h3 id="s9-3">분류와 교재 추가</h3>
     <p><b>분류</b>는 <code>categories</code> 탭입니다. 대분류 여섯과 소분류 스물셋이 여기에 들어 있습니다.</p>
+    <div class="note tip"><span class="lbl">분류를 늘릴 때 순서</span>
+      먼저 <code>categories</code> 탭에 줄을 넣고, 그다음 그 분류에 영상을 채웁니다.
+      영상이 0건인 분류는 화면에 아예 나오지 않으므로 미리 다 적어 두어도 화면이 깨지지 않습니다.
+      순서 값은 10, 20, 30 처럼 띄어 두면 나중에 사이에 끼워 넣기 쉽습니다.</div>
     <figure>
       <div class="shot"><img src="__IMG_SHEET_C__" alt="구글 시트 categories 탭"></div>
       <figcaption>대분류ID 하나에 소분류가 여러 줄 붙습니다. 이 표를 고치면 사이트 위 가로줄과
@@ -1061,6 +1256,13 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
     </table>
     <p>둘 다 바꾼 뒤에는 <code>npm run build</code> 로 <code>index.html</code> 을 다시 만들어야 합니다.
       <b><code>index.html</code> 을 직접 고치면 다음 빌드에 사라집니다.</b></p>
+    <div class="note warn"><span class="lbl">시트를 고치기 전에</span>
+      파일 › 사본 만들기로 한 부 떠 두고 시작하세요. 실수로 지운 행은 되돌리기(<kbd>Ctrl</kbd>+<kbd>Z</kbd>)로
+      살아나지만, 창을 닫은 뒤에는 어렵습니다. 회원과 출석이 든 시트라 더 그렇습니다.</div>
+    <div class="note"><span class="lbl">시트를 아무에게나 공유하지 않습니다</span>
+      <code>users</code> 탭에는 회원 정보가, <code>attendance</code> 탭에는 학생 이름이 들어 있습니다.
+      웹앱은 소유자 계정으로 시트를 읽으므로 <b>시트를 공유하지 않아도 사이트는 정상으로 돕니다.</b>
+      공유는 담당자에게만 두세요.</div>
   </section>
 
   <!-- ═══════ 10 ═══════ -->
@@ -1078,6 +1280,13 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
         <tr><td>데모를 처음 상태로 되돌리고 싶습니다</td><td>브라우저 콘솔에서 <code>sjReset()</code> 을 실행하세요</td></tr>
       </tbody>
     </table>
+    <div class="note tip"><span class="lbl">그래도 안 되면 이 순서로</span>
+      먼저 다른 브라우저(시크릿 창)에서 열어 봅니다. 여기서 되면 원래 창의 캐시 문제입니다.
+      다음으로 다른 기기에서 열어 봅니다. 여기서 되면 그 컴퓨터나 학교망 문제입니다.
+      둘 다 안 되면 시트와 배포를 봅니다. 이때 화면에 뜬 글을 그대로 적어 두면 원인을 훨씬 빨리 찾습니다.</div>
+    <div class="note"><span class="lbl">문의할 때 함께 알려 주면 좋은 것</span>
+      쓰신 계정 아이디, 누른 메뉴, 화면에 뜬 글, 쓰신 기기와 브라우저.
+      네 가지면 대개 재현됩니다. 화면을 찍어 두시면 더 빠릅니다.</div>
   </section>
 
   <!-- ═══════ 부록 ═══════ -->
