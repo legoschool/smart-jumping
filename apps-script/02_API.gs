@@ -823,19 +823,32 @@ function api_ytLookup(userId, input) {
     return { ok: false, msg: '유튜브에 연결하지 못했습니다. ' + e };
   }
 
-  /* 재생시간과 퍼가기 여부는 watch 페이지에서 읽는다. 실패해도 등록은 막지 않는다 */
-  try {
-    const w = UrlFetchApp.fetch('https://www.youtube.com/watch?v=' + id,
-      { muteHttpExceptions: true, headers: { 'Accept-Language': 'ko-KR,ko' } });
-    const html = w.getContentText();
-    const ml = html.match(/"lengthSeconds":"(\d+)"/);
-    if (ml) dur = mmss_(ml[1]);
-    const me = html.match(/"playableInEmbed":(true|false)/);
-    if (me) embed = (me[1] === 'true');
-  } catch (e) { /* 제목만으로도 등록은 된다 */ }
+  /* 재생시간과 퍼가기 여부는 watch 페이지에서 읽는다.
+     구글 서버에서 그냥 부르면 동의 화면이 돌아와 값이 비는 일이 있어,
+     동의 쿠키를 얹고 한 번 더 시도한다. 그래도 못 읽으면 등록은 그대로 두고
+     재생시간만 비워 보낸다(선생님이 직접 적으면 된다). */
+  const tries = [
+    { url: 'https://www.youtube.com/watch?v=' + id + '&bpctr=9999999999&has_verified=1',
+      headers: { 'Accept-Language': 'ko-KR,ko', 'Cookie': 'CONSENT=YES+cb; SOCS=CAI' } },
+    { url: 'https://www.youtube.com/watch?v=' + id,
+      headers: { 'Accept-Language': 'en-US,en' } }
+  ];
+  for (var i = 0; i < tries.length; i++) {
+    try {
+      const w = UrlFetchApp.fetch(tries[i].url,
+        { muteHttpExceptions: true, followRedirects: true, headers: tries[i].headers });
+      const html = w.getContentText();
+      const ml = html.match(/"lengthSeconds":"(\d+)"/) || html.match(/"approxDurationMs":"(\d+)"/);
+      if (ml) dur = mmss_(ml[0].indexOf('approx') >= 0 ? Number(ml[1]) / 1000 : ml[1]);
+      const me = html.match(/"playableInEmbed":(true|false)/);
+      if (me) embed = (me[1] === 'true');
+      if (dur) break;
+    } catch (e) { /* 다음 방법으로 */ }
+  }
 
   return {
     ok: true, yt: id, title: title, dur: dur, embed: embed,
+    note: dur ? '' : '재생시간을 읽지 못했습니다. 04:30 형식으로 직접 적어 주세요.',
     thumb: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg',
     dupId: dup ? String(dup['영상ID']) : '',
     dupTitle: dup ? String(dup['제목']) : ''

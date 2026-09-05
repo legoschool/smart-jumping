@@ -2,7 +2,7 @@
 
 교실에서 바로 쓰는 학교체육 수업 영상 플랫폼. 수업 전에 영상을 담아두고, 교실에서는 재생 버튼 하나로 한 차시를 진행합니다.
 
-**▶ 운영판(구글 시트 연동) : <https://script.google.com/macros/s/AKfycbwFHfh34t-z_HersriMAfhpUTkMPttG69j3yinfQAvsIHhFZ-Dxd4wV2csPUQZV35bHXA/exec>**
+**▶ 운영판(구글 시트 연동) : <https://script.google.com/macros/s/AKfycbw0yz7kOhvtTJ1GTmKA2TwGLwq34KFE1N7b8KDkCqsT_7iCISYwD2J5Zz88CGJJ9vUIsg/exec>**
 **▶ 데모 사이트 : https://legoschool.github.io/smart-jumping/**
 
 운영판은 구글 시트를 읽어 돕니다. 영상을 추가하면 여기에 반영됩니다.
