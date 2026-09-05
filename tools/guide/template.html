@@ -928,8 +928,10 @@ footer.end .u{ margin-left:auto; font-family:var(--disp); font-weight:800; font-
 
     <div class="note warn"><span class="lbl">영상 등록이 안 될 때 제일 먼저 볼 것</span>
       등록 화면에서 <span class="ui">불러오기</span> 가 「유튜브에 연결하지 못했습니다」로 끝나면
-      <b>외부 요청 권한이 아직 승인되지 않은 것</b>입니다. Apps Script 편집기에서 함수
-      <code>권한확인</code> 을 한 번 실행해 권한 검토 창을 허용한 뒤, 배포를 새 버전으로 갱신하세요.</div>
+      <b>외부 요청 권한이 아직 승인되지 않은 것</b>입니다. 시트 공유 설정과는 무관합니다.
+      Apps Script 편집기에서 <code>appsscript.json</code> 에 권한 목록을 넣고 함수
+      <code>권한확인</code> 을 실행해 권한 검토 창을 허용한 뒤, 배포를 새 버전으로 갱신하세요.
+      자세한 순서는 저장소 README 의 「외부 요청 권한」 절에 있습니다.</div>
 
     <h3 id="s9-1b">사이트에서 전체 영상 관리 <span class="role a">관리자</span></h3>
     <p>왼쪽 <span class="ui">영상등록</span> 은 관리자에게 다르게 보입니다.
