@@ -19,6 +19,7 @@
 | `npm run guide:mask` | 1장 유튜브 캡처의 계정 정보를 가린다 | 업로드 화면을 새로 받은 뒤 |
 | `npm run guide:sheet -- "시트주소"` | 구글 시트 화면을 찍는다 | 시트 구조가 바뀐 뒤 |
 | `npm run guide:live -- "웹앱주소"` | 운영판에서만 나오는 화면을 찍는다 | 웹앱을 다시 배포한 뒤 |
+| `npm run guide:export` | 가이드북을 docx · md 로 굽는다 | 배포본을 워드로 넘길 때 |
 
 ---
 

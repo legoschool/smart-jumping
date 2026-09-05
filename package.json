@@ -17,7 +17,8 @@
     "guide:measure": "node tools/guide/measure.js",
     "guide:mask": "node tools/guide/mask-yt.js",
     "guide:sheet": "node tools/guide/capture-sheet.js",
-    "guide:live": "node tools/guide/capture-live.js"
+    "guide:live": "node tools/guide/capture-live.js",
+    "guide:export": "node tools/guide/export.js"
   },
   "dependencies": {
     "xlsx": "^0.18.5"

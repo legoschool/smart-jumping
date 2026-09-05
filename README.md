@@ -172,10 +172,12 @@ Required permissions: https://www.googleapis.com/auth/script.external_request
 |---|---|
 | `스마트점핑 운영 가이드북.pdf`| 인쇄·배포용. 10개 장과 부록 |
 | `스마트점핑 운영 가이드북.html`| 원본. 그림이 base64 로 박혀 있어 파일 하나로 열립니다 |
+| `스마트점핑 운영 가이드북.docx`| 워드 편집용. 문단·표·그림을 Word 형식으로 다시 짰습니다 |
+| `스마트점핑 운영 가이드북.md`| 글만 고칠 때. 그림은 옆 `… 그림/` 폴더를 가리킵니다 |
 
 1장이 **영상 올리기**입니다. 구글 계정 로그인부터 유튜브 업로드, 공개 범위 고르기, 주소에서 영상 ID 꺼내 시트에 넣기까지를 실제 업로드 화면 9장으로 짚었습니다. 2~5장은 이미 올라간 영상으로 수업하는 법, 6~8장은 학급·마이페이지·관리자, 9~10장은 자료 추가와 문제 해결입니다.
 
-고칠 때는 `tools/guide/template.html` 을 고치고 `npm run guide` 를 돌립니다. 자세한 건 [tools/guide/README.md](tools/guide/README.md) 를 보세요.
+고칠 때는 `tools/guide/template.html` 을 고치고 `npm run guide` 를 돌립니다. docx·md 는 `npm run guide:export` 로 다시 굽습니다(서버를 띄워 둔 상태여야 합니다). 자세한 건 [tools/guide/README.md](tools/guide/README.md) 를 보세요.
 
 ### 사용 설명서 (A4 1쪽)
 
