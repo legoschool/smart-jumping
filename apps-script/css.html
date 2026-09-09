@@ -1330,20 +1330,23 @@ button.st-tag:hover{ filter:brightness(.94); }
   background:#0f1630; box-shadow:var(--sh-1); border:1px solid var(--line);
 }
 .clip video{ display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; background:#0f1630; }
+/* 재생 버튼은 영상 위만 덮는다. 아래 제목줄까지 가리면 글자를 못 누른다. */
 .clip-play{
-  position:absolute; inset:0; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:9px;
-  border:0; background:rgba(12,10,44,.34); color:#fff;
+  position:absolute; top:0; left:0; right:0; aspect-ratio:16/9;
+  display:flex; align-items:center; justify-content:center;
+  border:0; background:rgba(12,10,44,.28); color:#fff;
   transition:background .18s var(--ease);
 }
-.clip-play:hover{ background:rgba(12,10,44,.14); }
+.clip-play:hover{ background:rgba(12,10,44,.10); }
 .clip-play span{
   width:62px; height:62px; border-radius:50%; display:grid; place-items:center;
   background:linear-gradient(135deg,#fb923c,#f43f5e); font-size:22px; padding-left:4px;
   box-shadow:0 14px 30px -10px rgba(244,63,94,.95);
 }
-.clip-play b{ font-size:13.5px; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.6); }
 .clip.on .clip-play{ display:none; }
+.clip-cap{ padding:12px 16px 14px; background:var(--card); }
+.clip-cap b{ display:block; font-size:14.5px; font-weight:900; letter-spacing:-.03em; color:var(--n-900); }
+.clip-cap i{ display:block; margin-top:3px; font-style:normal; font-size:12.5px; font-weight:500; color:var(--n-600); }
 
 @media (max-width:1080px){ .eff-grid{ grid-template-columns:1fr 1fr; } }
 @media (max-width:760px){
@@ -1357,6 +1360,39 @@ button.st-tag:hover{ filter:brightness(.94); }
 .rv.in{ opacity:1; transform:none; }
 @media (prefers-reduced-motion:reduce){ .rv{ opacity:1; transform:none; } }
 
+/* 장면 영상 다섯 편 — 올려놓으면 무음으로 돌고, 누르면 소리와 함께 */
+.scene-strip{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+.scene{
+  position:relative; border-radius:var(--r); overflow:hidden;
+  background:#0f1630; border:1px solid var(--line); box-shadow:var(--sh-1);
+  transition:transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.scene:hover{ transform:translateY(-4px); box-shadow:var(--sh-2); }
+.scene video{
+  display:block; width:100%; height:auto; aspect-ratio:16/9;
+  object-fit:cover; background:#0f1630;
+}
+.scene-play{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:flex-end; gap:6px; padding:10px 8px;
+  border:0; color:#fff;
+  background:linear-gradient(180deg, rgba(10,8,38,0) 42%, rgba(10,8,38,.72) 100%);
+  transition:background .18s var(--ease);
+}
+.scene-play span{
+  width:38px; height:38px; border-radius:50%; display:grid; place-items:center;
+  background:rgba(255,255,255,.9); color:#312368; font-size:14px; padding-left:3px;
+  opacity:0; transform:scale(.85);
+  transition:opacity .18s var(--ease), transform .18s var(--ease);
+}
+.scene:hover .scene-play span{ opacity:1; transform:none; }
+.scene-play b{ font-size:12.5px; font-weight:800; text-shadow:0 2px 8px rgba(0,0,0,.7); }
+.scene.on .scene-play{ display:none; }
+
+@media (max-width:1080px){ .scene-strip{ grid-template-columns:repeat(3,1fr); } }
+@media (max-width:640px){ .scene-strip{ grid-template-columns:1fr 1fr; } }
+
+.sj-pin.p4{ background:linear-gradient(135deg,#ec4899,#8b5cf6); }
 /* ═══════════════ 알림 팝업 ═══════════════ */
 .pops{ position:fixed; left:18px; bottom:18px; z-index:70; display:flex; gap:14px; align-items:flex-end; }
 .pop{

@@ -1520,6 +1520,7 @@ function renderTut() {
 var HERO_VIDEO = 'assets/hero/lesson.mp4';
 var EDU = 'assets/edu/';
 var CLIP = 'assets/clips/';
+var SCENE = 'assets/scenes/';
 
 /* 히어로 위를 떠다니는 음표 — 위치·속도만 흩어 두면 알아서 올라간다 */
 function heroNotes() {
@@ -1630,8 +1631,18 @@ var FIGS = [
 ];
 
 var CLIPS = [
-  { f:'clip1', t:'스마트점핑이 뭐예요?', s:'교실에서 시작하는 첫 만남' },
-  { f:'clip2', t:'우리 학교에도 스마트점핑', s:'학교로 찾아가는 신체활동 수업' }
+  { f:'clip1', t:'스마트점프 초급 10', s:'교실에서 발판 순서 익히기' },
+  { f:'clip2', t:'스마트점프 초급 20', s:'창작(자유) 패턴 익히기 -2-' }
+];
+
+/* 10초짜리 장면 영상. 제목 카드는 없고 소리가 들어 있다.
+   기다리게 하지 않으려고 포스터만 깔아 두고, 올려놓으면 무음으로 돌린다. */
+var SCENES = [
+  { f:'scene1', t:'반딧불이 숲' },
+  { f:'scene2', t:'도시 산책' },
+  { f:'scene3', t:'공원 나들이' },
+  { f:'scene4', t:'요정의 숲' },
+  { f:'scene5', t:'해질녘 숲' }
 ];
 
 function eduSections() {
@@ -1656,7 +1667,18 @@ function eduSections() {
       '<video preload="none" playsinline poster="' + CLIP + c.f + '.webp">' +
         '<source src="' + CLIP + c.f + '.mp4" type="video/mp4">' +
       '</video>' +
-      '<button class="clip-play" aria-label="' + esc(c.t) + ' 재생">' +
+      /* 제목은 영상 표지에 이미 박혀 있으니 화면 위에 겹쳐 쓰지 않고 아래에 적는다 */
+      '<button class="clip-play" aria-label="' + esc(c.t) + ' 재생"><span>▶</span></button>' +
+      '<div class="clip-cap"><b>' + esc(c.t) + '</b><i>' + esc(c.s) + '</i></div>' +
+    '</div>';
+  }).join('');
+
+  var scenes = SCENES.map(function (c) {
+    return '<div class="scene" data-scene="' + c.f + '">' +
+      '<video preload="none" playsinline loop poster="' + SCENE + c.f + '.webp">' +
+        '<source src="' + SCENE + c.f + '.mp4" type="video/mp4">' +
+      '</video>' +
+      '<button class="scene-play" aria-label="' + esc(c.t) + ' 재생">' +
         '<span>▶</span><b>' + esc(c.t) + '</b>' +
       '</button>' +
     '</div>';
@@ -1683,10 +1705,17 @@ function eduSections() {
     '</section>' +
 
     '<section class="sj-sec rv">' +
-      '<div class="sj-head"><span class="sj-pin p3">프로그램 소개</span>' +
-        '<h2>1분 영상으로 먼저 만나 보세요</h2>' +
-        '<p>소리가 함께 나옵니다. 누르면 재생됩니다.</p></div>' +
+      '<div class="sj-head"><span class="sj-pin p3">수업 영상</span>' +
+        '<h2>한 차시를 먼저 보세요</h2>' +
+        '<p>발판 번호가 화면에 함께 뜹니다. 소리가 나오니 누를 때 확인하세요.</p></div>' +
       '<div class="clip-grid">' + clips + '</div>' +
+    '</section>' +
+
+    '<section class="sj-sec rv">' +
+      '<div class="sj-head"><span class="sj-pin p4">어디서든</span>' +
+        '<h2>교실 밖에서도 스마트점핑</h2>' +
+        '<p>올려놓으면 소리 없이 돌아가고, 누르면 소리와 함께 봅니다.</p></div>' +
+      '<div class="scene-strip">' + scenes + '</div>' +
     '</section>';
 }
 
@@ -1713,6 +1742,41 @@ function bindEdu() {
       v.play();
     });
     v.addEventListener('ended', function () { box.classList.remove('on'); v.controls = false; });
+  });
+
+  /* 장면 영상 — 마우스를 올리면 무음으로 돌고, 누르면 소리와 함께 본다.
+     올려놓기 전에는 포스터만 있으니 다섯 편이 있어도 첫 화면이 무거워지지 않는다. */
+  $$('.scene').forEach(function (box) {
+    var v = $('video', box);
+
+    box.addEventListener('mouseenter', function () {
+      if (box.classList.contains('on')) return;      // 소리 내어 보는 중이면 건드리지 않는다
+      v.muted = true;
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});
+    });
+    box.addEventListener('mouseleave', function () {
+      if (box.classList.contains('on')) return;
+      v.pause();
+      v.currentTime = 0;
+    });
+
+    $('.scene-play', box).addEventListener('click', function () {
+      /* 다른 편이 소리를 내고 있으면 되돌린다 */
+      $$('.scene').forEach(function (o) {
+        if (o === box) return;
+        var ov = $('video', o);
+        o.classList.remove('on'); ov.controls = false; ov.muted = true; ov.pause(); ov.currentTime = 0;
+      });
+      $$('.clip').forEach(function (o) {
+        var ov = $('video', o); ov.pause(); o.classList.remove('on'); ov.controls = false;
+      });
+      box.classList.add('on');
+      v.muted = false;
+      v.controls = true;
+      v.currentTime = 0;
+      v.play();
+    });
   });
 
   /* 스크롤에 맞춰 부드럽게 등장 — 지원하지 않는 브라우저면 그냥 보인다 */
