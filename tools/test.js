@@ -40,8 +40,8 @@ const vids = A.readAll_(A.T.VIDEOS);
 const users = A.readAll_(A.T.USERS);
 const classes = A.readAll_(A.T.CLASSES);
 const books = A.readAll_(A.T.TEXTBOOKS);
-ok('categories 행 23', cats.length === 23, cats.length + '행');
-ok('videos 행 (실영상 104건)', vids.length === 104, vids.length + '건');
+ok('categories 행 24', cats.length === 24, cats.length + '행');
+ok('videos 행 (유튜브 104 + 자체 제작 2)', vids.length === 106, vids.length + '건');
 ok('users 3명 (teacher, test, teststu)', users.length === 3 &&
    users.map(u=>u['아이디']).sort().join(',')==='teacher,test,teststu',
    users.map(u => u['아이디'] + '/' + u['권한']).join(', '));
@@ -72,9 +72,28 @@ ok('초 단위가 59 이하', badSec.length === 0, '위반 ' + badSec.length + '
 console.log('\n━━━ 2-b. 유튜브 연동 ━━━');
 const noYt = vids.filter(v => !String(v['youtube_id']).trim());
 ok('모든 영상에 youtube_id 존재', noYt.length === 0, '누락 ' + noYt.length + '건');
-const badYt = vids.filter(v => !/^[A-Za-z0-9_-]{11}$/.test(String(v['youtube_id']).trim()));
+
+// 'file:' 로 시작하면 저장소 안의 파일 영상이라 11자 규칙을 따르지 않는다
+const isFileVid = v => String(v['youtube_id']).trim().indexOf('file:') === 0;
+const ytVids = vids.filter(v => !isFileVid(v));
+const fileVids = vids.filter(isFileVid);
+const badYt = ytVids.filter(v => !/^[A-Za-z0-9_-]{11}$/.test(String(v['youtube_id']).trim()));
 ok('youtube_id 형식 11자 유효', badYt.length === 0,
-   badYt.length ? badYt[0]['youtube_id'] : vids[0]['youtube_id'] + ' 등');
+   badYt.length ? badYt[0]['youtube_id'] : ytVids.length + '건 모두');
+ok('자체 제작 영상 2건', fileVids.length === 2,
+   fileVids.map(v => v['제목']).join(' / '));
+// 경로 오타를 잡는다 — mp4 와 포스터 webp 가 실제로 있어야 한다
+const missingFiles = [];
+fileVids.forEach(v => {
+  const base = String(v['youtube_id']).trim().slice(5);
+  ['.mp4', '.webp'].forEach(ext => {
+    const p = path.resolve(__dirname, '..', 'assets', base + ext);
+    if (!fs.existsSync(p)) missingFiles.push(base + ext);
+  });
+});
+ok('파일 영상이 assets/ 에 실제로 있음', missingFiles.length === 0,
+   missingFiles.length ? '없음: ' + missingFiles.join(', ') : fileVids.length * 2 + '개 확인');
+
 const ytIds = vids.map(v => String(v['youtube_id']));
 ok('영상 중복 없음', new Set(ytIds).size === ytIds.length, new Set(ytIds).size + '개 고유');
 ok('제목이 실제 유튜브 제목', vids.every(v => String(v['제목']).length > 3));
@@ -103,7 +122,7 @@ ok('대분류 6개', boot.categories.length === 6,
    boot.categories.map(c => c.name).join(' / '));
 ok('대분류 순서 정렬', boot.categories.every((c, i, a) => i === 0 || a[i-1].order <= c.order));
 const c4 = boot.categories.find(c => c.id === 'C4');
-ok('스마트점핑 소분류 6개', c4.subs.length === 6, c4.subs.length + '개');
+ok('스마트점핑 소분류 7개', c4.subs.length === 7, c4.subs.length + '개');
 ok('전 대분류 영상 보유', boot.categories.every(c => boot.videos.some(v => v.c1 === c.id)),
    boot.categories.map(c => c.name + ':' + boot.videos.filter(v=>v.c1===c.id).length).join(' '));
 ok('소분류 순서 정렬', c4.subs.every((s, i, a) => i === 0 || a[i-1].order <= s.order));
@@ -354,7 +373,7 @@ const vAdded = A.api_addVideo('test', {
   yt: 'https://youtu.be/AbCdEfGh123', title: '교사가 올린 영상', c1: 'C1', c2: 'S11', dur: '04:30'
 });
 ok('교사 등록 성공', vAdded.ok, vAdded.id);
-ok('영상ID 이어서 발급', vAdded.id === 'V0105', vAdded.id);
+ok('영상ID 이어서 발급', vAdded.id === 'V0107', vAdded.id);
 ok('videos 한 줄 늘어남', A.readAll_(A.T.VIDEOS).length === vBefore + 1);
 ok('중복 등록 거부', !A.api_addVideo('test', { yt: 'AbCdEfGh123', title: 'y', c1: 'C1', c2: 'S11' }).ok);
 

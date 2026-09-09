@@ -761,7 +761,30 @@ function thumbUrl(yt) {
   return 'https://i.ytimg.com/vi/' + yt + (NO_MAXRES[yt] ? '/hqdefault.jpg' : '/maxresdefault.jpg');
 }
 
+/* youtube_id 자리에 'file:clips/clip1' 처럼 적으면 저장소 안의 파일로 재생한다.
+   자체 제작 영상은 유튜브에 올리지 않고 assets/ 에 그대로 두기 때문이다.
+   같은 이름의 .mp4 가 영상, .webp 가 썸네일이다. */
+function fileOf(v) {
+  var s = String((v && v.yt) || '');
+  return s.indexOf('file:') === 0 ? s.slice(5) : '';
+}
+
+/**
+ * 목록 카드 밖(튜토리얼 등)에서 쓰는 작은 썸네일.
+ * 파일 영상에는 yt-thumb 을 붙이지 않는다 — 유튜브 해상도 폴백이 걸리면 안 된다.
+ */
+function thumbImg(v) {
+  var f = fileOf(v);
+  if (f) return '<img alt="" src="assets/' + esc(f) + '.webp">';
+  return '<img alt="" class="yt-thumb" data-yt="' + esc(v.yt || '') + '" ' +
+    'src="' + esc(thumbUrl(v.yt)) + '">';
+}
+
 function thumbHtml(v) {
+  var f = fileOf(v);
+  if (f) {
+    return '<img class="file-thumb" alt="" loading="lazy" src="assets/' + esc(f) + '.webp">';
+  }
   if (v.yt) {
     // 고해상도부터 시도하고, 없으면 아래에서 hqdefault 로 자동 대체
     return '<img class="yt-thumb" data-yt="' + esc(v.yt) + '" alt="" loading="lazy" ' +
@@ -1009,7 +1032,7 @@ function openCartModal() {
 
 /* ═══════════ 수업 플레이어 ═══════════ */
 
-var P = { list: [], idx: 0, yt: null, demoTimer: null, demoLeft: 0, playing: false };
+var P = { list: [], idx: 0, yt: null, file: null, demoTimer: null, demoLeft: 0, playing: false };
 var YT_READY = false, ytQueue = null;
 
 (function () {
@@ -1039,6 +1062,7 @@ function closePlayer() {
   stopDemo(); ytQueue = null;
   if (P.yt && P.yt.destroy) { try { P.yt.destroy(); } catch (e) {} }
   P.yt = null;
+  if (P.file) { P.file.pause(); P.file.removeAttribute('src'); P.file = null; }
   $('#plScreen').innerHTML = '';
   $('#player').hidden = true;
   document.body.style.overflow = '';
@@ -1089,8 +1113,11 @@ function playAt(i) {
 
   stopDemo(); ytQueue = null;
   if (P.yt && P.yt.destroy) { try { P.yt.destroy(); } catch (e) {} P.yt = null; }
+  if (P.file) { P.file.pause(); P.file.removeAttribute('src'); P.file = null; }
   $('#plScreen').innerHTML = '';
 
+  var f = fileOf(v);
+  if (f) { mountFile(v, f, i); return; }
   if (!v.yt) { startDemo(v); return; }
   if (!YT_READY) {
     $('#plScreen').innerHTML = '<div class="demo-screen"><div class="demo-tag">Loading</div>' +
@@ -1100,6 +1127,31 @@ function playAt(i) {
     return;
   }
   mountYT(v, i);
+}
+
+/** 저장소 안의 파일 영상 — 유튜브 대신 video 태그로 튼다 */
+function mountFile(v, f, i) {
+  var el = document.createElement('video');
+  el.src = 'assets/' + f + '.mp4';
+  el.poster = 'assets/' + f + '.webp';
+  el.controls = true;
+  el.playsInline = true;
+  el.preload = 'auto';
+
+  el.addEventListener('play', function () { P.playing = true; syncToggle(); });
+  el.addEventListener('pause', function () { P.playing = false; syncToggle(); });
+  el.addEventListener('ended', function () { if (P.idx === i) playAt(i + 1); });
+  el.addEventListener('error', function () { if (P.idx === i) ytError(v, 'FILE'); });
+
+  $('#plScreen').innerHTML = '';
+  $('#plScreen').appendChild(el);
+  P.file = el;
+
+  /* 수업 플레이어는 사용자가 눌러서 여는 화면이라 소리와 함께 틀 수 있다.
+     그래도 브라우저가 막으면 멈춘 상태로 두고 재생 버튼을 기다린다. */
+  P.playing = true; syncToggle();
+  var p = el.play();
+  if (p && p.catch) p.catch(function () { P.playing = false; syncToggle(); });
 }
 
 function mountYT(v, i) {
@@ -1128,8 +1180,15 @@ function ytError(v, code) {
     5: '이 브라우저에서 재생할 수 없습니다',
     100: '삭제되었거나 비공개 영상입니다',
     101: '외부 재생이 허용되지 않은 영상입니다',
-    150: '외부 재생이 허용되지 않은 영상입니다'
+    150: '외부 재생이 허용되지 않은 영상입니다',
+    FILE: '영상 파일을 불러오지 못했습니다'
   })[code] || '재생할 수 없는 영상입니다';
+
+  /* 파일 영상에는 유튜브 주소가 없다 */
+  var where = fileOf(v)
+    ? '파일: assets/' + esc(fileOf(v)) + '.mp4'
+    : '유튜브에서 직접 보기: <a href="https://www.youtube.com/watch?v=' + esc(v.yt) +
+      '" target="_blank" rel="noopener" style="color:#818cf8">youtu.be/' + esc(v.yt) + '</a>';
 
   P.playing = false; syncToggle();
   var left = 5;
@@ -1137,9 +1196,7 @@ function ytError(v, code) {
     '<div class="err-screen"><div class="demo-tag">재생 오류</div>' +
       '<div class="demo-title">' + esc(v.title) + '</div>' +
       '<div class="demo-note">' + esc(why) + ' (코드 ' + code + ')<br>' +
-      '<b id="errLeft">5</b>초 뒤 다음 영상으로 넘어갑니다.<br><br>' +
-      '유튜브에서 직접 보기: <a href="https://www.youtube.com/watch?v=' + esc(v.yt) +
-      '" target="_blank" rel="noopener" style="color:#818cf8">youtu.be/' + esc(v.yt) + '</a></div></div>';
+      '<b id="errLeft">5</b>초 뒤 다음 영상으로 넘어갑니다.<br><br>' + where + '</div></div>';
 
   stopDemo();
   P.demoTimer = setInterval(function () {
@@ -1170,6 +1227,11 @@ function tickDemo() {
 function stopDemo() { if (P.demoTimer) { clearInterval(P.demoTimer); P.demoTimer = null; } }
 
 function togglePlay() {
+  if (P.file) {
+    // play / pause 이벤트가 syncToggle 을 부르므로 여기서는 부르지 않는다
+    if (P.file.paused) P.file.play(); else P.file.pause();
+    return;
+  }
   if (P.yt && P.yt.pauseVideo) {
     if (P.playing) P.yt.pauseVideo(); else P.yt.playVideo();
     return;
@@ -1412,8 +1474,7 @@ function renderTut() {
     if (sel) {
       return '<div class="tut-step">' + head +
         '<div class="tut-picked">' +
-          '<img alt="" class="yt-thumb" data-yt="' + esc(sel.yt || '') + '" ' +
-            'src="' + esc(thumbUrl(sel.yt)) + '">' +
+          thumbImg(sel) +
           '<span class="t"><b>' + esc(sel.title) + '</b>' +
             '<span>' + esc(sel.dur) + ' · ' + esc(catName(sel.c1)) + ' › ' + esc(subName(sel.c2)) + '</span></span>' +
           '<button class="btn btn-ghost btn-sm" data-play="' + esc(sel.id) + '">▶ 미리보기</button>' +
@@ -1441,8 +1502,7 @@ function renderTut() {
           var st = TUT_STEPS[i];
           return '<div class="tut-sum-row">' +
             '<span class="no" style="background:' + st.color + '">' + st.no + '</span>' +
-            '<img alt="" class="yt-thumb" data-yt="' + esc(v.yt || '') + '" ' +
-              'src="' + esc(thumbUrl(v.yt)) + '">' +
+            thumbImg(v) +
             '<span class="tt">' + esc(v.title) + '</span>' +
             '<span class="dd">' + esc(v.dur) + '</span>' +
           '</div>';
@@ -1631,8 +1691,11 @@ var FIGS = [
 ];
 
 var CLIPS = [
-  { f:'clip1', t:'스마트점프 초급 10', s:'교실에서 발판 순서 익히기' },
-  { f:'clip2', t:'스마트점프 초급 20', s:'창작(자유) 패턴 익히기 -2-' }
+  /* 영상 목록에도 같은 파일이 실려 있다(V0105 · V0106).
+     여기서는 표지만 걸어 두고, 누르면 목록과 똑같이 수업 플레이어를 연다.
+     재생 경로가 하나여야 조회수도 한곳에 쌓인다. */
+  { id:'V0105', f:'clip1', t:'스마트점프 초급 10', s:'교실에서 발판 순서 익히기' },
+  { id:'V0106', f:'clip2', t:'스마트점프 초급 20', s:'창작(자유) 패턴 익히기 -2-' }
 ];
 
 /* 10초짜리 장면 영상. 제목 카드는 없고 소리가 들어 있다.
@@ -1663,10 +1726,8 @@ function eduSections() {
   }).join('');
 
   var clips = CLIPS.map(function (c) {
-    return '<div class="clip" data-clip="' + c.f + '">' +
-      '<video preload="none" playsinline poster="' + CLIP + c.f + '.webp">' +
-        '<source src="' + CLIP + c.f + '.mp4" type="video/mp4">' +
-      '</video>' +
+    return '<div class="clip" data-clip="' + esc(c.id) + '">' +
+      '<img class="clip-poster" src="' + CLIP + c.f + '.webp" alt="" loading="lazy">' +
       /* 제목은 영상 표지에 이미 박혀 있으니 화면 위에 겹쳐 쓰지 않고 아래에 적는다 */
       '<button class="clip-play" aria-label="' + esc(c.t) + ' 재생"><span>▶</span></button>' +
       '<div class="clip-cap"><b>' + esc(c.t) + '</b><i>' + esc(c.s) + '</i></div>' +
@@ -1729,19 +1790,10 @@ function bindEdu() {
     });
   });
 
-  /* 소개 영상 — 누를 때 비로소 내려받는다 (한 편이 10MB 라 미리 받지 않는다) */
+  /* 차시 수업 영상 — 목록에 실린 것과 같은 영상이라 수업 플레이어를 그대로 연다.
+     표지 그림만 걸려 있어서 누르기 전에는 영상을 내려받지 않는다. */
   $$('.clip').forEach(function (box) {
-    var v = $('video', box);
-    $('.clip-play', box).addEventListener('click', function () {
-      /* 다른 편이 돌고 있으면 멈춘다 */
-      $$('.clip').forEach(function (o) {
-        if (o !== box) { var ov = $('video', o); ov.pause(); o.classList.remove('on'); ov.controls = false; }
-      });
-      box.classList.add('on');
-      v.controls = true;
-      v.play();
-    });
-    v.addEventListener('ended', function () { box.classList.remove('on'); v.controls = false; });
+    box.addEventListener('click', function () { openPlayer([box.dataset.clip]); });
   });
 
   /* 장면 영상 — 마우스를 올리면 무음으로 돌고, 누르면 소리와 함께 본다.
@@ -2569,7 +2621,9 @@ function renderMyVideos() {
 
   var rows = list.map(function (v) {
     return '<tr' + (v.show ? '' : ' class="row-off"') + ' data-vid="' + esc(v.id) + '">' +
-      '<td class="vt-th"><img src="https://i.ytimg.com/vi/' + esc(v.yt) + '/default.jpg" alt=""></td>' +
+      '<td class="vt-th">' + (fileOf(v)
+        ? '<img src="assets/' + esc(fileOf(v)) + '.webp" alt="">'
+        : '<img src="https://i.ytimg.com/vi/' + esc(v.yt) + '/default.jpg" alt="">') + '</td>' +
       '<td><b>' + esc(v.title) + '</b><span class="vt-sub">' + esc(v.id) + ' · ' + esc(v.yt) +
         (v.dur ? ' · ' + esc(v.dur) : '') + '</span></td>' +
       '<td class="vt-cat">' + esc(name(v.c1, v.c2)) + '</td>' +
