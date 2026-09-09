@@ -10,6 +10,10 @@ tools/data/seed-block.txt
 여자 아이 캐릭터/
 KakaoTalk_*.mp4
 
+# 선생님이 보내 주신 안내 도안·참조영상 원본
+# (tools/prep-edu.js · tools/prep-clips.js 로 구운 것이 assets/edu · assets/clips 에 있다)
+스마트 점핑 추가자료/
+
 # 가이드북 중간 산출물 (원본 PNG 는 크고, 최적화한 WebP 만 저장소에 둔다)
 tools/guide/raw/
 tools/guide/pages/

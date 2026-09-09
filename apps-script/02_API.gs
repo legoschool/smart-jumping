@@ -22,24 +22,296 @@ function include(filename) {
    인증
    ═══════════════════════════════════════════ */
 
-function api_login(id, pw) {
-  const users = readAll_(T.USERS);
-  const hash = sha256_(pw);
-  const u = users.filter(function (x) {
-    return String(x['아이디']).trim() === String(id).trim();
-  })[0];
+/* ═══════════════════════════════════════════
+   이용권(라이선스) — 한 학교 몫의 계정이
+   다른 학교에서 쓰이는 것을 막는 장치
 
-  if (!u) return { ok: false, msg: '존재하지 않는 아이디입니다.' };
+   네 겹으로 겁니다.
+   ① 학교 고정  가입할 때 정한 학교코드 밖으로는 수업을 못 만든다
+   ② 기기 등록  계정마다 쓸 수 있는 기기 수를 정해 둔다 (기본 2대)
+   ③ 한 세션    같은 계정으로 다른 곳에서 로그인하면 앞선 쪽이 풀린다
+   ④ 접속 이력  언제 · 어느 기기에서 들어왔는지 남겨 관리자가 본다
+   ═══════════════════════════════════════════ */
+
+/** users 한 줄에서 이용권 정보를 꺼낸다. 비어 있으면 기본값. */
+function licOf_(u) {
+  const seats = Number(u['좌석수']) || LIC.SEATS;
+  const from = dateStr_(u['이용시작']) || dateStr_(u['가입일']) || today_();
+  let to = dateStr_(u['이용종료']);
+  if (!to) {
+    const d = new Date(Date.parse(from) + LIC.DAYS * 86400000);
+    to = Utilities.formatDate(d, 'Asia/Seoul', 'yyyy-MM-dd');
+  }
+  return {
+    school: String(u['학교코드'] || '').trim(),
+    seats: seats,
+    from: from,
+    to: to,
+    expired: today_() > to
+  };
+}
+
+/** 접속 이력 한 줄 */
+function logLogin_(id, devId, school, result, note) {
+  try {
+    appendRows_(T.LOGINLOG, [{
+      '시각': now_(), '아이디': id, '기기ID': devId || '',
+      '학교코드': school || '', '결과': result, '비고': note || ''
+    }]);
+  } catch (e) { /* 이력이 안 남는다고 로그인을 막지는 않는다 */ }
+}
+
+/** 브라우저가 보내 준 기기 식별자를 다듬는다 */
+function devId_(dev) {
+  return String((dev && dev.id) || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+}
+
+/**
+ * 이 기기가 계정의 좌석 안에 드는지 본다.
+ * 처음 보는 기기면 빈자리에 등록하고, 자리가 없으면 막는다.
+ */
+function seatCheck_(userId, dev, seats) {
+  const id = devId_(dev);
+  if (!id) return { ok: true, devId: '', note: '기기 식별 없음' };   // 옛 화면 호환
+
+  const sh = sheet_(T.DEVICES);
+  const rows = readAll_(T.DEVICES);
+  const mine = rows.filter(function (r) {
+    return String(r['소유자']) === String(userId) && String(r['상태']) === '사용';
+  });
+
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i]['소유자']) !== String(userId)) continue;
+    if (String(rows[i]['기기ID']) !== id) continue;
+    if (String(rows[i]['상태']) !== '사용') {
+      return { ok: false, code: 'DEVICE_BLOCKED', devId: id,
+               msg: '이 기기는 관리자가 사용을 막아 두었습니다.' };
+    }
+    sh.getRange(i + 2, 6).setValue(now_());                        // 최근접속
+    return { ok: true, devId: id, seat: mine.length, seats: seats };
+  }
+
+  if (mine.length >= seats) {
+    return {
+      ok: false, code: 'SEAT_FULL', devId: id,
+      msg: '이 계정에 등록된 기기가 ' + seats + '대를 채웠습니다.\n' +
+           '쓰던 기기에서 [마이페이지 → 이용 정보]로 기기를 뺀 뒤 다시 시도하거나, 관리자에게 문의하세요.'
+    };
+  }
+
+  appendRows_(T.DEVICES, [{
+    '소유자': userId, '기기ID': id,
+    '기기별명': String((dev && dev.name) || '').slice(0, 40) || ('기기 ' + (mine.length + 1)),
+    '브라우저': String((dev && dev.ua) || '').slice(0, 120),
+    '등록일': today_(), '최근접속': now_(), '상태': '사용'
+  }]);
+  return { ok: true, devId: id, seat: mine.length + 1, seats: seats, fresh: true };
+}
+
+function newToken_() {
+  return Utilities.getUuid().replace(/-/g, '');
+}
+
+function api_login(id, pw, dev) {
+  return withLock_(function () {
+    const sh = sheet_(T.USERS);
+    const users = readAll_(T.USERS);
+    const hash = sha256_(pw);
+    const idx = users.findIndex(function (x) {
+      return String(x['아이디']).trim() === String(id).trim();
+    });
+    const u = users[idx];
+
+    if (!u) { logLogin_(id, devId_(dev), '', '실패', '없는 아이디'); return { ok: false, msg: '존재하지 않는 아이디입니다.' }; }
+    if (String(u['상태']) !== '정상') { logLogin_(id, devId_(dev), '', '실패', '상태 ' + u['상태']); return { ok: false, msg: '사용할 수 없는 계정입니다.' }; }
+    if (String(u['비번해시']) !== hash) { logLogin_(id, devId_(dev), '', '실패', '비번 불일치'); return { ok: false, msg: '비밀번호가 올바르지 않습니다.' }; }
+
+    const lic = licOf_(u);
+    if (lic.expired) {
+      logLogin_(id, devId_(dev), lic.school, '거부', '이용기간 만료 ' + lic.to);
+      return { ok: false, code: 'EXPIRED',
+               msg: '이용 기간이 ' + lic.to + ' 로 끝났습니다. 관리자에게 문의하세요.' };
+    }
+
+    const seat = seatCheck_(u['아이디'], dev, lic.seats);
+    if (!seat.ok) {
+      logLogin_(id, seat.devId, lic.school, '거부', seat.code);
+      return { ok: false, code: seat.code, msg: seat.msg };
+    }
+
+    /* 한 계정 = 한 세션. 새 토큰을 적어 두면 앞서 켜 둔 쪽은 다음 확인에서 풀린다. */
+    const token = newToken_();
+    sh.getRange(idx + 2, 13, 1, 2).setValues([[token, now_()]]);
+
+    logLogin_(id, seat.devId, lic.school, '성공', seat.fresh ? '기기 새로 등록' : '');
+
+    return {
+      ok: true,
+      token: token,
+      user: {
+        id: u['아이디'], name: u['이름'], org: u['소속'],
+        region: u['지역'], role: u['권한']
+      },
+      license: {
+        school: lic.school, seats: lic.seats, seat: seat.seat,
+        from: lic.from, to: lic.to, devId: seat.devId
+      }
+    };
+  });
+}
+
+/**
+ * 세션이 아직 내 것인지 확인한다.
+ * 같은 계정으로 다른 곳에서 로그인하면 토큰이 바뀌어 여기서 걸린다.
+ */
+function api_session(userId, token) {
+  if (!token) return { ok: true };                 // 토큰 없이 쓰던 화면은 건드리지 않는다
+  const users = readAll_(T.USERS);
+  const u = users.filter(function (x) { return String(x['아이디']) === String(userId); })[0];
+  if (!u) return { ok: false, msg: '계정을 찾을 수 없습니다.' };
   if (String(u['상태']) !== '정상') return { ok: false, msg: '사용할 수 없는 계정입니다.' };
-  if (String(u['비번해시']) !== hash) return { ok: false, msg: '비밀번호가 올바르지 않습니다.' };
+
+  const lic = licOf_(u);
+  if (lic.expired) return { ok: false, msg: '이용 기간이 ' + lic.to + ' 로 끝났습니다.' };
+
+  if (String(u['세션토큰']) && String(u['세션토큰']) !== String(token)) {
+    return { ok: false, code: 'TAKEN',
+             msg: '같은 아이디로 다른 곳에서 로그인했습니다.\n한 계정은 한 곳에서만 쓸 수 있습니다.' };
+  }
+  return { ok: true };
+}
+
+/** 내 기기 목록 + 이용권 */
+function api_myLicense(userId) {
+  const users = readAll_(T.USERS);
+  const u = users.filter(function (x) { return String(x['아이디']) === String(userId); })[0];
+  if (!u) return { ok: false, msg: '계정을 찾을 수 없습니다.' };
+  const lic = licOf_(u);
+
+  const devices = readAll_(T.DEVICES)
+    .filter(function (r) { return String(r['소유자']) === String(userId); })
+    .map(function (r) {
+      return {
+        devId: String(r['기기ID']), name: String(r['기기별명']),
+        ua: String(r['브라우저']), from: dateStr_(r['등록일']),
+        last: String(r['최근접속'] || ''), status: String(r['상태'])
+      };
+    });
 
   return {
     ok: true,
-    user: {
-      id: u['아이디'], name: u['이름'], org: u['소속'],
-      region: u['지역'], role: u['권한']
-    }
+    license: { school: lic.school, seats: lic.seats, from: lic.from, to: lic.to,
+               org: String(u['소속'] || ''), region: String(u['지역'] || '') },
+    devices: devices
   };
+}
+
+/** 본인이 쓰던 기기를 뺀다 (지금 쓰는 기기는 뺄 수 없다) */
+function api_releaseDevice(userId, devId, curDevId) {
+  return withLock_(function () {
+    if (String(devId) === String(curDevId)) {
+      return { ok: false, msg: '지금 쓰고 있는 기기는 뺄 수 없습니다.' };
+    }
+    const sh = sheet_(T.DEVICES);
+    const rows = readAll_(T.DEVICES);
+    const i = rows.findIndex(function (r) {
+      return String(r['소유자']) === String(userId) && String(r['기기ID']) === String(devId);
+    });
+    if (i < 0) return { ok: false, msg: '그 기기를 찾을 수 없습니다.' };
+
+    sh.deleteRow(i + 2);
+    logLogin_(userId, devId, '', '해제', '본인 해제');
+    return { ok: true };
+  });
+}
+
+/* ── 관리자 ── */
+
+/** 회원별 이용권 · 기기 현황 */
+function api_licenses(adminId) {
+  if (roleOf_(adminId) !== '관리자') return { ok: false, msg: '권한이 없습니다.' };
+
+  const devices = readAll_(T.DEVICES);
+  const logs = readAll_(T.LOGINLOG);
+  const since = Utilities.formatDate(new Date(Date.now() - 7 * 86400000), 'Asia/Seoul', 'yyyy-MM-dd');
+
+  const rows = readAll_(T.USERS)
+    .filter(function (u) { return String(u['권한']) !== '학생'; })
+    .map(function (u) {
+      const id = String(u['아이디']);
+      const lic = licOf_(u);
+      const mine = devices.filter(function (d) { return String(d['소유자']) === id; });
+      /* 최근 7일 동안 서로 다른 기기에서 몇 번이나 들어왔는지 */
+      const recent = {};
+      logs.forEach(function (g) {
+        if (String(g['아이디']) !== id) return;
+        if (String(g['시각']).slice(0, 10) < since) return;
+        if (String(g['결과']) !== '성공') return;
+        recent[String(g['기기ID'])] = 1;
+      });
+      const spread = Object.keys(recent).length;
+
+      return {
+        id: id, name: String(u['이름']), org: String(u['소속']), role: String(u['권한']),
+        school: lic.school, seats: lic.seats, used: mine.length,
+        from: lic.from, to: lic.to, expired: lic.expired,
+        spread: spread, warn: spread >= LIC.WARN_DEVICES,
+        online: !!String(u['세션토큰'] || ''), lastSeen: String(u['세션시각'] || '')
+      };
+    });
+
+  return { ok: true, rows: rows, warnAt: LIC.WARN_DEVICES };
+}
+
+/** 관리자가 이용권을 고친다 */
+function api_setLicense(adminId, targetId, obj) {
+  return withLock_(function () {
+    if (roleOf_(adminId) !== '관리자') return { ok: false, msg: '권한이 없습니다.' };
+    const sh = sheet_(T.USERS);
+    const users = readAll_(T.USERS);
+    const i = users.findIndex(function (x) { return String(x['아이디']) === String(targetId); });
+    if (i < 0) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+
+    const row = i + 2;
+    if (obj.school !== undefined) sh.getRange(row, 9).setValue(String(obj.school));
+    if (obj.seats !== undefined) sh.getRange(row, 10).setValue(Math.max(1, Number(obj.seats) || LIC.SEATS));
+    if (obj.from !== undefined) sh.getRange(row, 11).setValue(String(obj.from));
+    if (obj.to !== undefined) sh.getRange(row, 12).setValue(String(obj.to));
+    return { ok: true };
+  });
+}
+
+/** 관리자가 그 계정의 기기를 모두 뺀다 (기기를 잃어버렸을 때) */
+function api_resetDevices(adminId, targetId) {
+  return withLock_(function () {
+    if (roleOf_(adminId) !== '관리자') return { ok: false, msg: '권한이 없습니다.' };
+    const rows = readAll_(T.DEVICES).filter(function (r) {
+      return String(r['소유자']) !== String(targetId);
+    });
+    replaceAll_(T.DEVICES, rows);
+
+    /* 세션도 함께 끊어 지금 켜져 있는 화면을 밀어낸다 */
+    const sh = sheet_(T.USERS);
+    const users = readAll_(T.USERS);
+    const i = users.findIndex(function (x) { return String(x['아이디']) === String(targetId); });
+    if (i >= 0) sh.getRange(i + 2, 13, 1, 2).setValues([['', now_()]]);
+
+    logLogin_(targetId, '', '', '초기화', '관리자 ' + adminId);
+    return { ok: true };
+  });
+}
+
+/** 최근 접속 이력 */
+function api_loginLog(adminId, limit) {
+  if (roleOf_(adminId) !== '관리자') return { ok: false, msg: '권한이 없습니다.' };
+  const n = Math.min(Number(limit) || 60, 300);
+  const rows = readAll_(T.LOGINLOG).slice(-n).reverse().map(function (r) {
+    return {
+      at: String(r['시각']), id: String(r['아이디']), devId: String(r['기기ID']),
+      school: String(r['학교코드']), result: String(r['결과']), note: String(r['비고'])
+    };
+  });
+  return { ok: true, rows: rows };
 }
 
 function api_signup(obj) {
@@ -49,10 +321,16 @@ function api_signup(obj) {
     if (dup) return { ok: false, msg: '이미 사용 중인 아이디입니다.' };
     if (!obj.id || !obj.pw || !obj.name) return { ok: false, msg: '아이디·비밀번호·이름은 필수입니다.' };
 
+    /* 가입할 때 소속 학교를 이용권의 학교로 못 박는다.
+       이 값이 곧 '한 학교 몫' 의 기준이 되고, 바꾸려면 관리자를 거쳐야 한다. */
+    const to = Utilities.formatDate(new Date(Date.now() + LIC.DAYS * 86400000),
+                                    'Asia/Seoul', 'yyyy-MM-dd');
     appendRows_(T.USERS, [{
       '아이디': obj.id, '비번해시': sha256_(obj.pw), '이름': obj.name,
       '소속': obj.org || '', '지역': obj.region || '', '권한': '교사',
-      '가입일': today_(), '상태': '정상'
+      '가입일': today_(), '상태': '정상',
+      '학교코드': String(obj.org || '').trim(), '좌석수': LIC.SEATS,
+      '이용시작': today_(), '이용종료': to, '세션토큰': '', '세션시각': ''
     }]);
     return { ok: true };
   });
@@ -289,8 +567,31 @@ function classLabel_(c) {
   return String(c['학교']) + ' ' + c['학년'] + '-' + c['반'];
 }
 
+/**
+ * 이용권의 첫 겹 — 등록한 학교 밖으로는 수업을 만들지 못한다.
+ * 관리자이거나 학교코드가 비어 있으면(옛 계정) 그냥 지나간다.
+ */
+function schoolGuard_(userId, school) {
+  if (roleOf_(userId) === '관리자') return null;
+  const u = readAll_(T.USERS).filter(function (x) {
+    return String(x['아이디']) === String(userId);
+  })[0];
+  if (!u) return null;
+  const code = String(u['학교코드'] || '').trim();
+  if (!code) return null;
+  if (String(school || '').trim() === code) return null;
+  return {
+    ok: false, code: 'SCHOOL',
+    msg: '이 계정은 ' + code + ' 이용권입니다.\n' +
+         '다른 학교의 수업은 만들 수 없습니다. 학교를 옮기셨다면 관리자에게 문의하세요.'
+  };
+}
+
 function api_saveClass(userId, obj) {
   return withLock_(function () {
+    const bad = schoolGuard_(userId, obj.school);
+    if (bad) return bad;
+
     const sh = sheet_(T.CLASSES);
     const rows = readAll_(T.CLASSES);
 

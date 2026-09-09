@@ -75,9 +75,19 @@ function 시트_열맞추기() {
   const ss = ss_();
   const 결과 = [];
   Object.keys(HEADERS).forEach(function (name) {
-    const sh = ss.getSheetByName(name);
-    if (!sh) { 결과.push(name + ' 탭 없음'); return; }
+    let sh = ss.getSheetByName(name);
     const want = HEADERS[name];
+    /* 없는 탭은 머리글만 얹어 새로 만든다. 기존 탭의 데이터는 건드리지 않는다.
+       (2026-09: devices · loginlog 탭이 새로 생겼다) */
+    if (!sh) {
+      sh = ss.insertSheet(name);
+      sh.getRange(1, 1, 1, want.length).setValues([want])
+        .setFontWeight('bold').setBackground('#4338ca').setFontColor('#ffffff');
+      sh.setFrozenRows(1);
+      sh.autoResizeColumns(1, want.length);
+      결과.push(name + ' 탭 생성');
+      return;
+    }
     if (sh.getMaxColumns() < want.length) {
       sh.insertColumnsAfter(sh.getMaxColumns(), want.length - sh.getMaxColumns());
     }
@@ -277,13 +287,28 @@ function seedVideos_() {
    ═══════════════════════════════════════════ */
 
 function seedUsers_() {
+  // 이용권 기본값 — 학교코드는 소속 학교, 기간은 오늘부터 1년
+  const to = Utilities.formatDate(new Date(Date.now() + LIC.DAYS * 86400000),
+                                  'Asia/Seoul', 'yyyy-MM-dd');
+  function lic(school, seats) {
+    return { '학교코드': school, '좌석수': seats || LIC.SEATS,
+             '이용시작': today_(), '이용종료': to, '세션토큰': '', '세션시각': '' };
+  }
+  function row(base, extra) {
+    Object.keys(extra).forEach(function (k) { base[k] = extra[k]; });
+    return base;
+  }
+
   replaceAll_(T.USERS, [
-    { '아이디': 'teacher', '비번해시': sha256_('1234'), '이름': '테스트', '소속': '스마트점핑 본부',
+    row({ '아이디': 'teacher', '비번해시': sha256_('1234'), '이름': '테스트', '소속': '스마트점핑 본부',
       '지역': '울산광역시 북구', '권한': '관리자', '가입일': today_(), '상태': '정상' },
-    { '아이디': 'test', '비번해시': sha256_('1234'), '이름': '교사', '소속': '옥동초등학교',
+      lic('스마트점핑 본부', 5)),
+    row({ '아이디': 'test', '비번해시': sha256_('1234'), '이름': '교사', '소속': '옥동초등학교',
       '지역': '울산광역시 남구', '권한': '교사', '가입일': today_(), '상태': '정상' },
-    { '아이디': 'teststu', '비번해시': sha256_('1234'), '이름': '학생', '소속': '강동초등학교 3학년 2반',
-      '지역': '울산광역시 북구', '권한': '학생', '가입일': today_(), '상태': '정상' }
+      lic('옥동초등학교', 2)),
+    row({ '아이디': 'teststu', '비번해시': sha256_('1234'), '이름': '학생', '소속': '강동초등학교 3학년 2반',
+      '지역': '울산광역시 북구', '권한': '학생', '가입일': today_(), '상태': '정상' },
+      lic('강동초등학교', 1))
   ]);
 }
 
@@ -291,14 +316,15 @@ function seedClasses_() {
   const rows = [];
   // 마지막 값이 소유자 — 관리자(teacher)와 교사(test)에 나눠 담아
   // '관리자는 전체 조회, 교사는 내 것만' 이 눈에 보이게 한다
+  // 교사(test)의 수업은 모두 옥동초등학교다. 이용권이 그 학교 하나이기 때문이다.
   // [지역, 학교, 학년, 반, 정원, 소유자, 연결된 스케줄그룹]
   const spec = [
     ['울산광역시 북구', '강동초등학교', 1, 3, 8, 'teacher', '1학기 기본과정'],
-    ['울산광역시 북구', '강동초등학교', 2, 1, 12, 'teacher', '1학기 기본과정'],
-    ['울산광역시 북구', '강동초등학교', 3, 2, 15, 'teacher', '리듬 점핑반'],
+    ['부산광역시 해운대구', '해운대초등학교', 5, 4, 18, 'teacher', '체력왕 도전'],
+    ['서울특별시 강남구', '대치초등학교', 6, 2, 22, 'teacher', ''],
     ['울산광역시 남구', '옥동초등학교', 4, 1, 20, 'test', '체력왕 도전'],
-    ['부산광역시 해운대구', '해운대초등학교', 5, 4, 18, 'test', '체력왕 도전'],
-    ['서울특별시 강남구', '대치초등학교', 6, 2, 22, 'test', '']
+    ['울산광역시 남구', '옥동초등학교', 5, 2, 18, 'test', '체력왕 도전'],
+    ['울산광역시 남구', '옥동초등학교', 6, 3, 22, 'test', '']
   ];
   spec.forEach(function (s, i) {
     rows.push({

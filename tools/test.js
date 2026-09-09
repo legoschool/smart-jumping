@@ -17,7 +17,9 @@ global.__api = {
   api_classCurriculum, api_attendanceSummary, api_deleteAttendanceDate,
   api_members, api_setMemberRole, api_setMemberStatus, api_resetMemberPw,
   api_saveFavorites, api_myAttendance, api_classReport,
-  api_ytLookup, api_addVideo, api_myVideos, api_updateVideo, api_deleteVideo, ytId_, mmss_
+  api_ytLookup, api_addVideo, api_myVideos, api_updateVideo, api_deleteVideo, ytId_, mmss_,
+  api_session, api_myLicense, api_releaseDevice, api_licenses, api_setLicense,
+  api_resetDevices, api_loginLog
 };
 `;
 eval(src);
@@ -212,8 +214,8 @@ ok('관리자가 열어도 원 소유자 커리큘럼', cur4.ok && cur4.group ==
 ok('sched 미지정 수정 시 연결 유지',
    A.api_classCurriculum('CL005', 'teacher').group === '체력왕 도전',
    '수정해도 ' + A.api_classCurriculum('CL005', 'teacher').group + ' 유지');
-A.api_saveClass('test', { id: 'CL006', ym: '2026-08', region: '서울특별시 강남구',
-  school: '대치초등학교', grade: 6, cls: 2, cap: 22, sched: '체력왕 도전' });
+A.api_saveClass('test', { id: 'CL006', ym: '2026-08', region: '울산광역시 남구',
+  school: '옥동초등학교', grade: 6, cls: 3, cap: 22, sched: '체력왕 도전' });
 ok('커리큘럼 연결 저장', A.api_classCurriculum('CL006', 'test').group === '체력왕 도전');
 
 console.log('\n━━━ 8-c. 회원관리 (관리자 전용) ━━━');
@@ -392,6 +394,73 @@ ok('없는 영상 삭제는 거부', !A.api_deleteVideo('teacher', vAdded.id).ok
 
 ok('권한 없으면 조회도 거부', !A.api_ytLookup('teststu', 'AbCdEfGh123').ok);
 ok('주소를 못 읽으면 거부', !A.api_ytLookup('test', '그냥 글자').ok);
+
+console.log('\n━━━ 14. 이용권 — 학교 고정 ━━━');
+ok('내 학교 수업은 등록된다',
+   A.api_saveClass('test', { ym:'2026-09', region:'울산광역시 남구',
+     school:'옥동초등학교', grade:2, cls:7, cap:20 }).ok);
+const otherSchool = A.api_saveClass('test', { ym:'2026-09', region:'부산광역시 해운대구',
+  school:'해운대초등학교', grade:3, cls:1, cap:20 });
+ok('다른 학교 수업은 거부', !otherSchool.ok && otherSchool.code === 'SCHOOL', otherSchool.msg);
+ok('관리자는 학교에 매이지 않음',
+   A.api_saveClass('teacher', { ym:'2026-09', region:'대구광역시 수성구',
+     school:'범어초등학교', grade:1, cls:1, cap:20 }).ok);
+
+console.log('\n━━━ 14-b. 이용권 — 기기 등록(좌석) ━━━');
+A.api_resetDevices('teacher', 'test');
+const d1 = A.api_login('test', '1234', { id:'dev-classroom', name:'교실 PC', ua:'Chrome/Win' });
+ok('첫 기기 등록 + 토큰 발급', d1.ok && !!d1.token, '좌석 ' + d1.license.seat + '/' + d1.license.seats);
+const d2 = A.api_login('test', '1234', { id:'dev-laptop', name:'개인 노트북', ua:'Chrome/Win' });
+ok('두 번째 기기까지 허용', d2.ok, '좌석 ' + d2.license.seat + '/' + d2.license.seats);
+const d3 = A.api_login('test', '1234', { id:'dev-otherschool', name:'다른 학교 PC', ua:'Edge/Win' });
+ok('세 번째 기기는 거부', !d3.ok && d3.code === 'SEAT_FULL', d3.msg.split('\n')[0]);
+ok('쓰던 기기는 다시 들어와진다', A.api_login('test','1234',{ id:'dev-classroom' }).ok);
+
+console.log('\n━━━ 14-c. 이용권 — 한 세션 ━━━');
+const s1 = A.api_login('test', '1234', { id:'dev-classroom' });
+ok('로그인 직후 세션 유효', A.api_session('test', s1.token).ok);
+const s2 = A.api_login('test', '1234', { id:'dev-laptop' });
+const kicked = A.api_session('test', s1.token);
+ok('다른 곳에서 로그인하면 앞선 세션이 풀린다',
+   !kicked.ok && kicked.code === 'TAKEN', kicked.msg.split('\n')[0]);
+ok('새 세션은 살아 있다', A.api_session('test', s2.token).ok);
+ok('토큰 없이 쓰던 화면은 건드리지 않는다', A.api_session('test', '').ok);
+
+console.log('\n━━━ 14-d. 이용권 — 내 기기 / 관리자 ━━━');
+const mine = A.api_myLicense('test');
+ok('내 기기 2대', mine.ok && mine.devices.length === 2,
+   mine.devices.map(d => d.name).join(', '));
+ok('학교코드가 보인다', mine.license.school === '옥동초등학교', mine.license.school);
+ok('지금 쓰는 기기는 못 뺀다',
+   !A.api_releaseDevice('test', 'dev-laptop', 'dev-laptop').ok);
+ok('안 쓰는 기기는 뺄 수 있다',
+   A.api_releaseDevice('test', 'dev-classroom', 'dev-laptop').ok);
+ok('뺀 자리에 새 기기가 들어온다',
+   A.api_login('test', '1234', { id:'dev-newroom', name:'새 교실 PC' }).ok);
+
+const lic = A.api_licenses('teacher');
+ok('관리자 이용권 현황', lic.ok && lic.rows.some(r => r.id === 'test'),
+   lic.rows.map(r => r.id + ' ' + r.used + '/' + r.seats).join(' · '));
+ok('교사는 이용권 현황 못 봄', !A.api_licenses('test').ok);
+ok('관리자가 좌석을 늘린다', A.api_setLicense('teacher', 'test', { seats: 3 }).ok);
+ok('늘린 좌석이 반영된다',
+   A.api_login('test', '1234', { id:'dev-third', name:'세 번째' }).ok);
+ok('관리자가 기기를 모두 뺀다', A.api_resetDevices('teacher', 'test').ok);
+ok('초기화 뒤 기기 0대', A.api_myLicense('test').devices.length === 0);
+
+const expired = A.api_setLicense('teacher', 'test', { to: '2020-01-01' });
+ok('이용기간을 지난 날짜로', expired.ok);
+const old = A.api_login('test', '1234', { id:'dev-classroom' });
+ok('기간이 끝나면 로그인 거부', !old.ok && old.code === 'EXPIRED', old.msg);
+A.api_setLicense('teacher', 'test', { to: '2099-12-31' });
+ok('기간을 늘리면 다시 들어와진다', A.api_login('test', '1234', { id:'dev-classroom' }).ok);
+
+const logs = A.api_loginLog('teacher', 20);
+ok('접속 이력이 남는다', logs.ok && logs.rows.length > 0, logs.rows.length + '건');
+ok('거부도 이력에 남는다', logs.ok &&
+   A.api_loginLog('teacher', 300).rows.some(r => r.result === '거부'));
+ok('교사는 이력 못 봄', !A.api_loginLog('test', 10).ok);
+
 console.log('\n' + '━'.repeat(46));
 console.log(`  통과 ${pass} / 실패 ${fail}`);
 console.log('━'.repeat(46) + '\n');

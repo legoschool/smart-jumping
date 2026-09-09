@@ -15,6 +15,9 @@ function makeSheet(name) {
       return last;
     },
     getLastColumn() { return Math.max(0, ...this._d.map(r => (r ? r.length : 0))); },
+    // 시트_열맞추기() 가 쓰는 둘 — 목에서는 열 폭 개념이 없어 마지막 열을 그대로 돌려준다
+    getMaxColumns() { return Math.max(1, this.getLastColumn()); },
+    insertColumnsAfter() { return this; },
     setFrozenRows() { return this; },
     autoResizeColumns() { return this; },
     deleteRow(r) { this._d.splice(r - 1, 1); return this; },
@@ -105,6 +108,7 @@ global.Utilities = {
     const buf = crypto.createHash('sha256').update(String(text), 'utf8').digest();
     return Array.from(buf).map(b => (b > 127 ? b - 256 : b));
   },
+  getUuid() { return crypto.randomUUID(); },
   formatDate(d, tz, fmt) {
     const p = n => ('0' + n).slice(-2);
     return fmt

@@ -101,7 +101,9 @@
       id: u.id, name: u.name, org: u.org, region: u.region,
       role: o.role || u.role,
       hash: o.hash || u.hash,
-      status: o.status || '정상'
+      status: o.status || '정상',
+      // 이용권 — 시드에 있으면 그 값, 없으면 licOf() 가 기본값을 채운다
+      school: u.school, seats: u.seats, licFrom: u.licFrom, licTo: u.licTo
     };
   }
   function roleOf(userId) { var u = userOf(userId); return u ? u.role : ''; }
@@ -146,36 +148,269 @@
     return withHidden ? all : all.filter(function (v) { return v.show !== false; });
   }
 
+  /* ══════════════ 이용권(라이선스) ══════════════
+     시트 판의 devices · loginlog 탭과 users 의 이용권 열을
+     localStorage 위에 그대로 옮겨 둔 것. 규칙은 02_API.gs 와 같다. */
+
+  var LIC = { SEATS: 2, DAYS: 365, WARN_DEVICES: 3 };
+
+  function plusDays(days) {
+    var d = new Date(Date.now() + days * 86400000);
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) +
+           '-' + ('0' + d.getDate()).slice(-2);
+  }
+
+  /** 계정의 이용권 — 관리자가 고친 값이 있으면 그것을 덮어 쓴다 */
+  function licOf(userId) {
+    var u = userOf(userId);
+    if (!u) return null;
+    var base = {
+      school: (u.school !== undefined ? u.school : u.org) || '',
+      seats: u.seats || (u.role === '관리자' ? 5 : LIC.SEATS),
+      from: u.licFrom || SEED.today,
+      to: u.licTo || plusDays(LIC.DAYS)
+    };
+    var over = (get('licOverrides', {}) || {})[userId] || {};
+    Object.keys(over).forEach(function (k) { base[k] = over[k]; });
+    base.expired = todayStr() > base.to;
+    return base;
+  }
+
+  function devicesOf(userId) { return (get('devices', {}) || {})[userId] || []; }
+  function setDevices(userId, list) {
+    var all = get('devices', {}) || {};
+    all[userId] = list;
+    set('devices', all);
+  }
+
+  function logLogin(id, devId, school, result, note) {
+    var rows = get('loginlog', []) || [];
+    var t = new Date();
+    var p = function (n) { return ('0' + n).slice(-2); };
+    rows.push({
+      at: todayStr() + ' ' + p(t.getHours()) + ':' + p(t.getMinutes()) + ':' + p(t.getSeconds()),
+      id: id, devId: devId || '', school: school || '', result: result, note: note || ''
+    });
+    set('loginlog', rows.slice(-400));
+  }
+
+  function devIdOf(dev) {
+    return String((dev && dev.id) || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  }
+
+  function seatCheck(userId, dev, seats) {
+    var id = devIdOf(dev);
+    if (!id) return { ok: true, devId: '' };
+
+    var list = devicesOf(userId);
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].devId !== id) continue;
+      list[i].last = todayStr();
+      setDevices(userId, list);
+      return { ok: true, devId: id, seat: list.length, seats: seats };
+    }
+    if (list.length >= seats) {
+      return {
+        ok: false, code: 'SEAT_FULL', devId: id,
+        msg: '이 계정에 등록된 기기가 ' + seats + '대를 채웠습니다.\n' +
+             '쓰던 기기에서 [마이페이지 → 이용 정보]로 기기를 뺀 뒤 다시 시도하거나, 관리자에게 문의하세요.'
+      };
+    }
+    list.push({
+      devId: id,
+      name: String((dev && dev.name) || '').slice(0, 40) || ('기기 ' + (list.length + 1)),
+      ua: String((dev && dev.ua) || '').slice(0, 120),
+      from: todayStr(), last: todayStr(), status: '사용'
+    });
+    setDevices(userId, list);
+    return { ok: true, devId: id, seat: list.length, seats: seats, fresh: true };
+  }
+
+  function newToken() {
+    return 'tk' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  /** 등록한 학교 밖으로는 수업을 만들지 못한다 */
+  function schoolGuard(userId, school) {
+    if (isAdmin(userId)) return null;
+    var lic = licOf(userId);
+    if (!lic || !lic.school) return null;
+    if (String(school || '').trim() === lic.school) return null;
+    return {
+      ok: false, code: 'SCHOOL',
+      msg: '이 계정은 ' + lic.school + ' 이용권입니다.\n' +
+           '다른 학교의 수업은 만들 수 없습니다. 학교를 옮기셨다면 관리자에게 문의하세요.'
+    };
+  }
+
   /* ══════════════ API 구현 ══════════════ */
   var API = {
 
     /** 기본 계정 + 이 브라우저에서 가입한 계정을 함께 본다 */
-    api_login: function (id, pw) {
+    api_login: function (id, pw, dev) {
       id = String(id).trim();
       var u = userOf(id);
-      if (!u) return Promise.resolve({ ok: false, msg: '존재하지 않는 아이디입니다.' });
+      if (!u) { logLogin(id, devIdOf(dev), '', '실패', '없는 아이디');
+                return Promise.resolve({ ok: false, msg: '존재하지 않는 아이디입니다.' }); }
       if (get('withdrawn', []).indexOf(id) >= 0) {
         return Promise.resolve({ ok: false, msg: '탈퇴한 계정입니다.' });
       }
       if (u.status !== '정상') {
+        logLogin(id, devIdOf(dev), '', '실패', '상태 ' + u.status);
         return Promise.resolve({ ok: false, msg: '정지된 계정입니다. 관리자에게 문의하세요.' });
       }
       return sha256(pw).then(function (h) {
         if (h !== null && h !== u.hash) {
+          logLogin(id, devIdOf(dev), '', '실패', '비번 불일치');
           return { ok: false, msg: '비밀번호가 올바르지 않습니다.' };
         }
+
+        var lic = licOf(id);
+        if (lic.expired) {
+          logLogin(id, devIdOf(dev), lic.school, '거부', '이용기간 만료 ' + lic.to);
+          return { ok: false, code: 'EXPIRED',
+                   msg: '이용 기간이 ' + lic.to + ' 로 끝났습니다. 관리자에게 문의하세요.' };
+        }
+
+        var seat = seatCheck(id, dev, lic.seats);
+        if (!seat.ok) {
+          logLogin(id, seat.devId, lic.school, '거부', seat.code);
+          return { ok: false, code: seat.code, msg: seat.msg };
+        }
+
+        var token = newToken();
+        var ses = get('sessions', {}) || {};
+        ses[id] = token;
+        set('sessions', ses);
+        logLogin(id, seat.devId, lic.school, '성공', seat.fresh ? '기기 새로 등록' : '');
+
         var p = profile(u.id);
         return {
           ok: true,
+          token: token,
           user: {
             id: u.id,
             name: p.name || u.name,
             org: p.org !== undefined ? p.org : u.org,
             region: p.region !== undefined ? p.region : u.region,
             role: u.role
+          },
+          license: {
+            school: lic.school, seats: lic.seats, seat: seat.seat,
+            from: lic.from, to: lic.to, devId: seat.devId
           }
         };
       });
+    },
+
+    /* ── 이용권 ── */
+
+    api_session: function (userId, token) {
+      if (!token) return { ok: true };
+      var u = userOf(userId);
+      if (!u) return { ok: false, msg: '계정을 찾을 수 없습니다.' };
+      if (u.status !== '정상') return { ok: false, msg: '사용할 수 없는 계정입니다.' };
+      var lic = licOf(userId);
+      if (lic.expired) return { ok: false, msg: '이용 기간이 ' + lic.to + ' 로 끝났습니다.' };
+      var cur = (get('sessions', {}) || {})[userId];
+      if (cur && cur !== token) {
+        return { ok: false, code: 'TAKEN',
+                 msg: '같은 아이디로 다른 곳에서 로그인했습니다.\n한 계정은 한 곳에서만 쓸 수 있습니다.' };
+      }
+      return { ok: true };
+    },
+
+    api_myLicense: function (userId) {
+      var u = userOf(userId);
+      if (!u) return { ok: false, msg: '계정을 찾을 수 없습니다.' };
+      var lic = licOf(userId);
+      var p = profile(userId);
+      return {
+        ok: true,
+        license: {
+          school: lic.school, seats: lic.seats, from: lic.from, to: lic.to,
+          org: p.org !== undefined ? p.org : u.org,
+          region: p.region !== undefined ? p.region : u.region
+        },
+        devices: devicesOf(userId).map(function (d) {
+          return { devId: d.devId, name: d.name, ua: d.ua,
+                   from: d.from, last: d.last, status: d.status || '사용' };
+        })
+      };
+    },
+
+    api_releaseDevice: function (userId, devId, curDevId) {
+      if (String(devId) === String(curDevId)) {
+        return { ok: false, msg: '지금 쓰고 있는 기기는 뺄 수 없습니다.' };
+      }
+      var list = devicesOf(userId);
+      var left = list.filter(function (d) { return d.devId !== devId; });
+      if (left.length === list.length) return { ok: false, msg: '그 기기를 찾을 수 없습니다.' };
+      setDevices(userId, left);
+      logLogin(userId, devId, '', '해제', '본인 해제');
+      return { ok: true };
+    },
+
+    api_licenses: function (adminId) {
+      if (!isAdmin(adminId)) return { ok: false, msg: '권한이 없습니다.' };
+      var all = SEED.users.concat(get('newUsers', []));
+      var gone = get('withdrawn', []) || [];
+      var logs = get('loginlog', []) || [];
+      var ses = get('sessions', {}) || {};
+      var since = plusDays(-7);
+
+      var rows = all
+        .filter(function (x) { return gone.indexOf(x.id) < 0; })
+        .map(function (x) { return userOf(x.id); })
+        .filter(function (u) { return u && u.role !== '학생'; })
+        .map(function (u) {
+          var lic = licOf(u.id);
+          var recent = {};
+          logs.forEach(function (g) {
+            if (g.id !== u.id || g.result !== '성공') return;
+            if (g.at.slice(0, 10) < since) return;
+            recent[g.devId] = 1;
+          });
+          var spread = Object.keys(recent).length;
+          return {
+            id: u.id, name: u.name, org: u.org, role: u.role,
+            school: lic.school, seats: lic.seats, used: devicesOf(u.id).length,
+            from: lic.from, to: lic.to, expired: lic.expired,
+            spread: spread, warn: spread >= LIC.WARN_DEVICES,
+            online: !!ses[u.id], lastSeen: ''
+          };
+        });
+      return { ok: true, rows: rows, warnAt: LIC.WARN_DEVICES };
+    },
+
+    api_setLicense: function (adminId, targetId, obj) {
+      if (!isAdmin(adminId)) return { ok: false, msg: '권한이 없습니다.' };
+      if (!userOf(targetId)) return { ok: false, msg: '회원을 찾을 수 없습니다.' };
+      var all = get('licOverrides', {}) || {};
+      var cur = all[targetId] || {};
+      if (obj.school !== undefined) cur.school = String(obj.school);
+      if (obj.seats !== undefined) cur.seats = Math.max(1, Number(obj.seats) || LIC.SEATS);
+      if (obj.from !== undefined) cur.from = String(obj.from);
+      if (obj.to !== undefined) cur.to = String(obj.to);
+      all[targetId] = cur;
+      set('licOverrides', all);
+      return { ok: true };
+    },
+
+    api_resetDevices: function (adminId, targetId) {
+      if (!isAdmin(adminId)) return { ok: false, msg: '권한이 없습니다.' };
+      setDevices(targetId, []);
+      var ses = get('sessions', {}) || {};
+      delete ses[targetId];
+      set('sessions', ses);
+      logLogin(targetId, '', '', '초기화', '관리자 ' + adminId);
+      return { ok: true };
+    },
+
+    api_loginLog: function (adminId, limit) {
+      if (!isAdmin(adminId)) return { ok: false, msg: '권한이 없습니다.' };
+      var n = Math.min(Number(limit) || 60, 300);
+      return { ok: true, rows: (get('loginlog', []) || []).slice(-n).reverse() };
     },
 
     api_bootstrap: function (userId) {
@@ -224,6 +459,9 @@
     },
 
     api_saveClass: function (userId, obj) {
+      var bad = schoolGuard(userId, obj.school);
+      if (bad) return bad;
+
       var rows = get('classes', []);
       if (obj.id) {
         var i = rows.findIndex(function (c) { return c.id === obj.id; });

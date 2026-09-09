@@ -19,14 +19,18 @@ A.초기설정_실행();
 const boot = A.api_bootstrap('teacher');
 const users = A.readAll_(A.T.USERS).map(u => ({
   id: String(u['아이디']), hash: String(u['비번해시']), name: String(u['이름']),
-  org: String(u['소속']), region: String(u['지역']), role: String(u['권한'])
+  org: String(u['소속']), region: String(u['지역']), role: String(u['권한']),
+  // 이용권 — 데모도 시트 판과 같은 값에서 출발한다
+  school: String(u['학교코드'] || ''), seats: Number(u['좌석수']) || 0,
+  licFrom: String(u['이용시작'] || ''), licTo: String(u['이용종료'] || '')
 }));
 
 const DATA = {
   // 시드 내용이나 저장 구조가 바뀌면 값이 달라져야 방문자 브라우저가 다시 받는다
   // s6 = 콘텐츠 우선(게스트) + SVG 아이콘
   // s7 = 출석 회차 날짜를 방문 시점 기준으로 밀어 넣음
-  ver: 'sj-s7-' + boot.videos.length + '-' + boot.categories.length + '-' +
+  // s8 = 이용권(학교 고정·기기 등록) 도입, 교사 수업을 한 학교로 정리
+  ver: 'sj-s8-' + boot.videos.length + '-' + boot.categories.length + '-' +
        users.map(function (u) { return u.id + ':' + u.name + ':' + u.role; }).join('|'),
   appTitle: "미래형학교체육 '스마트점핑'(Smart-Jumping)",
   today: new Date().toISOString().slice(0, 10),
@@ -119,6 +123,9 @@ html = html.replace(
 /* 3) 검증 */
 const checks = [
   ['$$ 헬퍼 보존', /var \$\$ = function/.test(html)],
+  // $$ 가 $ 로 줄어들면 여기서 잡힌다. querySelector 하나에는 forEach 가 없다.
+  // (치환 문자열 안의 $$ 를 String.replace 가 $ 로 축약하는 함정 — 두 번 당했다)
+  ['$ 하나에 forEach 를 걸지 않음', !/[^$]\$\([^)]*\)\.forEach/.test(html)],
   ['SJ_DATA 주입', /window\.SJ_DATA = \{/.test(html)],
   ['local-backend 주입', /google = \{/.test(html)],
   ['include 태그 잔존 없음', !/<\?!=/.test(html)],
