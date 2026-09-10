@@ -1281,7 +1281,12 @@ button.st-tag:hover{ filter:brightness(.94); }
 .sj-pin.p2{ background:linear-gradient(135deg,#0ea5e9,#22c55e); }
 .sj-pin.p3{ background:linear-gradient(135deg,#f59e0b,#ef4444); }
 
-/* 효과 카드 4장 */
+/* 효과 카드 — 도안 양옆에 둘씩 */
+.eff-wrap{
+  display:grid; grid-template-columns:1fr minmax(0,620px) 1fr;
+  gap:14px; align-items:center;
+}
+.eff-col{ display:flex; flex-direction:column; gap:12px; }
 .eff-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
 .eff{
   position:relative; overflow:hidden; border-radius:var(--r-lg); padding:18px 16px 16px;
@@ -1292,48 +1297,64 @@ button.st-tag:hover{ filter:brightness(.94); }
 .eff::before{ content:''; position:absolute; left:0; top:0; right:0; height:5px; }
 .eff .ico{
   width:44px; height:44px; border-radius:14px; display:grid; place-items:center;
-  font-size:21px; margin-bottom:11px;
+  margin-bottom:11px;
 }
+.eff .ico svg{
+  width:24px; height:24px; fill:none; stroke:currentColor;
+  stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;
+}
+.eff-side{ display:block; font-size:11px; font-weight:800; letter-spacing:.01em; color:var(--n-500); margin:0 0 3px; }
 .eff h3{ margin:0; font-size:15.5px; font-weight:900; letter-spacing:-.03em; color:var(--n-900); }
 .eff p{ margin:6px 0 0; font-size:12.5px; font-weight:500; color:var(--n-600); line-height:1.55; }
+/* 도안이 적어 둔 항목을 그대로 옮겨 적는다 — 이모지 대신 읽을 수 있는 말로 */
+.eff-tags{ display:flex; flex-wrap:wrap; gap:5px; margin:10px 0 0; padding:0; list-style:none; }
+.eff-tags li{
+  font-size:11px; font-weight:800; letter-spacing:-.02em; line-height:1.5;
+  padding:2px 8px; border-radius:var(--r-pill);
+}
 .eff .up{
   position:absolute; right:14px; top:16px; font-size:11px; font-weight:900;
   padding:3px 9px; border-radius:var(--r-pill); color:#fff;
 }
 .eff.e1::before{ background:linear-gradient(90deg,#fb7185,#f43f5e); }
-.eff.e1 .ico{ background:#ffe4e9; } .eff.e1 .up{ background:#f43f5e; }
+.eff.e1 .ico{ background:#ffe4e9; color:#e11d48; }
+.eff.e1 .eff-tags li{ background:#ffe4e9; color:#e11d48; }
+.eff.e1 .up{ background:#f43f5e; }
 .eff.e2::before{ background:linear-gradient(90deg,#4ade80,#16a34a); }
-.eff.e2 .ico{ background:#dcfce7; } .eff.e2 .up{ background:#16a34a; }
+.eff.e2 .ico{ background:#dcfce7; color:#15803d; }
+.eff.e2 .eff-tags li{ background:#dcfce7; color:#15803d; }
+.eff.e2 .up{ background:#16a34a; }
 .eff.e3::before{ background:linear-gradient(90deg,#a78bfa,#7c3aed); }
-.eff.e3 .ico{ background:#ede9fe; } .eff.e3 .up{ background:#7c3aed; }
+.eff.e3 .ico{ background:#ede9fe; color:#6d28d9; }
+.eff.e3 .eff-tags li{ background:#ede9fe; color:#6d28d9; }
+.eff.e3 .up{ background:#7c3aed; }
 .eff.e4::before{ background:linear-gradient(90deg,#fbbf24,#f59e0b); }
-.eff.e4 .ico{ background:#fef3c7; } .eff.e4 .up{ background:#f59e0b; }
+.eff.e4 .ico{ background:#fef3c7; color:#b45309; }
+.eff.e4 .eff-tags li{ background:#fef3c7; color:#b45309; }
+.eff.e4 .up{ background:#f59e0b; }
 
 /* 안내 도안 — 한 장씩 넘어간다. 누르면 크게. */
 .fig-slide{
   position:relative; margin-top:14px; border:1px solid var(--line); background:var(--card);
   border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--sh-1);
 }
-.fs-stage{
-  position:relative; height:clamp(196px, 25vw, 340px);
-  background:linear-gradient(160deg,#eef3fb,#f8fafc);
-}
+/* 액자를 그림 비율에 맞춘다 (JS 가 넘길 때마다 갱신). 빈자리가 없으니 채울 것도 없다.
+   aspect-ratio 에는 전환 효과를 걸지 않는다 — 걸면 크롬이 이전 비율을 붙들고 있어
+   가로가 다른 도안에서 액자가 안 줄어든다. */
+.fs-stage{ position:relative; width:100%; background:var(--card); }
 .fs-item{
   position:absolute; inset:0; width:100%; padding:0; border:0; background:none;
   opacity:0; visibility:hidden; cursor:zoom-in;
   transition:opacity .55s var(--ease), visibility .55s var(--ease);
 }
 .fs-item.on{ opacity:1; visibility:visible; }
-/* 같은 도안을 흐리게 깔아 양옆 빈자리를 채운다 */
-.fs-bg{
-  position:absolute; inset:0; background-size:cover; background-position:center;
-  filter:blur(26px) saturate(1.25); opacity:.45; transform:scale(1.2);
-}
-.fs-item img{ position:relative; display:block; width:100%; height:100%; object-fit:contain; }
+/* 액자가 그림 비율이라 잘릴 일이 없다. 혹시 적어 둔 크기가 틀려도
+   contain 이면 잘리는 대신 아주 살짝 남을 뿐이라 도안 글자가 안전하다. */
+.fs-item img{ display:block; width:100%; height:100%; object-fit:contain; }
 
 /* 좌우 넘김 */
 .fs-nav{
-  position:absolute; top:calc(clamp(196px, 25vw, 340px) / 2); transform:translateY(-50%);
+  position:absolute; top:50%; transform:translateY(-50%);
   width:34px; height:34px; border-radius:50%; border:0; z-index:2;
   background:rgba(255,255,255,.86); color:var(--n-700);
   font-size:19px; line-height:1; display:grid; place-items:center;
@@ -1400,11 +1421,20 @@ button.st-tag:hover{ filter:brightness(.94); }
 }
 .clip-cap i{ display:block; margin-top:3px; font-style:normal; font-size:12.5px; font-weight:500; color:var(--n-600); }
 
+/* 좁아지면 효과를 도안 위로 올려 2×2 로 접는다 */
+@media (max-width:1240px){
+  .eff-wrap{ grid-template-columns:1fr 1fr; }
+  .eff-left{ order:1; } .eff-right{ order:2; }
+  .fig-slide{ order:3; grid-column:1 / -1; margin-top:2px; }
+}
 @media (max-width:1080px){ .eff-grid, .clip-grid{ grid-template-columns:1fr 1fr; } }
 @media (max-width:760px){
   .sj-head h2{ font-size:19px; }
 }
-@media (max-width:520px){ .eff-grid, .clip-grid{ grid-template-columns:1fr; } }
+@media (max-width:560px){
+  .eff-wrap{ grid-template-columns:1fr; }
+  .eff-grid, .clip-grid{ grid-template-columns:1fr; }
+}
 
 /* 스크롤에 맞춰 부드럽게 등장 */
 .rv{ opacity:0; transform:translateY(16px); transition:opacity .5s var(--ease), transform .5s var(--ease); }

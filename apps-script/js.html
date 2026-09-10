@@ -1669,25 +1669,51 @@ function bindMainHero() {
    선생님이 주신 안내 도안을 그대로 쓴다. 원본은 장당 1.6~2MB 라
    tools/prep-edu.js 로 WebP 로 다시 구운 것을 assets/edu/ 에서 부른다. */
 
+/* 아이콘은 이모지 대신 그린다. 이모지는 기기마다 모양이 달라 계획서에 넣기 곤란하다.
+   사이드바 메뉴와 같은 선 아이콘 방식이다. */
+var EFF_ICO = {
+  /* 심장 + 맥박선 */
+  e1: '<path d="M12 20.3S3.6 15.1 3.6 9.4A4.4 4.4 0 0 1 12 7.6a4.4 4.4 0 0 1 8.4 1.8c0 5.7-8.4 10.9-8.4 10.9z"/>' +
+      '<path d="M6.7 11.9h2.5l1.3-2.4 1.9 4.3 1.2-1.9h2.6"/>',
+  /* 한 발로 선 아이 + 바닥선 */
+  e2: '<circle cx="12" cy="4.4" r="2"/><path d="M12 6.8v6"/><path d="M5.6 9.1 12 7.9l6.4 1.2"/>' +
+      '<path d="M12 12.8 9.5 18"/><path d="M12 12.8l2.5 3.1"/><path d="M3.6 20.4h16.8"/>',
+  /* 맞물려 도는 두 화살표 */
+  e3: '<path d="M4.9 12a7.1 7.1 0 0 1 12.1-5"/><path d="M19.1 12a7.1 7.1 0 0 1-12.1 5"/>' +
+      '<path d="M17.3 3.3v3.8h-3.8"/><path d="M6.7 20.7v-3.8h3.8"/>',
+  /* 여럿이 함께 */
+  e4: '<circle cx="9" cy="8" r="2.6"/><path d="M3.6 19.4c0-2.9 2.4-4.9 5.4-4.9s5.4 2 5.4 4.9"/>' +
+      '<circle cx="17.3" cy="8.8" r="2"/><path d="M16.1 14.8c2.6.3 4.3 2.2 4.3 4.6"/>'
+};
+
 var EFFECTS = [
-  { k:'e1', ico:'🫁', up:'향상', t:'심폐체력',
-    d:'탄성 발판 위에서 쉬지 않고 뛰는 동안 심장과 폐가 함께 단련됩니다.' },
-  { k:'e2', ico:'🧍', up:'향상', t:'균형능력',
-    d:'발판이 밀어 올리는 힘을 받아 내며 자세를 잡는 사이 균형 감각이 자랍니다.' },
-  { k:'e3', ico:'🤾', up:'향상', t:'운동협응',
-    d:'보고 · 기억하고 · 판단해 움직이는 순서가 눈과 손발을 하나로 묶어 줍니다.' },
-  { k:'e4', ico:'🙌', up:'증가', t:'신체활동 참여도',
-    d:'음악과 놀이로 굴러가는 수업이라 체육을 어려워하던 아이도 함께 뜁니다.' }
+  { k:'e1', up:'향상', t:'심폐체력', s:'생리학적 측면',
+    d:'탄성 발판 위에서 쉬지 않고 뛰는 동안 심장과 폐가 함께 단련됩니다.',
+    g:['고속 뇌 반응', '하지 근력 및 근지구력', '순발력'] },
+  { k:'e2', up:'향상', t:'균형능력', s:'운동기능적 측면',
+    d:'발판이 밀어 올리는 힘을 받아 내며 자세를 잡는 사이 균형 감각이 자랍니다.',
+    g:['자세 조절', '착지 조절'] },
+  { k:'e3', up:'향상', t:'운동협응', s:'운동기능적 측면',
+    d:'보고 · 기억하고 · 판단해 움직이는 순서가 눈과 손발을 하나로 묶어 줍니다.',
+    g:['운동 협응력', '발판 순서 기억'] },
+  { k:'e4', up:'증가', t:'신체활동 참여도', s:'교육적 측면',
+    d:'음악과 놀이로 굴러가는 수업이라 체육을 어려워하던 아이도 함께 뜁니다.',
+    g:['집중력', '운동에 대한 흥미', '자기효능감', '대인 친화력'] }
 ];
 
 /* ── 안내 도안 ──
    네 장을 나란히 깔면 첫 화면이 도안으로 가득 찬다.
-   효과 카드 아래에서 한 장씩 넘어가게 두고, 자세히 볼 사람은 눌러서 크게 본다. */
+   효과 카드 사이에서 한 장씩 넘어가게 두고, 자세히 볼 사람은 눌러서 크게 본다.
+
+   가로세로를 함께 적어 둔다. 그림마다 비율이 달라, 액자를 그림에 맞추지 않으면
+   양옆에 빈자리가 생긴다. 그 빈자리를 흐린 그림으로 덮는 건 보기 나쁘다. */
 var SLIDES = [
-  { f:'effect.webp', t:'참여집단 · 비교집단 비교' },
-  { f:'step7.webp',  t:'7단계 스마트 신체활동 과정' },
-  { f:'step3.webp',  t:'스마트점핑 3단계 과정' },
-  { f:'rhythm.webp', t:'음악의 박자와 리듬에 맞추어' }
+  { f:'effect.webp', w:1400, h:933, t:'참여집단 · 비교집단 비교' },
+  { f:'aspect.webp', w:1400, h:933, t:'스마트점핑의 효과 — 세 가지 측면' },
+  { f:'step7.webp',  w:1500, h:844, t:'7단계 스마트 신체활동 과정' },
+  { f:'step3.webp',  w:1400, h:934, t:'스마트점핑 3단계 과정' },
+  { f:'rhythm.webp', w:1400, h:933, t:'음악의 박자와 리듬에 맞추어' },
+  { f:'room.webp',   w:1400, h:785, t:'교실 발판 위 1~5번 자리' }
 ];
 var SLIDE_MS = 3500;
 
@@ -1703,6 +1729,7 @@ function bindSlides() {
 
   var items = $$('.fs-item', box);
   var dots = $$('.fs-dot', box);
+  var stage = $('.fs-stage', box);
   var cap = $('#fsCap');
   var at = 0;
 
@@ -1711,6 +1738,8 @@ function bindSlides() {
     items.forEach(function (el, k) { el.classList.toggle('on', k === at); });
     dots.forEach(function (el, k) { el.classList.toggle('on', k === at); });
     cap.textContent = SLIDES[at].t;
+    /* 액자를 그림 비율에 맞춘다 — 이래야 양옆에 빈자리가 안 생긴다 */
+    stage.style.aspectRatio = SLIDES[at].w + '/' + SLIDES[at].h;
   }
 
   /* 움직임을 줄여 달라고 한 사람에게는 넘기지 않는다 */
@@ -1767,20 +1796,24 @@ var SCENES = [
 ];
 
 function eduSections() {
-  var effs = EFFECTS.map(function (e) {
+  function effCard(e) {
+    var tags = e.g.map(function (g) { return '<li>' + esc(g) + '</li>'; }).join('');
     return '<article class="eff ' + e.k + '">' +
       '<span class="up">' + e.up + '</span>' +
-      '<div class="ico">' + e.ico + '</div>' +
+      '<div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true">' + EFF_ICO[e.k] + '</svg></div>' +
+      '<b class="eff-side">' + esc(e.s) + '</b>' +
       '<h3>' + e.t + '</h3><p>' + e.d + '</p>' +
+      '<ul class="eff-tags">' + tags + '</ul>' +
     '</article>';
-  }).join('');
+  }
+  /* 좌우로 둘씩 나눠 도안 양옆에 세운다 */
+  var effL = EFFECTS.slice(0, 2).map(effCard).join('');
+  var effR = EFFECTS.slice(2).map(effCard).join('');
 
   var slides = SLIDES.map(function (g, i) {
     return '<button class="fs-item' + (i ? '' : ' on') + '" data-i="' + i + '" ' +
       'data-fig="' + EDU + g.f + '" data-cap="' + esc(g.t) + '" ' +
       'aria-label="' + esc(g.t) + ' 크게 보기">' +
-      /* 도안이 가로세로가 제각각이라 양옆이 빈다. 같은 그림을 흐리게 깔아 채운다. */
-      '<span class="fs-bg" style="background-image:url(' + EDU + g.f + ')"></span>' +
       '<img src="' + EDU + g.f + '" alt="' + esc(g.t) + '" loading="lazy">' +
     '</button>';
   }).join('');
@@ -1792,9 +1825,12 @@ function eduSections() {
 
   var figs =
     '<div class="fig-slide" id="figSlide">' +
-      '<div class="fs-stage">' + slides + '</div>' +
-      '<button class="fs-nav fs-prev" aria-label="이전 도안">‹</button>' +
-      '<button class="fs-nav fs-next" aria-label="다음 도안">›</button>' +
+      /* 액자 비율은 지금 걸린 그림에 맞춰 넣는다 (bindSlides 가 갱신) */
+      '<div class="fs-stage" style="aspect-ratio:' + SLIDES[0].w + '/' + SLIDES[0].h + '">' +
+        slides +
+        '<button class="fs-nav fs-prev" aria-label="이전 도안">‹</button>' +
+        '<button class="fs-nav fs-next" aria-label="다음 도안">›</button>' +
+      '</div>' +
       '<div class="fs-bar">' +
         '<span class="fs-cap" id="fsCap">' + esc(SLIDES[0].t) + '</span>' +
         '<span class="fs-dots">' + dots + '</span>' +
@@ -1827,8 +1863,12 @@ function eduSections() {
       '<div class="sj-head"><span class="sj-pin p1">교육적 효과</span>' +
         '<h2>몸이 자라는 동안 뇌도 함께 자랍니다</h2>' +
         '<p>스마트점핑 참여집단은 비교집단에 비해 네 가지에서 긍정적인 변화를 보였습니다.</p></div>' +
-      '<div class="eff-grid">' + effs + '</div>' +
-      figs +
+      /* 도안 양옆에 효과를 둘씩 세운다. 좁아지면 아래에서 알아서 접힌다. */
+      '<div class="eff-wrap">' +
+        '<div class="eff-col eff-left">' + effL + '</div>' +
+        figs +
+        '<div class="eff-col eff-right">' + effR + '</div>' +
+      '</div>' +
     '</section>' +
 
     '<section class="sj-sec rv">' +
