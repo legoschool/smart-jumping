@@ -1579,7 +1579,6 @@ function renderTut() {
    못 불러오면 포스터 그림(.mh-poster, chars.html 에 인라인)이 그대로 자리를 지킨다. */
 var HERO_VIDEO = 'assets/hero/lesson.mp4';
 var EDU = 'assets/edu/';
-var CLIP = 'assets/clips/';
 var SCENE = 'assets/scenes/';
 
 /* 히어로 위를 떠다니는 음표 — 위치·속도만 흩어 두면 알아서 올라간다 */
@@ -1690,13 +1689,25 @@ var FIGS = [
     s:'듣고 · 반응하고 · 움직이는 세 장면' }
 ];
 
-var CLIPS = [
-  /* 영상 목록에도 같은 파일이 실려 있다(V0105 · V0106).
-     여기서는 표지만 걸어 두고, 누르면 목록과 똑같이 수업 플레이어를 연다.
-     재생 경로가 하나여야 조회수도 한곳에 쌓인다. */
-  { id:'V0105', f:'clip1', t:'스마트점프 초급 10', s:'교실에서 발판 순서 익히기' },
-  { id:'V0106', f:'clip2', t:'스마트점프 초급 20', s:'창작(자유) 패턴 익히기 -2-' }
-];
+/* ── 추천 수업 영상 ──
+   골라 둔 영상을 앞에 세우고, 남은 자리는 조회수가 많은 순으로 채운다.
+   PICKED 를 비우면 순전히 조회수 순이 된다. 없는 영상ID 는 그냥 건너뛴다. */
+var PICKED = ['V0105', 'V0106'];
+var RECO_N = 4;
+
+function recoVideos() {
+  var out = [];
+  PICKED.forEach(function (id) {
+    var v = vById(id);
+    if (v && out.indexOf(v) < 0) out.push(v);
+  });
+  S.videos.slice()
+    .sort(function (a, b) { return (b.views || 0) - (a.views || 0); })
+    .forEach(function (v) {
+      if (out.length < RECO_N && out.indexOf(v) < 0) out.push(v);
+    });
+  return out.slice(0, RECO_N);
+}
 
 /* 10초짜리 장면 영상. 제목 카드는 없고 소리가 들어 있다.
    기다리게 하지 않으려고 포스터만 깔아 두고, 올려놓으면 무음으로 돌린다. */
@@ -1725,12 +1736,13 @@ function eduSections() {
     '</button>';
   }).join('');
 
-  var clips = CLIPS.map(function (c) {
-    return '<div class="clip" data-clip="' + esc(c.id) + '">' +
-      '<img class="clip-poster" src="' + CLIP + c.f + '.webp" alt="" loading="lazy">' +
-      /* 제목은 영상 표지에 이미 박혀 있으니 화면 위에 겹쳐 쓰지 않고 아래에 적는다 */
-      '<button class="clip-play" aria-label="' + esc(c.t) + ' 재생"><span>▶</span></button>' +
-      '<div class="clip-cap"><b>' + esc(c.t) + '</b><i>' + esc(c.s) + '</i></div>' +
+  var clips = recoVideos().map(function (v) {
+    return '<div class="clip" data-clip="' + esc(v.id) + '">' +
+      thumbHtml(v) +
+      '<button class="clip-play" aria-label="' + esc(v.title) + ' 재생"><span>▶</span></button>' +
+      '<div class="clip-cap"><b>' + esc(v.title) + '</b>' +
+        '<i>' + esc(subName(v.c2) || catName(v.c1)) + ' · ' + esc(v.dur) +
+        ' · 조회 ' + nfmt(v.views) + '</i></div>' +
     '</div>';
   }).join('');
 
@@ -1766,16 +1778,14 @@ function eduSections() {
     '</section>' +
 
     '<section class="sj-sec rv">' +
-      '<div class="sj-head"><span class="sj-pin p3">수업 영상</span>' +
-        '<h2>한 차시를 먼저 보세요</h2>' +
-        '<p>발판 번호가 화면에 함께 뜹니다. 소리가 나오니 누를 때 확인하세요.</p></div>' +
+      '<div class="sj-head"><span class="sj-pin p3">추천</span>' +
+        '<h2>추천 수업 영상</h2></div>' +
       '<div class="clip-grid">' + clips + '</div>' +
     '</section>' +
 
     '<section class="sj-sec rv">' +
       '<div class="sj-head"><span class="sj-pin p4">어디서든</span>' +
-        '<h2>교실 밖에서도 스마트점핑</h2>' +
-        '<p>올려놓으면 소리 없이 돌아가고, 누르면 소리와 함께 봅니다.</p></div>' +
+        '<h2>교실 밖에서도 스마트점핑</h2></div>' +
       '<div class="scene-strip">' + scenes + '</div>' +
     '</section>';
 }
@@ -1790,8 +1800,9 @@ function bindEdu() {
     });
   });
 
-  /* 차시 수업 영상 — 목록에 실린 것과 같은 영상이라 수업 플레이어를 그대로 연다.
-     표지 그림만 걸려 있어서 누르기 전에는 영상을 내려받지 않는다. */
+  /* 추천 수업 영상 — 목록에 실린 그 영상이라 수업 플레이어를 그대로 연다.
+     유튜브 영상이 섞이므로 목록 카드와 같은 썸네일 대체를 걸어 둔다. */
+  bindThumbFallback($('.clip-grid'));
   $$('.clip').forEach(function (box) {
     box.addEventListener('click', function () { openPlayer([box.dataset.clip]); });
   });
