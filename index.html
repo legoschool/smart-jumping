@@ -1325,21 +1325,61 @@ button.st-tag:hover{ filter:brightness(.94); }
 .eff.e4::before{ background:linear-gradient(90deg,#fbbf24,#f59e0b); }
 .eff.e4 .ico{ background:#fef3c7; } .eff.e4 .up{ background:#f59e0b; }
 
-/* 안내 도안 — 클릭하면 크게 */
-.fig-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.fig{
-  display:block; width:100%; padding:0; border:1px solid var(--line); background:var(--card);
-  border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--sh-1); text-align:left;
-  transition:transform .18s var(--ease), box-shadow .18s var(--ease);
+/* 안내 도안 — 한 장씩 넘어간다. 누르면 크게. */
+.fig-slide{
+  position:relative; margin-top:14px; border:1px solid var(--line); background:var(--card);
+  border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--sh-1);
 }
-.fig:hover{ transform:translateY(-3px); box-shadow:var(--sh-2); }
-.fig img{ display:block; width:100%; height:auto; background:#f1f5fb; }
-.fig .cap{
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
-  padding:12px 16px; font-size:13px; font-weight:700; color:var(--n-700);
+.fs-stage{
+  position:relative; height:clamp(196px, 25vw, 340px);
+  background:linear-gradient(160deg,#eef3fb,#f8fafc);
 }
-.fig .cap i{ font-style:normal; font-size:12px; font-weight:700; color:var(--indigo-600); }
-.fig-wide{ grid-column:1 / -1; }
+.fs-item{
+  position:absolute; inset:0; width:100%; padding:0; border:0; background:none;
+  opacity:0; visibility:hidden; cursor:zoom-in;
+  transition:opacity .55s var(--ease), visibility .55s var(--ease);
+}
+.fs-item.on{ opacity:1; visibility:visible; }
+/* 같은 도안을 흐리게 깔아 양옆 빈자리를 채운다 */
+.fs-bg{
+  position:absolute; inset:0; background-size:cover; background-position:center;
+  filter:blur(26px) saturate(1.25); opacity:.45; transform:scale(1.2);
+}
+.fs-item img{ position:relative; display:block; width:100%; height:100%; object-fit:contain; }
+
+/* 좌우 넘김 */
+.fs-nav{
+  position:absolute; top:calc(clamp(196px, 25vw, 340px) / 2); transform:translateY(-50%);
+  width:34px; height:34px; border-radius:50%; border:0; z-index:2;
+  background:rgba(255,255,255,.86); color:var(--n-700);
+  font-size:19px; line-height:1; display:grid; place-items:center;
+  box-shadow:0 4px 12px -4px rgba(20,26,60,.4);
+  opacity:0; transition:opacity .18s var(--ease), background .18s var(--ease);
+}
+.fig-slide:hover .fs-nav{ opacity:1; }
+.fs-nav:hover{ background:#fff; color:var(--indigo-600); }
+.fs-prev{ left:12px; }
+.fs-next{ right:12px; }
+
+/* 아래 띠 — 제목 · 점 · 크게 보기 */
+.fs-bar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:11px 16px; border-top:1px solid var(--line); background:var(--card);
+}
+.fs-cap{ font-size:13px; font-weight:700; color:var(--n-700); min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fs-dots{ display:flex; gap:6px; flex:0 0 auto; }
+.fs-dot{
+  width:7px; height:7px; padding:0; border:0; border-radius:50%;
+  background:var(--n-300); transition:background .2s var(--ease), width .2s var(--ease);
+}
+.fs-dot.on{ width:18px; border-radius:99px; background:var(--indigo-600); }
+.fs-zoom{ font-size:12px; font-weight:700; color:var(--indigo-600); flex:0 0 auto; }
+
+@media (max-width:640px){
+  .fs-zoom{ display:none; }
+  .fs-nav{ opacity:1; }
+}
 
 /* 소개 영상 2편 */
 .clip-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
@@ -1378,7 +1418,6 @@ button.st-tag:hover{ filter:brightness(.94); }
 
 @media (max-width:1080px){ .eff-grid, .clip-grid{ grid-template-columns:1fr 1fr; } }
 @media (max-width:760px){
-  .fig-grid{ grid-template-columns:1fr; }
   .sj-head h2{ font-size:19px; }
 }
 @media (max-width:520px){ .eff-grid, .clip-grid{ grid-template-columns:1fr; } }
@@ -3417,7 +3456,7 @@ function renderRoute() {
   }
 
   $('#fabCart').hidden = (key !== 'library');
-  if (key !== 'library') closePops();   // 알림 팝업은 첫 화면에서만
+  if (key !== 'library') { closePops(); stopSlides(); }   // 알림 팝업·도안 슬라이드는 첫 화면에서만
   guardSession();                       // 화면을 옮길 때마다 (1분에 한 번) 세션을 확인한다
 
   if (key === 'guide') return viewGuide();
@@ -4513,14 +4552,61 @@ var EFFECTS = [
     d:'음악과 놀이로 굴러가는 수업이라 체육을 어려워하던 아이도 함께 뜁니다.' }
 ];
 
-var FIGS = [
-  { f:'step7.webp', wide:true,  t:'7단계 스마트 신체활동 과정',
-    s:'보기 → 기억하기 → 판단하기 → 이동하기 → 리듬 맞추기 → 협력하기 → 창작하기' },
-  { f:'step3.webp', wide:false, t:'스마트점핑 3단계 과정',
-    s:'위치 인지와 안전한 착지 → 방향 전환과 협응 → 고속 반응과 창의적 퍼포먼스' },
-  { f:'rhythm.webp', wide:false, t:'음악의 박자와 리듬에 맞추어',
-    s:'듣고 · 반응하고 · 움직이는 세 장면' }
+/* ── 안내 도안 ──
+   네 장을 나란히 깔면 첫 화면이 도안으로 가득 찬다.
+   효과 카드 아래에서 한 장씩 넘어가게 두고, 자세히 볼 사람은 눌러서 크게 본다. */
+var SLIDES = [
+  { f:'effect.webp', t:'참여집단 · 비교집단 비교' },
+  { f:'step7.webp',  t:'7단계 스마트 신체활동 과정' },
+  { f:'step3.webp',  t:'스마트점핑 3단계 과정' },
+  { f:'rhythm.webp', t:'음악의 박자와 리듬에 맞추어' }
 ];
+var SLIDE_MS = 3500;
+
+var slideTimer = null;
+
+function stopSlides() {
+  if (slideTimer) { clearInterval(slideTimer); slideTimer = null; }
+}
+
+function bindSlides() {
+  var box = $('#figSlide');
+  if (!box) return;
+
+  var items = $$('.fs-item', box);
+  var dots = $$('.fs-dot', box);
+  var cap = $('#fsCap');
+  var at = 0;
+
+  function show(i) {
+    at = (i + items.length) % items.length;
+    items.forEach(function (el, k) { el.classList.toggle('on', k === at); });
+    dots.forEach(function (el, k) { el.classList.toggle('on', k === at); });
+    cap.textContent = SLIDES[at].t;
+  }
+
+  /* 움직임을 줄여 달라고 한 사람에게는 넘기지 않는다 */
+  var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function start() { if (!still) { stopSlides(); slideTimer = setInterval(function () { show(at + 1); }, SLIDE_MS); } }
+
+  start();
+  box.addEventListener('mouseenter', stopSlides);
+  box.addEventListener('mouseleave', start);
+
+  $('.fs-prev', box).addEventListener('click', function () { show(at - 1); start(); });
+  $('.fs-next', box).addEventListener('click', function () { show(at + 1); start(); });
+  dots.forEach(function (d) {
+    d.addEventListener('click', function () { show(Number(d.dataset.go)); start(); });
+  });
+
+  items.forEach(function (b) {
+    b.addEventListener('click', function () {
+      modal(b.dataset.cap,
+        '<img src="' + b.dataset.fig + '" alt="' + esc(b.dataset.cap) + '" ' +
+        'style="display:block;width:100%;height:auto;border-radius:12px">');
+    });
+  });
+}
 
 /* ── 추천 수업 영상 ──
    골라 둔 영상을 앞에 세우고, 남은 자리는 조회수가 많은 순으로 채운다.
@@ -4561,13 +4647,32 @@ function eduSections() {
     '</article>';
   }).join('');
 
-  var figs = FIGS.map(function (g) {
-    return '<button class="fig' + (g.wide ? ' fig-wide' : '') + '" data-fig="' + EDU + g.f + '" ' +
-      'data-cap="' + esc(g.t) + '">' +
+  var slides = SLIDES.map(function (g, i) {
+    return '<button class="fs-item' + (i ? '' : ' on') + '" data-i="' + i + '" ' +
+      'data-fig="' + EDU + g.f + '" data-cap="' + esc(g.t) + '" ' +
+      'aria-label="' + esc(g.t) + ' 크게 보기">' +
+      /* 도안이 가로세로가 제각각이라 양옆이 빈다. 같은 그림을 흐리게 깔아 채운다. */
+      '<span class="fs-bg" style="background-image:url(' + EDU + g.f + ')"></span>' +
       '<img src="' + EDU + g.f + '" alt="' + esc(g.t) + '" loading="lazy">' +
-      '<div class="cap"><b>' + esc(g.t) + '</b><i>크게 보기 ⤢</i></div>' +
     '</button>';
   }).join('');
+
+  var dots = SLIDES.map(function (g, i) {
+    return '<button class="fs-dot' + (i ? '' : ' on') + '" data-go="' + i + '" ' +
+      'aria-label="' + esc(g.t) + '"></button>';
+  }).join('');
+
+  var figs =
+    '<div class="fig-slide" id="figSlide">' +
+      '<div class="fs-stage">' + slides + '</div>' +
+      '<button class="fs-nav fs-prev" aria-label="이전 도안">‹</button>' +
+      '<button class="fs-nav fs-next" aria-label="다음 도안">›</button>' +
+      '<div class="fs-bar">' +
+        '<span class="fs-cap" id="fsCap">' + esc(SLIDES[0].t) + '</span>' +
+        '<span class="fs-dots">' + dots + '</span>' +
+        '<span class="fs-zoom">크게 보기 ⤢</span>' +
+      '</div>' +
+    '</div>';
 
   var clips = recoVideos().map(function (v) {
     return '<div class="clip" data-clip="' + esc(v.id) + '">' +
@@ -4595,19 +4700,7 @@ function eduSections() {
         '<h2>몸이 자라는 동안 뇌도 함께 자랍니다</h2>' +
         '<p>스마트점핑 참여집단은 비교집단에 비해 네 가지에서 긍정적인 변화를 보였습니다.</p></div>' +
       '<div class="eff-grid">' + effs + '</div>' +
-      '<div class="fig-grid" style="margin-top:14px">' +
-        '<button class="fig fig-wide" data-fig="' + EDU + 'effect.webp" data-cap="참여집단과 비교집단">' +
-          '<img src="' + EDU + 'effect.webp" alt="참여집단과 비교집단 비교" loading="lazy">' +
-          '<div class="cap"><b>참여집단 · 비교집단 비교</b><i>크게 보기 ⤢</i></div>' +
-        '</button>' +
-      '</div>' +
-    '</section>' +
-
-    '<section class="sj-sec rv">' +
-      '<div class="sj-head"><span class="sj-pin p2">배우는 과정</span>' +
-        '<h2>보고, 기억하고, 판단하고, 움직입니다</h2>' +
-        '<p>도안을 누르면 크게 볼 수 있습니다.</p></div>' +
-      '<div class="fig-grid">' + figs + '</div>' +
+      figs +
     '</section>' +
 
     '<section class="sj-sec rv">' +
@@ -4624,14 +4717,10 @@ function eduSections() {
 }
 
 function bindEdu() {
-  /* 도안 크게 보기 */
-  $$('.fig').forEach(function (b) {
-    b.addEventListener('click', function () {
-      modal(b.dataset.cap,
-        '<img src="' + b.dataset.fig + '" alt="' + esc(b.dataset.cap) + '" ' +
-        'style="display:block;width:100%;height:auto;border-radius:12px">');
-    });
-  });
+  /* 안내 도안 — 한 장씩 넘어가고, 누르면 크게 본다.
+     화면을 다시 그릴 때마다 여기로 오므로 앞서 돌던 타이머를 먼저 끈다. */
+  stopSlides();
+  bindSlides();
 
   /* 추천 수업 영상 — 목록에 실린 그 영상이라 수업 플레이어를 그대로 연다.
      유튜브 영상이 섞이므로 목록 카드와 같은 썸네일 대체를 걸어 둔다. */
